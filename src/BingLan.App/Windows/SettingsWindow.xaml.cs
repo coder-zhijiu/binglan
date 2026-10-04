@@ -147,12 +147,18 @@ public partial class SettingsWindow : Window
         LoadTaskbarSettings();
         LoadDesktopMode();
         LoadPrivacySettings();
+        LoadUpdateSettings();
         RefreshCleanDesktopSettings();
         LoadStyle();
         RefreshBackupList();
         ShowPage("Layout");
         Closing += (_, _) => CommitPendingChanges();
         Closed += (_, _) => CancelSearch();
+        if (_maintenance.Updater is { } updater)
+        {
+            updater.Changed += RefreshUpdateView;
+            Closed += (_, _) => updater.Changed -= RefreshUpdateView;
+        }
     }
 
     private void LoadDesktopExperience()
@@ -835,7 +841,7 @@ public partial class SettingsWindow : Window
     private void ShowPage(string page)
     {
         if (LayoutPage is null || ComponentsPage is null || DockPage is null || TaskbarPage is null ||
-            PrivacyPage is null || BackupPage is null)
+            PrivacyPage is null || BackupPage is null || AboutPage is null)
         {
             return;
         }
@@ -856,6 +862,9 @@ public partial class SettingsWindow : Window
             ? Visibility.Visible
             : Visibility.Collapsed;
         BackupPage.Visibility = page == "Backup"
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        AboutPage.Visibility = page == "About"
             ? Visibility.Visible
             : Visibility.Collapsed;
         if (page == "Backup")
@@ -1652,6 +1661,78 @@ public partial class SettingsWindow : Window
             ApplyDockChange($"已取消固定 {entry.App.DisplayName}");
         }
     }
+
+    private bool _loadingUpdates;
+
+    private void LoadUpdateSettings()
+    {
+        _loadingUpdates = true;
+        try
+        {
+            var updater = _maintenance.Updater;
+            AppVersionText.Text = updater is null
+                ? "冰蓝桌面"
+                : $"冰蓝桌面 {updater.CurrentVersion.ToString(3)}";
+            AutoCheckUpdatesCheckBox.IsChecked = updater?.AutoCheck == true;
+            AutoCheckUpdatesCheckBox.IsEnabled = updater is not null;
+        }
+        finally
+        {
+            _loadingUpdates = false;
+        }
+        RefreshUpdateView();
+    }
+
+    private void RefreshUpdateView()
+    {
+        var updater = _maintenance.Updater;
+        CheckUpdatesButton.IsEnabled = updater is { IsBusy: false };
+        UpdateStatusText.Text = updater?.Status ?? "此运行方式不提供更新检查。";
+        if (updater?.Available is { } release)
+        {
+            UpdateAvailableCard.Visibility = Visibility.Visible;
+            UpdateAvailableTitle.Text = $"新版本 {release.Version.ToString(3)}";
+            UpdateNotesText.Text = release.Notes.Length > 0 ? release.Notes : "这个版本没有附更新说明。";
+            var installable = release.Installer is not null;
+            InstallUpdateButton.Visibility = installable ? Visibility.Visible : Visibility.Collapsed;
+            InstallUpdateButton.IsEnabled = !updater.IsBusy;
+            InstallUpdateNoteText.Text = installable
+                ? "安装时冰蓝桌面会暂时退出，装完自动重新打开；设置和桌面内容保留。"
+                : "这个版本没有可校验的安装包，请在发布页下载。";
+        }
+        else
+        {
+            UpdateAvailableCard.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void AutoCheckUpdates_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_loadingUpdates || _maintenance.Updater is not { } updater)
+        {
+            return;
+        }
+        updater.AutoCheck = AutoCheckUpdatesCheckBox.IsChecked == true;
+    }
+
+    private async void CheckUpdates_Click(object sender, RoutedEventArgs e)
+    {
+        if (_maintenance.Updater is { } updater)
+        {
+            await updater.CheckNowAsync();
+        }
+    }
+
+    private async void InstallUpdate_Click(object sender, RoutedEventArgs e)
+    {
+        if (_maintenance.Updater is { } updater)
+        {
+            await updater.DownloadAndInstallAsync();
+        }
+    }
+
+    private void OpenReleasePage_Click(object sender, RoutedEventArgs e) =>
+        _maintenance.Updater?.OpenReleasePage();
 
     private void ApplyDockChange(string status)
     {

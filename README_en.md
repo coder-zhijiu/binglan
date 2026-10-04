@@ -41,6 +41,7 @@ Requires Windows 11 x64. See the [user guide (Chinese)](docs/USER-GUIDE.md) for 
 
 - No telemetry. To-dos, notes, file paths, app lists, and window titles stay on this computer under `%LOCALAPPDATA%\BingLanWidgets`.
 - The weather city is chosen by searching by hand. Requests send only the search text and the chosen city's coordinates; IP address and device location are not used.
+- Once a day the app asks GitHub for the latest version number (can be turned off under Settings → 关于与更新). A new version is only announced; you decide whether to download and install it.
 - Adding, sorting, or removing items in a file group changes only the mapping. Original files are never moved, renamed, or deleted.
 
 ## Build from source
@@ -50,7 +51,7 @@ Requires the .NET 10 SDK and PowerShell 7. Building the installer also needs Inn
 ```powershell
 dotnet build .\BingLan.slnx -c Release
 dotnet run --project .\tests\BingLan.SmokeTests\BingLan.SmokeTests.csproj -c Release
-pwsh -NoProfile -File .\installer\build.ps1 -Version 0.2.1
+pwsh -NoProfile -File .\installer\build.ps1 -Version 0.2.2
 ```
 
 Full test commands, the technical design, and the current implementation are in the [development notes (Chinese)](docs/DEVELOPMENT.md); installer details are in [docs/INSTALLER.md](docs/INSTALLER.md).

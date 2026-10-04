@@ -2,7 +2,7 @@
 ; installer\obj\publish and passes the version with /DAppVersion=x.y.z.
 
 #ifndef AppVersion
-  #define AppVersion "0.2.1"
+  #define AppVersion "0.2.2"
 #endif
 
 [Setup]
@@ -55,6 +55,7 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [Run]
 Filename: "{app}\BingLan.exe"; Description: "启动冰蓝桌面"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\BingLan.exe"; Flags: nowait; Check: RelaunchAfterUpdate
 
 [Code]
 const
@@ -106,6 +107,13 @@ begin
     StopInstalledApp(ExePath);
     Exec(ExePath, '--restore-taskbar', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   end;
+end;
+
+// The app starts a downloaded update silently with /UPDATE=1 and exits; the new version
+// is opened again once the files are in place.
+function RelaunchAfterUpdate(): Boolean;
+begin
+  Result := ExpandConstant('{param:UPDATE|0}') = '1';
 end;
 
 // An update keeps the startup choice made in the app: the entry is written again only

@@ -416,6 +416,13 @@ public sealed class LocalStateStore
             // The list of apps the dock leaves out is new and starts empty.
             state.SchemaVersion = 20;
         }
+
+        if (state.SchemaVersion < 21)
+        {
+            // Update checking is new and starts on: one check a day, only to say a release exists.
+            state.SchemaVersion = 21;
+        }
+        state.Updates ??= new UpdateState();
         state.QuickPlaces = QuickPlaceRules.Normalize(state.QuickPlaces);
         state.DismissedDesktopCategories = (state.DismissedDesktopCategories ?? [])
             .Where(category => category is not DesktopGroupCategory.None && Enum.IsDefined(category))

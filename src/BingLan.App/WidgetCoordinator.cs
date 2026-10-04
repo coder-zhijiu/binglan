@@ -39,6 +39,9 @@ public sealed class WidgetCoordinator : IDisposable
     private readonly CleanDesktopAdapter _cleanDesktop;
     private readonly TaskbarCornerReveal _cornerReveal = new();
     private readonly DockIconStore _iconStore;
+    private readonly AppUpdater _updater;
+    private Forms.ToolStripMenuItem? _updateMenuItem;
+    private Action? _balloonClicked;
     private IReadOnlyDictionary<string, byte[]> _pendingThemeIcons = new Dictionary<string, byte[]>();
     private readonly SemaphoreSlim _cleanDesktopGate = new(1, 1);
     private bool _cleanDesktopRecovered;
@@ -80,6 +83,9 @@ public sealed class WidgetCoordinator : IDisposable
             SaveNow();
         };
         _trayIcon = BuildTrayIcon();
+        // Only the installed app checks on its own; test and interactive runs keep quiet.
+        _updater = new AppUpdater(_state.Updates, AppVersion, ScheduleSave, Exit, canAutoCheck: dataDirectory is null);
+        _updater.ReleaseFound += OnReleaseFound;
         _iconStore = new DockIconStore(Path.Combine(_store.DataDirectory, "icons"));
         DockAppResolver.IconStore = _iconStore;
         ApplyStyleSettings();
@@ -252,6 +258,23 @@ public sealed class WidgetCoordinator : IDisposable
             StartupLog.Write("清爽桌面已应用");
         }
         ScheduleSave();
+        _updater.Start();
+    }
+
+    private void OnReleaseFound(UpdateRelease release)
+    {
+        var version = release.Version.ToString(3);
+        if (_updateMenuItem is not null)
+        {
+            _updateMenuItem.Text = $"新版本 {version} 可用…";
+            _updateMenuItem.Visible = true;
+        }
+        _balloonClicked = () => OpenSettings("About");
+        _trayIcon.ShowBalloonTip(
+            8000,
+            "冰蓝桌面有新版本",
+            $"{version} 已发布，点击查看更新内容并安装。",
+            Forms.ToolTipIcon.Info);
     }
 
     private void OnHighContrastChanged(object? sender, EventArgs e) => ApplyItemSurface();
@@ -945,6 +968,7 @@ public sealed class WidgetCoordinator : IDisposable
                     }
                 },
                 ExitApp = Exit,
+                Updater = _updater,
                 ApplyGlass = ApplyGlass,
                 ImportTaskbarPins = () =>
                 {
@@ -1850,6 +1874,7 @@ public sealed class WidgetCoordinator : IDisposable
         _cornerReveal.Dispose();
         _taskbar.Dispose();
         _cleanDesktop.Dispose();
+        _updater.Dispose();
         foreach (var window in _windows.ToList())
         {
             window.CanClose = true;
@@ -1876,6 +1901,11 @@ public sealed class WidgetCoordinator : IDisposable
         menu.Items.Add("新建普通便签", null, (_, _) => AddNote());
         menu.Items.Add("新建桌面分组盒", null, (_, _) => AddFileBox());
         menu.Items.Add(new Forms.ToolStripSeparator());
+        _updateMenuItem = new Forms.ToolStripMenuItem(string.Empty, null, (_, _) => OpenSettings("About"))
+        {
+            Visible = false
+        };
+        menu.Items.Add(_updateMenuItem);
         menu.Items.Add("冰蓝桌面设置…", null, (_, _) => OpenSettings());
         menu.Items.Add("立即备份", null, (_, _) => Backup());
         menu.Items.Add("打开数据目录", null, (_, _) => OpenDataDirectory());
@@ -1889,6 +1919,9 @@ public sealed class WidgetCoordinator : IDisposable
             ContextMenuStrip = menu
         };
         trayIcon.DoubleClick += (_, _) => OpenSettings();
+        // Only the update notice acts on a click; other notices are plain information.
+        trayIcon.BalloonTipClicked += (_, _) => _balloonClicked?.Invoke();
+        trayIcon.BalloonTipClosed += (_, _) => _balloonClicked = null;
         return trayIcon;
     }
 

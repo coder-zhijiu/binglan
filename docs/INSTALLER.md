@@ -3,10 +3,10 @@
 ## 构建
 
 ```powershell
-pwsh -NoProfile -File .\installer\build.ps1 -Version 0.2.1
+pwsh -NoProfile -File .\installer\build.ps1 -Version 0.2.2
 ```
 
-输出 `installer\bin\BingLan-Setup-0.2.1.exe`（约 53 MB）。脚本先把应用发布为 win-x64 自包含程序（附带 .NET 运行时，只保留中文和英文资源），再用 Inno Setup 打包为按用户安装的安装程序。构建还需要 .NET 10 SDK、PowerShell 7、Visual Studio 2022 C++ x64 工具链和 Windows SDK；自有任务栏 DLL 随发布输出进入安装包，细节见 [任务栏 XAML 适配](TASKBAR-XAML.md)。需要 Inno Setup 6：`winget install JRSoftware.InnoSetup --scope user`。
+输出 `installer\bin\BingLan-Setup-0.2.2.exe`（约 53 MB）。脚本先把应用发布为 win-x64 自包含程序（附带 .NET 运行时，只保留中文和英文资源），再用 Inno Setup 打包为按用户安装的安装程序。构建还需要 .NET 10 SDK、PowerShell 7、Visual Studio 2022 C++ x64 工具链和 Windows SDK；自有任务栏 DLL 随发布输出进入安装包，细节见 [任务栏 XAML 适配](TASKBAR-XAML.md)。需要 Inno Setup 6：`winget install JRSoftware.InnoSetup --scope user`。
 
 ## 安装程序行为
 
@@ -15,7 +15,7 @@ pwsh -NoProfile -File .\installer\build.ps1 -Version 0.2.1
 - “登录 Windows 时启动冰蓝桌面”默认勾选，写入当前用户的单个启动项；可在设置中心“隐私与启动”页开关。卸载时只要启动项启动的正是本安装位置的程序就删除，不论它由安装程序还是应用创建；指向其他位置的同名启动项保留。
 - 安装目录附带面向用户的 `使用说明.md`，开始菜单提供“冰蓝桌面使用说明”入口。
 - 覆盖安装（更新）前先结束本安装位置运行中的冰蓝桌面，并运行 `--restore-taskbar` 恢复任务栏和桌面图标，再替换文件。恢复未完成时检查点保留，新版本启动时再次恢复。
-- 安装完成后可直接启动冰蓝桌面；升级安装时先关闭正在运行的冰蓝桌面。
+- 安装完成后可直接启动冰蓝桌面；升级安装时先关闭正在运行的冰蓝桌面。应用内更新以 `/SILENT /SUPPRESSMSGBOXES /NORESTART /UPDATE=1` 启动安装程序，带 `/UPDATE=1` 时装完自动重新打开冰蓝桌面。
 - 卸载时先结束本安装位置的冰蓝桌面进程（按完整路径匹配，不影响同名程序），再运行 `BingLan.exe --restore-taskbar` 撤销任务栏和清爽桌面改动，然后删除程序文件、快捷方式和启动项；恢复失败时提示用户在 Windows 设置和桌面右键菜单中手动恢复，并且不再询问删除个人数据，保留其中的恢复记录。
 - 卸载最后询问是否删除个人数据 `%LOCALAPPDATA%\BingLanWidgets`（组件、待办、便签、文件映射、设置和备份），默认“否”；选择“是”时移到回收站。静默卸载（`/SILENT`、`/VERYSILENT`）始终保留数据。
 

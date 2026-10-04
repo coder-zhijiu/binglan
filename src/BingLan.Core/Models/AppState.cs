@@ -2,7 +2,7 @@ namespace BingLan.Core.Models;
 
 public sealed class AppState
 {
-    public const int CurrentSchemaVersion = 20;
+    public const int CurrentSchemaVersion = 21;
 
     public int SchemaVersion { get; set; } = CurrentSchemaVersion;
     public List<TodoWidgetState> TodoWidgets { get; set; } = [];
@@ -14,6 +14,7 @@ public sealed class AppState
     public DockState Dock { get; set; } = new();
     public TaskbarState Taskbar { get; set; } = new();
     public DesktopStyleState Style { get; set; } = new();
+    public UpdateState Updates { get; set; } = new();
 
     /// <summary>Whether the first-run guide has been finished or skipped.</summary>
     public bool OnboardingCompleted { get; set; }

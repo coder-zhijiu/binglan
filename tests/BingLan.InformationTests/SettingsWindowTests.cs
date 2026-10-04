@@ -182,4 +182,69 @@ internal static class SettingsWindowTests
         button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         Pump();
     }
+
+    public static void UpdatePageShowsFoundRelease()
+    {
+        var installer = System.Text.Encoding.UTF8.GetBytes("setup");
+        var digest = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(installer)).ToLowerInvariant();
+        var releaseJson = $$"""
+            {
+              "tag_name": "v9.9.9",
+              "html_url": "https://github.com/keros68/binglan/releases/tag/v9.9.9",
+              "body": "新功能说明",
+              "assets": [
+                {
+                  "name": "BingLan-Setup-9.9.9.exe",
+                  "size": {{installer.Length}},
+                  "digest": "sha256:{{digest}}",
+                  "browser_download_url": "https://github.com/keros68/binglan/releases/download/v9.9.9/BingLan-Setup-9.9.9.exe"
+                }
+              ]
+            }
+            """;
+        var stub = new StubHttpMessageHandler
+        {
+            Behavior = (_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(releaseJson)
+            })
+        };
+        var updateState = new UpdateState();
+        var saves = 0;
+        var updater = new BingLan.App.Services.AppUpdater(
+            updateState, new Version(0, 2, 2), () => saves++, () => { }, canAutoCheck: false, stub);
+        var window = new SettingsWindow(
+            new CitySearchService(new StubHttpMessageHandler()),
+            new InformationWidgetState(),
+            DesktopExperienceRules.CreateDefault(),
+            (_, _) => { },
+            _ => { },
+            _ => { },
+            maintenance: new SettingsMaintenance { Updater = updater });
+        ShowAndPump(window);
+        try
+        {
+            Assert(Require<TextBlock>(window, "AppVersionText").Text == "冰蓝桌面 0.2.2", "显示当前版本");
+            var autoCheck = Require<CheckBox>(window, "AutoCheckUpdatesCheckBox");
+            Assert(autoCheck.IsChecked == true, "默认每天自动检查更新");
+            autoCheck.IsChecked = false;
+            Pump();
+            Assert(!updateState.AutoCheck && saves == 1, "关闭自动检查后保存设置");
+
+            var card = Require<Border>(window, "UpdateAvailableCard");
+            Assert(card.Visibility != Visibility.Visible, "检查前不显示新版本");
+            Require<Button>(window, "CheckUpdatesButton").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            PumpUntil(() => card.Visibility == Visibility.Visible, TimeSpan.FromSeconds(5), "发现新版本后显示更新内容");
+            AssertEqual("新版本 9.9.9", Require<TextBlock>(window, "UpdateAvailableTitle").Text, "新版本号");
+            AssertEqual("新功能说明", Require<TextBox>(window, "UpdateNotesText").Text, "更新说明");
+            Assert(Require<Button>(window, "InstallUpdateButton").Visibility == Visibility.Visible, "可校验的安装包提供安装按钮");
+            Assert(Require<TextBlock>(window, "UpdateStatusText").Text.Contains("9.9.9"), "状态写明新版本");
+            Assert(updateState.LastCheckedAt is not null, "成功检查后记录时间");
+        }
+        finally
+        {
+            window.Close();
+            Pump();
+        }
+    }
 }

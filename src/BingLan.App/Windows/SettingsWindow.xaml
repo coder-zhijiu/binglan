@@ -118,6 +118,7 @@
                     <ListBoxItem Content="任务栏" Tag="Taskbar"/>
                     <ListBoxItem Content="隐私与启动" Tag="Privacy"/>
                     <ListBoxItem Content="备份与导入" Tag="Backup"/>
+                    <ListBoxItem Content="关于与更新" Tag="About"/>
                 </ListBox>
             </DockPanel>
         </Border>
@@ -1335,6 +1336,9 @@
                                        Text="只有搜索天气城市和刷新天气时联网，发送的是搜索关键词或所选城市坐标；不使用 IP、GPS 或 Wi-Fi 定位。"/>
                             <TextBlock Margin="0,8,0,0"
                                        TextWrapping="Wrap"
+                                       Text="检查更新时向 GitHub 查询最新版本号，不发送个人数据；可在“关于与更新”页关闭自动检查。"/>
+                            <TextBlock Margin="0,8,0,0"
+                                       TextWrapping="Wrap"
                                        Text="不收集使用数据，不上传待办、文件路径、应用列表或窗口标题。"/>
                             <Button Margin="0,14,0,0"
                                     HorizontalAlignment="Left"
@@ -1403,6 +1407,64 @@
                                TextWrapping="Wrap"
                                AutomationProperties.LiveSetting="Polite"
                                Foreground="{DynamicResource IceMutedInkBrush}"/>
+                </StackPanel>
+            </ScrollViewer>
+            <ScrollViewer x:Name="AboutPage"
+                          Visibility="Collapsed"
+                          VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <TextBlock FontSize="26" FontWeight="SemiBold" Text="关于与更新"/>
+
+                    <Border Margin="0,18,0,0" Style="{StaticResource SectionCardStyle}">
+                        <StackPanel>
+                            <TextBlock x:Name="AppVersionText" FontSize="17" FontWeight="SemiBold"/>
+                            <CheckBox x:Name="AutoCheckUpdatesCheckBox"
+                                      Margin="0,14,0,0"
+                                      AutomationProperties.Name="每天自动检查更新"
+                                      Content="每天自动检查更新"
+                                      Checked="AutoCheckUpdates_Changed"
+                                      Unchecked="AutoCheckUpdates_Changed"/>
+                            <TextBlock Margin="22,4,0,0"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource IceMutedInkBrush}"
+                                       Text="只向 GitHub 查询最新版本号，不发送个人数据。发现新版本时提示，不会自动下载或安装。"/>
+                            <WrapPanel Margin="0,14,0,0">
+                                <Button x:Name="CheckUpdatesButton" Content="检查更新" Click="CheckUpdates_Click"/>
+                            </WrapPanel>
+                            <TextBlock x:Name="UpdateStatusText"
+                                       Margin="0,10,0,0"
+                                       TextWrapping="Wrap"
+                                       AutomationProperties.LiveSetting="Polite"
+                                       Foreground="{DynamicResource IceMutedInkBrush}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="UpdateAvailableCard"
+                            Margin="0,18,0,0"
+                            Visibility="Collapsed"
+                            Style="{StaticResource SectionCardStyle}">
+                        <StackPanel>
+                            <TextBlock x:Name="UpdateAvailableTitle" FontSize="17" FontWeight="SemiBold"/>
+                            <TextBox x:Name="UpdateNotesText"
+                                     Margin="0,10,0,0"
+                                     MaxHeight="260"
+                                     IsReadOnly="True"
+                                     TextWrapping="Wrap"
+                                     VerticalScrollBarVisibility="Auto"
+                                     AutomationProperties.Name="更新内容"
+                                     Background="{DynamicResource SettingsInputBrush}"
+                                     BorderBrush="{DynamicResource SettingsInputBorderBrush}"/>
+                            <WrapPanel Margin="0,12,0,0">
+                                <Button x:Name="InstallUpdateButton" Content="下载并安装" Click="InstallUpdate_Click"/>
+                                <Button Margin="8,0,0,0" Content="查看发布页" Click="OpenReleasePage_Click"/>
+                            </WrapPanel>
+                            <TextBlock x:Name="InstallUpdateNoteText"
+                                       Margin="0,10,0,0"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource IceMutedInkBrush}"
+                                       Text="安装时冰蓝桌面会暂时退出，装完自动重新打开；设置和桌面内容保留。"/>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </ScrollViewer>
         </Grid>

@@ -39,6 +39,7 @@
 
 - 不采集遥测；待办、便签、文件路径、应用列表和窗口标题只保存在本机 `%LOCALAPPDATA%\BingLanWidgets`。
 - 天气城市由用户手动搜索选择，网络请求只发送搜索关键词和所选城市的坐标，不使用 IP 或设备位置。
+- 每天自动检查一次新版本（可在设置“关于与更新”页关闭），只向 GitHub 查询版本号；发现新版本只提示，由你决定是否下载安装。
 - 分组盒的添加、排序和移除只改变映射，不移动、重命名或删除原文件。
 
 ## 从源码构建
@@ -48,7 +49,7 @@
 ```powershell
 dotnet build .\BingLan.slnx -c Release
 dotnet run --project .\tests\BingLan.SmokeTests\BingLan.SmokeTests.csproj -c Release
-pwsh -NoProfile -File .\installer\build.ps1 -Version 0.2.1
+pwsh -NoProfile -File .\installer\build.ps1 -Version 0.2.2
 ```
 
 完整测试命令、技术方案和当前实现见[开发说明](docs/DEVELOPMENT.md)，安装包细节见[安装包](docs/INSTALLER.md)。

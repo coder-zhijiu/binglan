@@ -55,6 +55,9 @@ public sealed class SettingsMaintenance
     public Func<NewWidgetKind, WidgetWindowBase?> AddWidget { get; init; } = _ => null;
     public Action ExitApp { get; init; } = () => { };
 
+    /// <summary>Update checking and installing, or null where it is not offered.</summary>
+    public BingLan.App.Services.AppUpdater? Updater { get; init; }
+
     public Func<int> ImportTaskbarPins { get; init; } = () => 0;
 
     /// <summary>Writes the shared card material from <see cref="Style"/> to every card.</summary>

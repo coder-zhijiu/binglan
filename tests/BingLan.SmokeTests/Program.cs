@@ -38,6 +38,11 @@ Run("超大预览图被拒绝", ThemePreviewTests.TestOversizedPreviewIsRejected
 Run("带预览图的导出仍不含个人信息", ThemePreviewTests.TestExportWithPreviewStillHasNoPersonalData);
 Run("清爽桌面只改图标位", CleanDesktopTests.TestOnlyTheIconBitChanges);
 Run("清爽桌面隐藏与恢复计划", CleanDesktopTests.TestHideAndRestorePlans);
+Run("更新版本号与每日检查节奏", UpdateServiceTests.TestVersionAndSchedule);
+Run("更新发布信息解析与安全过滤", UpdateServiceTests.TestReleaseParsing);
+Run("检查更新结果与请求内容（离线桩）", UpdateServiceTests.TestCheck);
+Run("更新安装包大小与 SHA-256 校验", UpdateServiceTests.TestVerifiedDownload);
+Run("更新设置 v20 迁移与保存", UpdateServiceTests.TestStateMigration);
 Run("清爽桌面识别用户接管", CleanDesktopTests.TestTakeoverDetection);
 Run("清爽桌面检查点往返与拒绝", CleanDesktopTests.TestCheckpointRoundTripAndRejection);
 Run("清爽桌面设置迁移", CleanDesktopTests.TestSettingMigration);
