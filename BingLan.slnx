@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/BingLan.Core/BingLan.Core.csproj" />
+    <Project Path="src/BingLan.App/BingLan.App.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/BingLan.SmokeTests/BingLan.SmokeTests.csproj" />
+    <Project Path="tests/BingLan.UiSmokeTests/BingLan.UiSmokeTests.csproj" />
+    <Project Path="tests/BingLan.NoteTests/BingLan.NoteTests.csproj" />
+    <Project Path="tests/BingLan.InformationTests/BingLan.InformationTests.csproj" />
+    <Project Path="tests/BingLan.DockTests/BingLan.DockTests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,56 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <FontFamily x:Key="IceBlue.FontFamily">Segoe UI, Microsoft YaHei UI</FontFamily>
+    <SolidColorBrush x:Key="IceBlue.BodyBrush" Color="#52FFFFFF"/>
+    <SolidColorBrush x:Key="IceBlue.TitleBrush" Color="#F7A0B4E1"/>
+    <SolidColorBrush x:Key="IceBlue.BorderBrush" Color="#D9FFFFFF"/>
+    <SolidColorBrush x:Key="IceBlue.PrimaryTextBrush" Color="#E6000000"/>
+    <SolidColorBrush x:Key="IceBlue.SecondaryTextBrush" Color="#A6000000"/>
+    <SolidColorBrush x:Key="IceBlue.ItemBrush" Color="#72FFFFFF"/>
+    <SolidColorBrush x:Key="IceBlue.ItemCompletedBrush" Color="#44FFFFFF"/>
+
+    <Style x:Key="IceBlue.IconButton" TargetType="Button">
+        <Setter Property="Width" Value="32"/>
+        <Setter Property="Height" Value="32"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Foreground" Value="{StaticResource IceBlue.PrimaryTextBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Chrome"
+                            CornerRadius="7"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="Transparent"
+                            BorderThickness="0">
+                        <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Chrome" Property="Background" Value="#28FFFFFF"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Chrome" Property="Background" Value="#48FFFFFF"/>
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Chrome" Property="BorderBrush" Value="#990B57D0"/>
+                            <Setter TargetName="Chrome" Property="BorderThickness" Value="1"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="IceBlue.TitleText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource IceBlue.FontFamily}"/>
+        <Setter Property="FontSize" Value="19"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontStyle" Value="Italic"/>
+        <Setter Property="Foreground" Value="{StaticResource IceBlue.PrimaryTextBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+</ResourceDictionary>

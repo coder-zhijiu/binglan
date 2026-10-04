@@ -1,0 +1,200 @@
+<host:WidgetWindow x:Class="BingLan.WidgetHost.Sample.Windows.TodoDemoWindow"
+                   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                   xmlns:host="clr-namespace:BingLan.WidgetHost.Wpf;assembly=BingLan.WidgetHost.Wpf"
+                   Title="待办透明宿主原型"
+                   Width="353"
+                   Height="420"
+                    MinWidth="280"
+                    MinHeight="260"
+                    BackdropPreference="PoggetLike"
+                    WidgetCornerRadius="15.5"
+                    FontFamily="{StaticResource IceBlue.FontFamily}">
+    <Grid Background="{StaticResource IceBlue.BodyBrush}"
+          ClipToBounds="True">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="70"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="40"/>
+            </Grid.RowDefinitions>
+
+            <Border Height="50"
+                    Margin="10"
+                    VerticalAlignment="Top"
+                    CornerRadius="9.2"
+                    Background="{StaticResource IceBlue.TitleBrush}">
+                <Grid Margin="18,0,10,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="34"/>
+                        <ColumnDefinition Width="34"/>
+                        <ColumnDefinition Width="30"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox x:Name="TitleEditor"
+                             VerticalAlignment="Center"
+                             Padding="0"
+                             Foreground="{StaticResource IceBlue.PrimaryTextBrush}"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             FontFamily="{StaticResource IceBlue.FontFamily}"
+                             FontSize="19"
+                             FontWeight="Bold"
+                             FontStyle="Italic"
+                             Text="今日待办"
+                             KeyDown="TitleEditor_KeyDown"/>
+
+                    <Button Grid.Column="1"
+                            Style="{StaticResource IceBlue.IconButton}"
+                            ToolTip="新增待办"
+                            Click="AddButton_Click">
+                        <TextBlock FontFamily="Segoe Fluent Icons"
+                                   FontSize="17"
+                                   Text="&#xE710;"/>
+                    </Button>
+
+                    <Button x:Name="MoreButton"
+                             Grid.Column="2"
+                             Style="{StaticResource IceBlue.IconButton}"
+                            DataContext="{Binding RelativeSource={RelativeSource AncestorType={x:Type host:WidgetWindow}}}"
+                             ToolTip="设置"
+                             Click="MoreButton_Click">
+                        <TextBlock FontFamily="Segoe Fluent Icons"
+                                   FontSize="17"
+                                   Text="&#xE712;"/>
+                        <Button.ContextMenu>
+                            <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                <MenuItem x:Name="LockMenuItem"
+                                          Header="锁定位置与大小"
+                                          IsCheckable="True"
+                                          Click="LockMenuItem_Click"/>
+                                <MenuItem x:Name="HideCompletedMenuItem"
+                                          Header="隐藏已完成"
+                                          IsCheckable="True"
+                                          Click="HideCompletedMenuItem_Click"/>
+                                <Separator/>
+                                <MenuItem x:Name="PoggetBackdropMenuItem"
+                                          Header="Pogget 动态模糊"
+                                          IsCheckable="True"
+                                          IsChecked="True"
+                                          Click="PoggetBackdropMenuItem_Click"/>
+                                <MenuItem x:Name="AutoBackdropMenuItem"
+                                          Header="Windows 系统磨砂"
+                                          IsCheckable="True"
+                                          Click="AutoBackdropMenuItem_Click"/>
+                                <MenuItem x:Name="SolidBackdropMenuItem"
+                                          Header="纯色回退"
+                                          IsCheckable="True"
+                                          Click="SolidBackdropMenuItem_Click"/>
+                                <Separator/>
+                                <MenuItem StaysOpenOnClick="True">
+                                    <MenuItem.Header>
+                                        <StackPanel Width="190">
+                                            <TextBlock Margin="2,0,2,5"
+                                                       Text="{Binding WidgetCornerRadius, StringFormat='窗口圆角：{0:0.#} DIP'}"/>
+                                            <Slider x:Name="CornerRadiusSlider"
+                                                    Minimum="0"
+                                                    Maximum="32"
+                                                    TickFrequency="1"
+                                                    IsSnapToTickEnabled="True"
+                                                    Value="{Binding WidgetCornerRadius, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        </StackPanel>
+                                    </MenuItem.Header>
+                                </MenuItem>
+                                <Separator/>
+                                <MenuItem Header="关闭组件"
+                                          Click="CloseMenuItem_Click"/>
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
+
+                    <Button Grid.Column="3"
+                            Style="{StaticResource IceBlue.IconButton}"
+                            Width="28"
+                            ToolTip="折叠"
+                            Click="CollapseButton_Click">
+                        <TextBlock x:Name="CollapseGlyph"
+                                   FontFamily="Segoe Fluent Icons"
+                                   FontSize="17"
+                                   FontWeight="SemiBold"
+                                   Text="&#xE70E;"/>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <ScrollViewer Grid.Row="1"
+                          Margin="10,4,6,2"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <ItemsControl x:Name="TodoList">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Margin="2,3,6,3"
+                                    Padding="9,8"
+                                    CornerRadius="9"
+                                    Background="{StaticResource IceBlue.ItemBrush}"
+                                    host:WidgetHitTest.IsInteractive="True">
+                                <Border.ContextMenu>
+                                    <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                        <MenuItem Header="上移" Click="MoveUpMenuItem_Click"/>
+                                        <MenuItem Header="下移" Click="MoveDownMenuItem_Click"/>
+                                        <Separator/>
+                                        <MenuItem Header="删除" Click="DeleteMenuItem_Click"/>
+                                    </ContextMenu>
+                                </Border.ContextMenu>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="28"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <CheckBox VerticalAlignment="Center"
+                                              IsChecked="{Binding IsCompleted, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              Checked="CompletionChanged"
+                                              Unchecked="CompletionChanged"/>
+
+                                    <TextBox Grid.Column="1"
+                                             MinHeight="24"
+                                             Padding="0"
+                                             VerticalContentAlignment="Center"
+                                             Background="Transparent"
+                                             BorderThickness="0"
+                                             FontSize="14"
+                                             TextWrapping="Wrap"
+                                             Text="{Binding Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             KeyDown="TodoText_KeyDown">
+                                        <TextBox.Style>
+                                            <Style TargetType="TextBox">
+                                                <Setter Property="Foreground" Value="#D9202A3A"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                                        <Setter Property="Foreground" Value="#70808A96"/>
+                                                        <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBox.Style>
+                                    </TextBox>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <TextBlock x:Name="SummaryText"
+                       Grid.Row="2"
+                       Margin="18,0,18,8"
+                       VerticalAlignment="Center"
+                       Foreground="{StaticResource IceBlue.SecondaryTextBrush}"
+                       FontSize="12"/>
+        </Grid>
+
+        <Border CornerRadius="{Binding SurfaceCornerRadius, RelativeSource={RelativeSource AncestorType={x:Type host:WidgetWindow}}}"
+                Background="Transparent"
+                BorderBrush="{StaticResource IceBlue.BorderBrush}"
+                BorderThickness="1.2"
+                IsHitTestVisible="False"/>
+    </Grid>
+</host:WidgetWindow>

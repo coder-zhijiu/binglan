@@ -1,0 +1,34 @@
+<Window x:Class="BingLan.DockSpike.DockSpikeWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="冰蓝 Dock 实验"
+        Width="180"
+        Height="104"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        ShowActivated="False"
+        Topmost="False"
+        AllowsTransparency="True"
+        Background="Transparent">
+    <Border x:Name="DockSurface"
+            Padding="14,9"
+            Background="#D6EAF5FC"
+            BorderBrush="#BFFFFFFF"
+            BorderThickness="1"
+            CornerRadius="18"
+            MouseRightButtonUp="OnDockSurfaceRightClick">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="18"
+                              ShadowDepth="2"
+                              Direction="270"
+                              Color="#1B2E46"
+                              Opacity="0.28"/>
+        </Border.Effect>
+        <ScrollViewer x:Name="GroupScroller"
+                      HorizontalScrollBarVisibility="Hidden"
+                      VerticalScrollBarVisibility="Disabled">
+            <WrapPanel x:Name="GroupPanel" Orientation="Horizontal"/>
+        </ScrollViewer>
+    </Border>
+</Window>

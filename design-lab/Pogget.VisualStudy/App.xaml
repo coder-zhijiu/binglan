@@ -1,0 +1,10 @@
+<Application x:Class="Pogget.VisualStudy.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="VisualStudyWindow.xaml">
+    <Application.Resources>
+        <SolidColorBrush x:Key="PoggetTitleBrush" Color="#F7A0B4E1"/>
+        <SolidColorBrush x:Key="PoggetTextBrush" Color="#E6000000"/>
+        <SolidColorBrush x:Key="PoggetBodyBrush" Color="#52FFFFFF"/>
+    </Application.Resources>
+</Application>

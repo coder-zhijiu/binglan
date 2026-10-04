@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/spike/">
+    <Project Path="BingLan.DockSpike/BingLan.DockSpike.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="BingLan.DockSpike.Tests/BingLan.DockSpike.Tests.csproj" />
+  </Folder>
+</Solution>

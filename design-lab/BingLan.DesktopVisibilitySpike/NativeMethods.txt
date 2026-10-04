@@ -1,0 +1,10 @@
+CoCreateInstance
+IFolderView2
+IFolderViewOptions
+IShellBrowser
+IShellWindows
+IServiceProvider
+FOLDERFLAGS
+FOLDERVIEWOPTIONS
+ShellWindowFindWindowOptions
+ShellWindowTypeConstants

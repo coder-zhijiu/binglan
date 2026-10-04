@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/host/">
+    <Project Path="BingLan.WidgetHost.Wpf/BingLan.WidgetHost.Wpf.csproj" />
+  </Folder>
+  <Folder Name="/sample/">
+    <Project Path="BingLan.WidgetHost.Sample/BingLan.WidgetHost.Sample.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="BingLan.WidgetHost.Tests/BingLan.WidgetHost.Tests.csproj" />
+  </Folder>
+</Solution>

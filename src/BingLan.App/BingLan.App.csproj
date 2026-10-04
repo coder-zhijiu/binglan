@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>BingLan</AssemblyName>
+    <RootNamespace>BingLan.App</RootNamespace>
+    <ApplicationIcon>Assets\Brand\BingLan.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../BingLan.Core/BingLan.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\Brand\BingLan.ico" />
+    <Resource Include="Assets\Fonts\*.ttf" />
+    <None Include="Assets\Fonts\LICENSE-*.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\BingLan.Taskbar.Xaml\bin\Release\BingLan.Taskbar.Xaml.dll"
+             Link="BingLan.Taskbar.Xaml.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Target Name="BuildTaskbarXaml" BeforeTargets="PrepareForBuild"
+          Inputs="..\BingLan.Taskbar.Xaml\TaskbarXaml.cpp;..\BingLan.Taskbar.Xaml\build.ps1"
+          Outputs="..\BingLan.Taskbar.Xaml\bin\Release\BingLan.Taskbar.Xaml.dll">
+    <Exec Command="pwsh -NoProfile -File &quot;$(MSBuildProjectDirectory)\..\BingLan.Taskbar.Xaml\build.ps1&quot;" />
+  </Target>
+</Project>

@@ -1,0 +1,177 @@
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+
+namespace BingLan.Core.Models;
+
+public enum DesktopGroupCategory
+{
+    None,
+    Applications,
+    Folders,
+    Files
+}
+
+public sealed class WindowPlacement
+{
+    public double Left { get; set; } = 92;
+    public double Top { get; set; } = 92;
+    public double Width { get; set; } = 286;
+    public double Height { get; set; } = 336;
+}
+
+public sealed class WidgetAppearanceState
+{
+    private string _backgroundColor = WidgetAppearanceRules.DefaultBackgroundColor;
+    private double _backgroundOpacity = WidgetAppearanceRules.DefaultBackgroundOpacity;
+    private string _headerColor = WidgetAppearanceRules.DefaultHeaderColor;
+    private double _headerOpacity = WidgetAppearanceRules.DefaultHeaderOpacity;
+    private string _textColor = WidgetAppearanceRules.DefaultTextColor;
+    private string _titleFontFamily = WidgetAppearanceRules.DefaultTitleFontFamily;
+
+    public string BackgroundColor
+    {
+        get => _backgroundColor;
+        set => _backgroundColor = WidgetAppearanceRules.CoerceBackgroundColor(value);
+    }
+
+    public double BackgroundOpacity
+    {
+        get => _backgroundOpacity;
+        set => _backgroundOpacity = WidgetAppearanceRules.CoerceBackgroundOpacity(value);
+    }
+
+    public string HeaderColor
+    {
+        get => _headerColor;
+        set => _headerColor = WidgetAppearanceRules.CoerceHeaderColor(value);
+    }
+
+    public double HeaderOpacity
+    {
+        get => _headerOpacity;
+        set => _headerOpacity = WidgetAppearanceRules.CoerceHeaderOpacity(value);
+    }
+
+    public string TextColor
+    {
+        get => _textColor;
+        set => _textColor = WidgetAppearanceRules.CoerceTextColor(value);
+    }
+
+    public string TitleFontFamily
+    {
+        get => _titleFontFamily;
+        set => _titleFontFamily = WidgetAppearanceRules.CoerceTitleFontFamily(value);
+    }
+
+    public bool TitleFontBold { get; set; } = WidgetAppearanceRules.DefaultTitleFontBold;
+
+    public bool TitleFontItalic { get; set; } = WidgetAppearanceRules.DefaultTitleFontItalic;
+}
+
+public sealed class TodoWidgetState
+{
+    private double _cornerRadius = WidgetAppearanceRules.DefaultCornerRadius;
+
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Title { get; set; } = "今日待办";
+    public bool HideCompleted { get; set; }
+    public bool IsLocked { get; set; }
+    public WidgetAppearanceState Appearance { get; set; } = new();
+    public double CornerRadius
+    {
+        get => _cornerRadius;
+        set => _cornerRadius = WidgetAppearanceRules.CoerceCornerRadius(value);
+    }
+    public WindowPlacement Placement { get; set; } = new();
+    public List<TodoItemState> Items { get; set; } = [];
+}
+
+public sealed class TodoItemState : INotifyPropertyChanged
+{
+    private string _text = "";
+    private bool _isCompleted;
+
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Text
+    {
+        get => _text;
+        set
+        {
+            if (_text == value)
+            {
+                return;
+            }
+            _text = value;
+            OnPropertyChanged();
+        }
+    }
+    public bool IsCompleted
+    {
+        get => _isCompleted;
+        set
+        {
+            if (_isCompleted == value)
+            {
+                return;
+            }
+            _isCompleted = value;
+            OnPropertyChanged();
+        }
+    }
+    public int Order { get; set; }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    private void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+}
+
+public sealed class FileBoxState
+{
+    private double _cornerRadius = WidgetAppearanceRules.DefaultCornerRadius;
+
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Title { get; set; } = "桌面分组";
+    public DesktopGroupCategory DesktopCategory { get; set; }
+
+    /// <summary>
+    /// File types this box collects when the desktop is organised, as lower-case
+    /// extensions such as ".pdf". Empty with <see cref="CollectFolders"/> off means the
+    /// box takes no part in organising, unless it is one of the original category boxes.
+    /// </summary>
+    public List<string> CollectExtensions { get; set; } = [];
+
+    /// <summary>Whether this box collects desktop folders when the desktop is organised.</summary>
+    public bool CollectFolders { get; set; }
+
+    /// <summary>Whether the box is folded up to its title bar.</summary>
+    public bool IsCollapsed { get; set; }
+
+    /// <summary>The height to unfold to, in DIPs; 0 while it has never been folded.</summary>
+    public double ExpandedHeight { get; set; }
+
+    public bool IsLocked { get; set; }
+    public WidgetAppearanceState Appearance { get; set; } = new();
+    public double CornerRadius
+    {
+        get => _cornerRadius;
+        set => _cornerRadius = WidgetAppearanceRules.CoerceCornerRadius(value);
+    }
+    public WindowPlacement Placement { get; set; } = new()
+    {
+        Left = 432,
+        Top = 92,
+        Width = 366,
+        Height = 306
+    };
+    public List<FileMappingState> Items { get; set; } = [];
+}
+
+public sealed class FileMappingState
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Path { get; set; } = "";
+    public string? Title { get; set; }
+    public int Order { get; set; }
+}

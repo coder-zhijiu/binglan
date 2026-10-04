@@ -1,0 +1,89 @@
+<Window x:Class="BingLan.App.Windows.ThemeBindingWizardWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="绑定向导"
+        Width="520"
+        MaxHeight="600"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Background="{DynamicResource IcePageBrush}"
+        Foreground="{DynamicResource IceInkBrush}"
+        FontFamily="{StaticResource UiFont}">
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="MinHeight" Value="30"/>
+            <Setter Property="Padding" Value="12,5"/>
+            <Setter Property="Foreground" Value="{DynamicResource IceInkBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource SettingsButtonBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SettingsButtonBorderBrush}"/>
+        </Style>
+        <Style x:Key="SlotCardStyle" TargetType="Border">
+            <Setter Property="Padding" Value="14"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+            <Setter Property="Background" Value="{DynamicResource SettingsCardBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SettingsCardBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="11"/>
+        </Style>
+    </Window.Resources>
+
+    <StackPanel Margin="24">
+        <TextBlock FontSize="19" FontWeight="SemiBold" Text="绑定向导"/>
+        <TextBlock Margin="0,6,0,16"
+                   TextWrapping="Wrap"
+                   Foreground="{DynamicResource IceMutedInkBrush}"
+                   Text="以下语义槽位没有在本机自动匹配到应用，可以逐个选择本机应用，或跳过留待稍后在 Dock 页手动添加。"/>
+
+        <ScrollViewer MaxHeight="360" VerticalScrollBarVisibility="Auto">
+            <ItemsControl x:Name="SlotList" AutomationProperties.Name="缺失的应用绑定">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource SlotCardStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock FontWeight="SemiBold" Text="{Binding SlotName}"/>
+                                    <TextBlock Margin="0,2,0,0"
+                                               Foreground="{DynamicResource IceMutedInkBrush}"
+                                               Text="{Binding BindingName}"/>
+                                    <TextBlock Margin="0,4,0,0"
+                                               FontSize="12"
+                                               AutomationProperties.LiveSetting="Polite"
+                                               Foreground="{DynamicResource IceMutedInkBrush}"
+                                               Text="{Binding Status}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            Orientation="Horizontal">
+                                    <Button Content="选择应用…"
+                                            IsEnabled="{Binding IsPending}"
+                                            AutomationProperties.Name="{Binding ChooseAppAutomationName}"
+                                            Click="ChooseApp_Click"/>
+                                    <Button Margin="8,0,0,0"
+                                            Content="跳过"
+                                            IsEnabled="{Binding IsPending}"
+                                            AutomationProperties.Name="{Binding SkipAutomationName}"
+                                            Click="Skip_Click"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <StackPanel Margin="0,18,0,0" HorizontalAlignment="Right">
+            <Button Content="完成"
+                    IsDefault="True"
+                    Foreground="{DynamicResource IceActionTextBrush}"
+                    Background="{DynamicResource IceActionBrush}"
+                    BorderBrush="{DynamicResource IceActionBrush}"
+                    Click="Done_Click"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

@@ -1,0 +1,73 @@
+<Window x:Class="BingLan.App.Windows.ThemeImportDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="导入主题"
+        Width="480"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Background="{DynamicResource IcePageBrush}"
+        Foreground="{DynamicResource IceInkBrush}"
+        FontFamily="{StaticResource UiFont}">
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="MinHeight" Value="34"/>
+            <Setter Property="Padding" Value="14,6"/>
+            <Setter Property="Foreground" Value="{DynamicResource IceInkBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource SettingsButtonBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SettingsButtonBorderBrush}"/>
+        </Style>
+    </Window.Resources>
+
+    <StackPanel Margin="24">
+        <TextBlock FontSize="19" FontWeight="SemiBold" Text="导入主题"/>
+
+        <Border Margin="0,14,0,0"
+                Height="180"
+                Background="{DynamicResource SettingsPreviewBrush}"
+                BorderBrush="{DynamicResource SettingsPreviewBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="12"
+                ClipToBounds="True">
+            <Grid>
+                <Image x:Name="PreviewImage"
+                       AutomationProperties.Name="主题预览图"
+                       Stretch="Uniform"
+                       Visibility="Collapsed"/>
+                <TextBlock x:Name="NoPreviewText"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource IceMutedInkBrush}"
+                           Text="此主题包没有预览图"/>
+            </Grid>
+        </Border>
+
+        <TextBlock x:Name="ThemeNameText"
+                    Margin="0,16,0,0"
+                    FontSize="17"
+                    FontWeight="SemiBold"/>
+
+        <TextBlock Margin="0,14,0,4" FontWeight="SemiBold" Text="将改变"/>
+        <TextBlock TextWrapping="Wrap"
+                   Text="组件外观、显示开关、相对布局、整体风格（文字阴影、吸附间距、Dock 动效、任务栏透明或模糊）和 Dock 固定应用及其自定义图标；任务栏设为自动隐藏时保持不变。应用前会先备份当前设置。"/>
+
+        <TextBlock Margin="0,10,0,4" FontWeight="SemiBold" Text="保持不变"/>
+        <TextBlock TextWrapping="Wrap"
+                   Foreground="{DynamicResource IceMutedInkBrush}"
+                   Text="称呼、天气城市、待办、便签和文件映射。"/>
+
+        <StackPanel Margin="0,22,0,0" HorizontalAlignment="Right" Orientation="Horizontal">
+            <Button Content="取消"
+                    IsCancel="True"
+                    Click="Cancel_Click"/>
+            <Button Margin="10,0,0,0"
+                    Content="确认导入"
+                    IsDefault="True"
+                    Foreground="{DynamicResource IceActionTextBrush}"
+                    Background="{DynamicResource IceActionBrush}"
+                    BorderBrush="{DynamicResource IceActionBrush}"
+                    Click="Confirm_Click"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

@@ -1,0 +1,242 @@
+<Window x:Class="BingLan.App.Windows.OnboardingWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="欢迎使用冰蓝桌面"
+        Width="780"
+        Height="640"
+        MinWidth="720"
+        MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource IcePageBrush}"
+        Foreground="{DynamicResource IceInkBrush}"
+        FontFamily="{StaticResource UiFont}"
+        ShowInTaskbar="True">
+    <Window.Resources>
+        <Style TargetType="TextBox">
+            <Setter Property="Foreground" Value="{DynamicResource IceInkBrush}"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource IceInkBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource SettingsInputBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SettingsInputBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,7"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="MinHeight" Value="34"/>
+            <Setter Property="Padding" Value="14,6"/>
+            <Setter Property="Foreground" Value="{DynamicResource IceInkBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource SettingsButtonBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SettingsButtonBorderBrush}"/>
+        </Style>
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{DynamicResource IceInkBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource IceInkBrush}"/>
+        </Style>
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Padding" Value="18"/>
+            <Setter Property="Background" Value="{DynamicResource IcePanelBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SettingsPanelBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="14"/>
+        </Style>
+        <Style x:Key="NoteStyle" TargetType="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Foreground" Value="{DynamicResource IceMutedInkBrush}"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="28,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+            <TextBlock x:Name="StepText"
+                       AutomationProperties.LiveSetting="Polite"
+                       Foreground="{DynamicResource IceMutedInkBrush}"/>
+            <TextBlock x:Name="StepTitleText" Margin="0,4,0,0" FontSize="24" FontWeight="SemiBold"/>
+        </StackPanel>
+
+        <!-- 1. Desktop -->
+        <ScrollViewer x:Name="DesktopStep" Grid.Row="1" Margin="0,16,0,0" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Style="{StaticResource NoteStyle}"
+                           Text="选择一套布局作为起点，之后可在设置中心随时更换。也可以导入别人分享的主题包。"/>
+                <UniformGrid Margin="0,14,0,0" Columns="3">
+                    <RadioButton x:Name="QuietPresetRadio"
+                                 AutomationProperties.Name="静谧信息层布局"
+                                 Margin="0,0,8,0"
+                                 GroupName="Preset"
+                                 IsChecked="True">
+                        <StackPanel>
+                            <Border Height="100" CornerRadius="10" ClipToBounds="True">
+                                <Image x:Name="QuietPresetThumb" Stretch="Uniform"/>
+                            </Border>
+                            <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontWeight="SemiBold" Text="静谧信息层"/>
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton x:Name="GlacierPresetRadio"
+                                 AutomationProperties.Name="冰川工作台布局"
+                                 Margin="4,0"
+                                 GroupName="Preset">
+                        <StackPanel>
+                            <Border Height="100" CornerRadius="10" ClipToBounds="True">
+                                <Image x:Name="GlacierPresetThumb" Stretch="Uniform"/>
+                            </Border>
+                            <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontWeight="SemiBold" Text="冰川工作台"/>
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton x:Name="ApplePresetRadio"
+                                 AutomationProperties.Name="通透苹果桌面布局"
+                                 Margin="8,0,0,0"
+                                 GroupName="Preset">
+                        <StackPanel>
+                            <Border Height="100" CornerRadius="10" ClipToBounds="True">
+                                <Image x:Name="ApplePresetThumb" Stretch="Uniform"/>
+                            </Border>
+                            <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" FontWeight="SemiBold" Text="通透苹果桌面"/>
+                        </StackPanel>
+                    </RadioButton>
+                </UniformGrid>
+                <Border Margin="0,16,0,0" Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock FontWeight="SemiBold" Text="显示器"/>
+                        <ComboBox x:Name="MonitorSelector"
+                                  Margin="0,6,0,0"
+                                  Height="34"
+                                  MaxWidth="520"
+                                  HorizontalAlignment="Left"
+                                  AutomationProperties.Name="冰蓝 Dock 所在显示器"
+                                  DisplayMemberPath="Label"
+                                  SelectionChanged="MonitorSelector_SelectionChanged"/>
+                        <TextBlock x:Name="DisplaySummaryText" Margin="0,6,0,0" Style="{StaticResource NoteStyle}"/>
+                    </StackPanel>
+                </Border>
+                <StackPanel Margin="0,16,0,0" Orientation="Horizontal">
+                    <Button Content="导入主题包…" Click="ImportTheme_Click"/>
+                    <TextBlock x:Name="ThemeStatusText"
+                               Margin="12,0,0,0"
+                               VerticalAlignment="Center"
+                               TextWrapping="Wrap"
+                               MaxWidth="520"
+                               Foreground="{DynamicResource IceMutedInkBrush}"/>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- 2. Personal -->
+        <ScrollViewer x:Name="PersonalStep" Grid.Row="1" Margin="0,16,0,0" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock FontWeight="SemiBold" Text="怎么称呼你"/>
+                <TextBox x:Name="GreetingNameEditor"
+                         Margin="0,6,0,0"
+                         Width="320"
+                         HorizontalAlignment="Left"
+                         AutomationProperties.Name="问候称呼"/>
+                <TextBlock Margin="0,4,0,0" Style="{StaticResource NoteStyle}" Text="用于桌面问候语，只保存在本机，可以留空。"/>
+
+                <TextBlock Margin="0,20,0,0" FontWeight="SemiBold" Text="天气城市"/>
+                <StackPanel Margin="0,6,0,0" Orientation="Horizontal">
+                    <TextBox x:Name="CityQueryEditor"
+                             Width="320"
+                             AutomationProperties.Name="城市名称"
+                             KeyDown="CityQueryEditor_KeyDown"/>
+                    <Button x:Name="SearchCityButton" Margin="8,0,0,0" Content="搜索" Click="SearchCity_Click"/>
+                </StackPanel>
+                <ListBox x:Name="CityResultsList"
+                         Margin="0,8,0,0"
+                         MaxHeight="180"
+                         DisplayMemberPath="DisplayName"
+                         AutomationProperties.Name="城市搜索结果"
+                         Background="{DynamicResource SettingsInputBrush}"
+                         BorderBrush="{DynamicResource SettingsInputBorderBrush}"/>
+                <TextBlock x:Name="CitySearchStatusText" Margin="0,6,0,0" Style="{StaticResource NoteStyle}"/>
+                <TextBlock Margin="0,8,0,0"
+                           Style="{StaticResource NoteStyle}"
+                           Text="天气需要联网：只有点击搜索时才发送城市关键词，选定后只把城市名和坐标保存在本机。不使用 IP、GPS 或 Wi-Fi 定位。可以跳过，之后在设置中心填写。"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- 3. Entries -->
+        <ScrollViewer x:Name="EntriesStep" Grid.Row="1" Margin="0,16,0,0" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Style="{StaticResource NoteStyle}"
+                           Text="勾选的应用会固定到冰蓝 Dock；已自动匹配本机安装的应用，也可以改选。"/>
+                <TextBlock x:Name="EntriesStatusText" Margin="0,10,0,0" Style="{StaticResource NoteStyle}"/>
+                <StackPanel x:Name="EntryRows" Margin="0,8,0,0"/>
+                <CheckBox x:Name="DownloadsCheckBox"
+                          Margin="0,16,0,0"
+                          IsChecked="True"
+                          Content="在桌面分组盒中添加“下载”入口"/>
+                <StackPanel Margin="22,6,0,0" Orientation="Horizontal">
+                    <TextBlock x:Name="DownloadsFolderText"
+                               MaxWidth="440"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               Style="{StaticResource NoteStyle}"/>
+                    <Button x:Name="ChooseDownloadsButton"
+                            Margin="12,0,0,0"
+                            Content="选择文件夹…"
+                            Click="ChooseDownloads_Click"/>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- 4. Mode -->
+        <ScrollViewer x:Name="ModeStep" Grid.Row="1" Margin="0,16,0,0" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <RadioButton x:Name="NativeModeRadio" GroupName="Mode" IsChecked="True">
+                    <StackPanel>
+                        <TextBlock FontWeight="SemiBold" Text="Windows 原生"/>
+                        <TextBlock Style="{StaticResource NoteStyle}" Text="不显示 Dock，任务栏保持系统默认。"/>
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton x:Name="HybridModeRadio" Margin="0,12,0,0" GroupName="Mode">
+                    <StackPanel>
+                        <TextBlock FontWeight="SemiBold" Text="冰蓝混合"/>
+                        <TextBlock Style="{StaticResource NoteStyle}" Text="显示冰蓝 Dock，任务栏透明。"/>
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton x:Name="AppleModeRadio" Margin="0,12,0,0" GroupName="Mode">
+                    <StackPanel>
+                        <TextBlock FontWeight="SemiBold" Text="苹果式"/>
+                        <TextBlock Style="{StaticResource NoteStyle}" Text="显示冰蓝 Dock，任务栏自动隐藏。"/>
+                    </StackPanel>
+                </RadioButton>
+                <TextBlock Margin="0,8,0,0"
+                           Style="{StaticResource NoteStyle}"
+                           Text="任务栏只改变外观和显示方式，开始菜单、托盘和通知不变；退出冰蓝桌面时恢复系统默认。"/>
+                <TextBlock x:Name="DockNoteText"
+                           Margin="0,14,0,0"
+                           Visibility="Collapsed"
+                           Style="{StaticResource NoteStyle}"/>
+                <CheckBox x:Name="StartupCheckBox"
+                          Margin="0,20,0,0"
+                          Content="登录 Windows 时启动冰蓝桌面"/>
+                <CheckBox x:Name="OpenSettingsCheckBox"
+                          Margin="0,10,0,0"
+                          Content="进入桌面后打开设置中心"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Grid Grid.Row="2" Margin="0,16,0,0">
+            <Button x:Name="SkipButton" HorizontalAlignment="Left" Content="跳过引导" Click="Skip_Click"/>
+            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                <Button x:Name="BackButton" Content="上一步" Click="Back_Click"/>
+                <Button x:Name="NextButton"
+                        Margin="8,0,0,0"
+                        MinWidth="110"
+                        Foreground="{DynamicResource IceActionTextBrush}"
+                        Background="{DynamicResource IceActionBrush}"
+                        BorderBrush="{DynamicResource IceActionBrush}"
+                        Content="下一步"
+                        Click="Next_Click"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
