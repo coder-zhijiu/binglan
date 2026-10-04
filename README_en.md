@@ -1,0 +1,59 @@
+<div align="center">
+
+<img src="src/BingLan.App/Assets/Brand/binglan-icon.png" width="112" alt="BingLan icon">
+
+# BingLan Desktop
+
+[简体中文](README.md) · [Download](https://github.com/keros68/binglan/releases/latest) · [Get started](#get-started) · [User guide (Chinese)](docs/USER-GUIDE.md) · [Development (Chinese)](docs/DEVELOPMENT.md) · [License](#license)
+
+**Manage desktop info cards, to-dos, file groups, a dock, and the taskbar on Windows 11 from one app.**
+
+</div>
+
+BingLan Desktop (冰蓝桌面) is a Windows 11 desktop companion built with .NET 10 and WPF. It replaces separate tools for desktop info widgets, file organizing, a dock, and taskbar styling. All modules share one process, one tray icon, and one settings window.
+
+<p align="center">
+  <img src="docs/images/desktop.png" alt="BingLan time, greeting, weather, performance, to-do, note, file group, and quick-launch cards">
+</p>
+
+## Features
+
+- **Desktop info**: time and date, greeting, weather, and CPU / RAM / network are separate cards, each with its own font, size, colour, and position. A thin line that fades at both ends can be shown under the time.
+- **To-dos and notes**: a to-do card starts with three empty items; ticking, adding, and deleting are separate actions. Notes hold plain multi-line text.
+- **File groups**: map desktop files, folders, and apps into boxes, sort them by type automatically, and fold a box down to its title bar. Boxes record paths only; original files stay where they are.
+- **Quick launch**: a row of line icons for This PC, Desktop, Documents, Downloads, Pictures, and the Recycle Bin by default. Icons, names, and targets are customizable; a target can be a folder, program, or file.
+- **Dock**: pinned and running apps in separate sections, with a badge on apps that need attention. Drag a program or shortcut onto the dock to pin it; colour, opacity, and icon size are adjustable.
+- **Taskbar**: keep the default or auto-hide, optionally revealed only at the bottom-left and bottom-right corners.
+- **Look**: light glass, dark glass, or no backing; custom text and accent colours; bundled open-licence fonts. Fonts and colours can be imported, read-only, from a Rainmeter skin. Themes can be exported and shared without names, cities, to-dos, or file paths.
+
+The interface is in Simplified Chinese.
+
+## Get started
+
+1. Open [Releases](https://github.com/keros68/binglan/releases/latest) and download `BingLan-Setup-*.exe`.
+2. Run the installer. It installs for the current user, needs no administrator rights, and includes the .NET runtime. The installer is not code-signed yet, so Windows asks for confirmation on first run.
+3. On first launch, pick a layout and your common apps. Settings open from the tray icon or any card's right-click menu.
+
+Requires Windows 11 x64. See the [user guide (Chinese)](docs/USER-GUIDE.md) for details.
+
+## Privacy
+
+- No telemetry. To-dos, notes, file paths, app lists, and window titles stay on this computer under `%LOCALAPPDATA%\BingLanWidgets`.
+- The weather city is chosen by searching by hand. Requests send only the search text and the chosen city's coordinates; IP address and device location are not used.
+- Adding, sorting, or removing items in a file group changes only the mapping. Original files are never moved, renamed, or deleted.
+
+## Build from source
+
+Requires the .NET 10 SDK and PowerShell 7. Building the installer also needs Inno Setup 6 and the Visual Studio 2022 C++ build tools.
+
+```powershell
+dotnet build .\BingLan.slnx -c Release
+dotnet run --project .\tests\BingLan.SmokeTests\BingLan.SmokeTests.csproj -c Release
+pwsh -NoProfile -File .\installer\build.ps1 -Version 0.2.0
+```
+
+Full test commands, the technical design, and the current implementation are in the [development notes (Chinese)](docs/DEVELOPMENT.md); installer details are in [docs/INSTALLER.md](docs/INSTALLER.md).
+
+## License
+
+[PolyForm Noncommercial 1.0.0](LICENSE), Copyright © 2026 keros68. Free for personal learning, research, and other noncommercial use; commercial use requires a separate licence. Bundled fonts and other third-party content are listed in [NOTICE](NOTICE.md).
