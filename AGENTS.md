@@ -1,6 +1,6 @@
 # AGENTS.md
 
-本文件是冰蓝桌面仓库的长期开发约束，适用于根目录及所有子目录。产品范围以 `docs/MVP-PRODUCT-DESIGN.md` 为准；`README.md` 描述当前已实现能力。
+本文件是冰蓝桌面仓库的长期开发约束，适用于根目录及所有子目录。产品范围以 `docs/MVP-PRODUCT-DESIGN.md` 为准；`docs/DEVELOPMENT.md` 描述当前已实现能力，`README.md` 是面向用户的项目首页。
 
 ## 1. 开始任务前
 
@@ -8,7 +8,7 @@
 
 1. 阅读本文件。
 2. 阅读 `docs/MVP-PRODUCT-DESIGN.md`，确认需求是否属于 MVP。
-3. 阅读 `README.md`，区分“目标产品”和“当前实现”。
+3. 阅读 `docs/DEVELOPMENT.md`，区分“目标产品”和“当前实现”。
 4. 只检查与任务直接相关的源码、测试和 `design-lab` 资料。
 5. 修改前说明会影响结果的假设；如果两种解释会导致明显不同的产品行为，再向用户确认。
 
@@ -146,6 +146,6 @@ dotnet run --project .\tests\BingLan.UiSmokeTests\BingLan.UiSmokeTests.csproj -c
 - 用户数据、原文件和任务栏恢复边界未被破坏。
 - 相关测试通过，或明确说明无法验证的原因和剩余风险。
 - 新增的用户可见设置有合理默认值和恢复方式。
-- 如果改变了产品范围、架构边界、数据格式或关键交互，同步更新产品文档或 README。
+- 如果改变了产品范围、架构边界、数据格式或关键交互，同步更新产品文档、`docs/DEVELOPMENT.md`，用户可见的功能变化同时更新 `README.md`。
 
 报告结果时先说用户可见的结果，再简要列出验证和仍未验证的内容。

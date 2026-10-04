@@ -1,0 +1,24 @@
+# 第三方内容
+
+冰蓝桌面的源码由 keros68 编写，按 [PolyForm Noncommercial 1.0.0](LICENSE) 授权。以下第三方内容随程序或仓库分发，各自适用原许可证，不受上述许可证约束。
+
+## 内置字体
+
+字体文件和许可证原文位于 `src/BingLan.App/Assets/Fonts/`，安装后许可证复制到程序目录的 `字体许可` 文件夹。字体只从程序资源加载，不安装到 Windows。
+
+| 字体 | 版权 | 许可证 |
+| --- | --- | --- |
+| 得意黑 Smiley Sans | Copyright (c) 2022–2024 atelierAnchor | SIL Open Font License 1.1 |
+| Jost | Copyright 2020 The Jost Project Authors | SIL Open Font License 1.1 |
+| Quicksand | Copyright 2011 The Quicksand Project Authors | SIL Open Font License 1.1 |
+| Abril Fatface | Copyright (c) 2011 TypeTogether | SIL Open Font License 1.1 |
+
+## 构建工具
+
+| 名称 | 用途 | 许可证 |
+| --- | --- | --- |
+| Microsoft.Windows.CsWin32 | `design-lab/BingLan.DesktopVisibilitySpike` 研究项目生成 Windows API 声明，只在编译时使用，不随程序发布 | MIT |
+
+## 参考过的项目
+
+产品设计参考过 Rainmeter、Pogget、Nexus Dock 和 TranslucentTB 等工具的行为，仓库中没有复制它们的代码或素材。“从 Rainmeter 皮肤导入外观”只在用户本机读取所选皮肤的文字设置，不随程序分发任何皮肤内容。
