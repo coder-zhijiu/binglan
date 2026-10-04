@@ -13,7 +13,7 @@
 BingLan Desktop (冰蓝桌面) is a Windows 11 desktop companion built with .NET 10 and WPF. It replaces separate tools for desktop info widgets, file organizing, a dock, and taskbar styling. All modules share one process, one tray icon, and one settings window.
 
 <p align="center">
-  <img src="docs/images/desktop.png" alt="BingLan time, greeting, weather, performance, to-do, note, file group, and quick-launch cards">
+  <img src="docs/images/desktop.jpg" alt="BingLan desktop: quick launch, folded file groups, centred clock, performance and weather, to-dos, greeting, and the dock">
 </p>
 
 ## Features
@@ -23,7 +23,8 @@ BingLan Desktop (冰蓝桌面) is a Windows 11 desktop companion built with .NET
 - **File groups**: map desktop files, folders, and apps into boxes, sort them by type automatically, and fold a box down to its title bar. Boxes record paths only; original files stay where they are.
 - **Quick launch**: a row of line icons for This PC, Desktop, Documents, Downloads, Pictures, and the Recycle Bin by default. Icons, names, and targets are customizable; a target can be a folder, program, or file.
 - **Dock**: pinned and running apps in separate sections, with a badge on apps that need attention. Drag a program or shortcut onto the dock to pin it; colour, opacity, and icon size are adjustable.
-- **Taskbar**: keep the default or auto-hide, optionally revealed only at the bottom-left and bottom-right corners.
+- **Taskbar**: default, transparent, blurred, or auto-hide; an auto-hidden taskbar can be revealed only at the bottom-left and bottom-right corners. The original state comes back on exit or after a crash.
+- **Resource use**: measured on one 1440p Windows 11 PC, BingLan uses about 56–58 MB of memory; Rainmeter, Pogget, Nexus Dock, and TranslucentTB, the tools it replaces, used about 77.5 MB together (Task Manager "Memory" column, single measurement; varies with the machine and number of cards).
 - **Look**: light glass, dark glass, or no backing; custom text and accent colours; bundled open-licence fonts. Fonts and colours can be imported, read-only, from a Rainmeter skin. Themes can be exported and shared without names, cities, to-dos, or file paths.
 
 The interface is in Simplified Chinese.
