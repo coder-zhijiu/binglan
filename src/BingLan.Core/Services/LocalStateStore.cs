@@ -410,6 +410,12 @@ public sealed class LocalStateStore
             // icons are new; all start at what showed before.
             state.SchemaVersion = 19;
         }
+
+        if (state.SchemaVersion < 20)
+        {
+            // The list of apps the dock leaves out is new and starts empty.
+            state.SchemaVersion = 20;
+        }
         state.QuickPlaces = QuickPlaceRules.Normalize(state.QuickPlaces);
         state.DismissedDesktopCategories = (state.DismissedDesktopCategories ?? [])
             .Where(category => category is not DesktopGroupCategory.None && Enum.IsDefined(category))

@@ -270,10 +270,11 @@ public partial class IceBlueDockWindow : Window
             {
                 _refreshQueued = false;
                 var pinned = _state.PinnedApps.ToArray();
+                var hidden = _state.HiddenApps.ToArray();
                 var snapshot = await Task.Run(_catalog.Capture);
                 var groups = WindowGrouping.OrderByFirstSeen(WindowGrouping.Group(snapshot), _groupOrder);
                 _groupOrder = groups.Select(group => group.Key).ToArray();
-                var items = DockItemComposer.Compose(pinned, groups);
+                var items = DockItemComposer.Compose(pinned, groups, hidden);
                 _attention.Retain(groups.SelectMany(group => group.Windows).Select(window => window.Handle));
                 foreach (var stale in _visuals.Keys.Except(items.Select(item => item.Key)).ToArray())
                 {
@@ -599,6 +600,13 @@ public partial class IceBlueDockWindow : Window
             menu.Items.Add(MenuItem("固定到 Dock", () =>
             {
                 if (DockPinRules.Pin(_state, pin))
+                {
+                    PinsChanged();
+                }
+            }));
+            menu.Items.Add(MenuItem("不在 Dock 中显示此应用", () =>
+            {
+                if (DockPinRules.Hide(_state, pin))
                 {
                     PinsChanged();
                 }

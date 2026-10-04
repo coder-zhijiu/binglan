@@ -33,10 +33,18 @@ public static class DockItemComposer
 {
     public static IReadOnlyList<DockItem> Compose(
         IReadOnlyList<DockPinnedApp> pinnedApps,
-        IReadOnlyList<WindowGroup> runningGroups)
+        IReadOnlyList<WindowGroup> runningGroups,
+        IReadOnlyList<DockPinnedApp>? hiddenApps = null)
     {
         ArgumentNullException.ThrowIfNull(pinnedApps);
         ArgumentNullException.ThrowIfNull(runningGroups);
+
+        if (hiddenApps is { Count: > 0 })
+        {
+            runningGroups = runningGroups
+                .Where(group => !hiddenApps.Any(hidden => DockPinRules.Matches(hidden, group)))
+                .ToArray();
+        }
 
         var items = new List<DockItem>();
         var matchedGroups = new HashSet<WindowGroup>();
@@ -174,7 +182,33 @@ public static class DockPinRules
 
         var position = Math.Clamp(index ?? state.PinnedApps.Count, 0, state.PinnedApps.Count);
         state.PinnedApps.Insert(position, app);
+        // Pinning an app asks to see it, so it no longer stays hidden.
+        state.HiddenApps.RemoveAll(hidden => string.Equals(
+            IdentityKey(hidden), key, StringComparison.OrdinalIgnoreCase));
         return true;
+    }
+
+    public static bool Hide(DockState state, DockPinnedApp app)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(app);
+
+        var key = IdentityKey(app);
+        if (key.Length == 0 || state.HiddenApps.Any(hidden => string.Equals(
+                IdentityKey(hidden), key, StringComparison.OrdinalIgnoreCase)))
+        {
+            return false;
+        }
+
+        state.HiddenApps.Add(app);
+        return true;
+    }
+
+    public static bool Unhide(DockState state, string identityKey)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        return state.HiddenApps.RemoveAll(hidden => string.Equals(
+            IdentityKey(hidden), identityKey, StringComparison.OrdinalIgnoreCase)) > 0;
     }
 
     public static bool Unpin(DockState state, string identityKey)
@@ -246,9 +280,15 @@ public static class DockPinRules
             ? null
             : state.MonitorDeviceName.Trim();
 
+        state.PinnedApps = NormalizeApps(state.PinnedApps);
+        state.HiddenApps = NormalizeApps(state.HiddenApps);
+    }
+
+    private static List<DockPinnedApp> NormalizeApps(List<DockPinnedApp>? apps)
+    {
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var normalized = new List<DockPinnedApp>();
-        foreach (var app in state.PinnedApps ?? [])
+        foreach (var app in apps ?? [])
         {
             if (app is null)
             {
@@ -277,6 +317,6 @@ public static class DockPinRules
             normalized.Add(app);
         }
 
-        state.PinnedApps = normalized;
+        return normalized;
     }
 }

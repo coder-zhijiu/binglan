@@ -32,6 +32,12 @@ public sealed class DockState
     public DockVisibilityMode VisibilityMode { get; set; } = DockVisibilityMode.ReserveWorkArea;
     public List<DockPinnedApp> PinnedApps { get; set; } = [];
 
+    /// <summary>
+    /// Apps whose running windows the dock leaves out, for windows that keep themselves
+    /// off the Windows taskbar in ways the dock cannot detect.
+    /// </summary>
+    public List<DockPinnedApp> HiddenApps { get; set; } = [];
+
     /// <summary>Icon edge length in DIPs; the dock grows with it.</summary>
     public double IconSize { get; set; } = DefaultIconSize;
 

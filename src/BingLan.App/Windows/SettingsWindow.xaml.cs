@@ -1412,6 +1412,7 @@ public partial class SettingsWindow : Window
             }
 
             RefreshDockPinnedList();
+            RefreshDockHiddenList();
         }
         finally
         {
@@ -1427,6 +1428,30 @@ public partial class SettingsWindow : Window
         DockPinnedList.ItemsSource = entries;
         DockPinnedList.SelectedItem = entries.FirstOrDefault(entry => ReferenceEquals(entry.App, selected));
         DockPinnedEmptyText.Visibility = entries.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void RefreshDockHiddenList()
+    {
+        var entries = _dockState.HiddenApps
+            .Select(app => new DockPinnedEntry(app))
+            .ToList();
+        DockHiddenList.ItemsSource = entries;
+        DockHiddenEmptyText.Visibility = entries.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void UnhideDockApp_Click(object sender, RoutedEventArgs e)
+    {
+        if (DockHiddenList.SelectedItem is not DockPinnedEntry entry)
+        {
+            DockStatusText.Text = "请先选择一个应用";
+            return;
+        }
+
+        if (DockPinRules.Unhide(_dockState, DockPinRules.IdentityKey(entry.App)))
+        {
+            RefreshDockHiddenList();
+            ApplyDockChange($"{entry.App.DisplayName} 会重新显示在 Dock 上");
+        }
     }
 
     private void DockSetting_Changed(object sender, RoutedEventArgs e)

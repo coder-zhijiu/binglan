@@ -17,6 +17,7 @@ public sealed class WeatherService
     private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(10);
 
     private readonly HttpClient _httpClient;
+    private readonly TimeProvider _time;
     private readonly SemaphoreSlim _refreshGate = new(1, 1);
     private int _consecutiveFailures;
     private DateTimeOffset? _nextRetryAt;
@@ -28,10 +29,14 @@ public sealed class WeatherService
     {
     }
 
-    public WeatherService(HttpMessageHandler? handler, TimeSpan? timeout = null)
+    public WeatherService(
+        HttpMessageHandler? handler,
+        TimeSpan? timeout = null,
+        TimeProvider? time = null)
     {
         _httpClient = handler is null ? new HttpClient() : new HttpClient(handler);
         _httpClient.Timeout = timeout ?? DefaultTimeout;
+        _time = time ?? TimeProvider.System;
     }
 
     public DateTimeOffset? NextRetryAt => _nextRetryAt;
@@ -95,7 +100,7 @@ public sealed class WeatherService
                 var json = await _httpClient
                     .GetStringAsync(BuildRequestUrl(latitude, longitude), cancellationToken)
                     .ConfigureAwait(false);
-                var snapshot = ParseForecast(json, trimmedCity, DateTimeOffset.Now);
+                var snapshot = ParseForecast(json, trimmedCity, _time.GetLocalNow());
                 _lastSuccess = snapshot;
                 _consecutiveFailures = 0;
                 _nextRetryAt = null;
@@ -106,7 +111,7 @@ public sealed class WeatherService
                 or JsonException)
             {
                 _consecutiveFailures++;
-                _nextRetryAt = DateTimeOffset.Now + ComputeRetryDelay(_consecutiveFailures);
+                _nextRetryAt = _time.GetLocalNow() + ComputeRetryDelay(_consecutiveFailures);
                 var message = exception switch
                 {
                     OperationCanceledException => "请求超时",

@@ -49,6 +49,7 @@ internal static class Program
         Run("裸文字表面白色默认与对比度阴影", WidgetWindowTests.NakedTextContrastDefaults, failures);
         Run("信息组件天气成功管线", WidgetWindowTests.WeatherPipelineUpdatesWindow, failures);
         Run("信息组件天气失败状态", WidgetWindowTests.WeatherFailureShowsStatus, failures);
+        Run("天气失败后按退避自动重试", WidgetWindowTests.WeatherRetriesAfterBackoffWithoutManualRefresh, failures);
         Run("信息组件城市设置入口", WidgetWindowTests.CitySettingsEntryRaisesRequest, failures);
         Run("切换城市忽略旧天气返回", WidgetWindowTests.CityChangeIgnoresStaleWeather, failures);
         Run("统一设置搜索选择与保存", SettingsWindowTests.SearchSelectAndSave, failures);

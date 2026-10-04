@@ -177,6 +177,60 @@ internal static class WidgetWindowTests
         }
     }
 
+    // 开机时网络未就绪导致首次失败：退避到期后的下一次采样应自动重试，不再等满成功刷新间隔。
+    public static void WeatherRetriesAfterBackoffWithoutManualRefresh()
+    {
+        var state = new InformationWidgetState
+        {
+            WeatherCity = "北京",
+            WeatherLatitude = 39.9,
+            WeatherLongitude = 116.4
+        };
+        var sampler = new FakeSamplingService();
+        var stub = new StubHttpMessageHandler
+        {
+            Behavior = (_, _) => Task.FromResult(
+                new HttpResponseMessage(HttpStatusCode.InternalServerError))
+        };
+        // 服务时钟落后十分钟，首次失败安排的重试时间在真实时间里已经过去。
+        var weather = new WeatherService(
+            stub,
+            time: new OffsetTimeProvider(TimeSpan.FromMinutes(-10)));
+        var window = new InformationWidgetWindow(state, sampler, weather);
+        ShowAndPump(window);
+        try
+        {
+            var status = Require<TextBlock>(window, "WeatherStatusText");
+            sampler.Emit(new PerformanceSnapshot(1d, 2d, 0d, 0d, DateTimeOffset.Now));
+            PumpUntil(
+                () => status.Text.Contains("刷新失败"),
+                TimeSpan.FromSeconds(5),
+                "首次失败写入窗口");
+
+            stub.Behavior = (_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(ForecastJson)
+            });
+            sampler.Emit(new PerformanceSnapshot(1d, 2d, 0d, 0d, DateTimeOffset.Now));
+            PumpUntil(
+                () => Require<TextBlock>(window, "WeatherTempText").Text.Contains("31.5"),
+                TimeSpan.FromSeconds(5),
+                "退避到期后自动重试成功");
+            AssertEqual(2, stub.CallCount, "失败一次后自动重试一次");
+        }
+        finally
+        {
+            window.CanClose = true;
+            window.Close();
+            Pump();
+        }
+    }
+
+    private sealed class OffsetTimeProvider(TimeSpan offset) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => base.GetUtcNow() + offset;
+    }
+
     public static void DefaultHeightShowsWeatherDetails()
     {
         var state = new InformationWidgetState

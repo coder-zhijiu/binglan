@@ -17,7 +17,7 @@ public partial class InformationWidgetWindow : WidgetWindowBase
     private readonly bool _usesLegacyAppearance;
     private readonly DesktopComponentKind? _componentKind;
     private DesktopExperienceState _experience;
-    private DateTimeOffset? _lastWeatherAttempt;
+    private DateTimeOffset? _lastWeatherSuccess;
     private bool _weatherInFlight;
 
     public InformationWidgetWindow(
@@ -340,7 +340,7 @@ public partial class InformationWidgetWindow : WidgetWindowBase
             return;
         }
 
-        _lastWeatherAttempt = null;
+        _lastWeatherSuccess = null;
         UpdateWeatherView(new WeatherSnapshot(
             State.HasWeatherLocation ? WeatherStatus.Failed : WeatherStatus.NoCity,
             State.WeatherCity.Trim(), null, null, null, null, "", false, null,
@@ -375,15 +375,15 @@ public partial class InformationWidgetWindow : WidgetWindowBase
                 : "上次刷新失败，稍后重试";
             return;
         }
+        // 只有成功后才等满刷新间隔；失败后的重试时机由服务的退避决定。
         if (!manual &&
-            _lastWeatherAttempt is { } last &&
+            _lastWeatherSuccess is { } last &&
             now - last < WeatherService.SuccessRefreshInterval)
         {
             return;
         }
 
         _weatherInFlight = true;
-        _lastWeatherAttempt = now;
         WeatherStatusText.Text = "更新中…";
         _ = RefreshWeatherAsync();
     }
@@ -425,6 +425,10 @@ public partial class InformationWidgetWindow : WidgetWindowBase
                 State.WeatherLongitude == requestedLongitude;
             if (locationIsCurrent)
             {
+                if (snapshot.Status == WeatherStatus.Fresh)
+                {
+                    _lastWeatherSuccess = DateTimeOffset.Now;
+                }
                 UpdateWeatherView(snapshot);
             }
             else

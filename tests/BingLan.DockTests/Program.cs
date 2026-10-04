@@ -39,6 +39,7 @@ Run("全屏优先于进行中的交互", TestDockAutoHideFullScreenOverridesInte
 Run("v12 状态迁移到 v13 应补齐 Dock 默认值", TestDockStateV12Migration);
 Run("Dock 状态保存与加载往返保留顺序与取值", TestDockStateRoundTrip);
 Run("重复固定项保存后应去重", TestDockStateDuplicatePinsDeduped);
+Run("隐藏的应用不出现在 Dock 且可恢复", TestDockHiddenApps);
 
 if (failures.Count > 0)
 {
@@ -559,6 +560,35 @@ static void TestExecutablePinPrefersPlainGroup()
     AssertEqual(1, onlyWebApp.Count, "没有普通浏览器窗口时仍可回退匹配同一可执行文件");
 }
 
+static void TestDockHiddenApps()
+{
+    var capsule = Window(1, 100, "M", null, @"C:\Users\me\AppData\Local\Metrik\metrik.exe");
+    var editor = Window(2, 200, "文档", null, @"C:\Apps\Editor.exe");
+    var groups = WindowGrouping.Group([capsule, editor]);
+    var state = new DockState();
+    var hidden = DockPinRules.CreateFromGroup(groups.First(group => group.Windows.Contains(capsule)), "Metrik")!;
+
+    Assert(DockPinRules.Hide(state, hidden), "首次隐藏应成功");
+    Assert(!DockPinRules.Hide(state, hidden), "重复隐藏应被忽略");
+    var items = DockItemComposer.Compose(state.PinnedApps, groups, state.HiddenApps);
+    AssertEqual(1, items.Count, "隐藏应用的窗口不应出现在 Dock");
+    AssertEqual(WindowGrouping.IdentityKey(editor), items[0].Key, "其他应用不受影响");
+
+    Assert(DockPinRules.Unhide(state, DockPinRules.IdentityKey(hidden)), "恢复显示应成功");
+    AssertEqual(2, DockItemComposer.Compose(state.PinnedApps, groups, state.HiddenApps).Count, "恢复后窗口重新出现");
+
+    DockPinRules.Hide(state, hidden);
+    Assert(DockPinRules.Pin(state, DockPinRules.CreateFromGroup(groups.First(group => group.Windows.Contains(capsule)), "Metrik")!),
+        "隐藏的应用仍可固定");
+    AssertEqual(0, state.HiddenApps.Count, "固定应用后不再隐藏");
+
+    state.HiddenApps.Add(new DockPinnedApp { ExecutablePath = @"C:\Apps\Tool.exe" });
+    state.HiddenApps.Add(new DockPinnedApp { ExecutablePath = @"c:\apps\TOOL.EXE" });
+    DockPinRules.Normalize(state);
+    AssertEqual(1, state.HiddenApps.Count, "规范化应去重隐藏列表");
+    AssertEqual("Tool", state.HiddenApps[0].DisplayName, "缺少名称时用可执行文件名");
+}
+
 static void TestDockPinCreateFromGroup()
 {
     var aumidWindow = Window(1, 10, "打包窗口", "Package.Sample!App", @"C:\Apps\Sample.exe");
@@ -847,6 +877,12 @@ static void TestDockStateRoundTrip()
             ExecutablePath = @"C:\Windows\System32\notepad.exe"
         });
 
+        state.Dock.HiddenApps.Add(new DockPinnedApp
+        {
+            DisplayName = "Metrik",
+            ExecutablePath = @"C:\Tools\metrik.exe"
+        });
+
         store.Save(state);
         var loaded = store.Load();
 
@@ -861,6 +897,8 @@ static void TestDockStateRoundTrip()
             Path.GetFullPath(@"C:\Windows\System32\notepad.exe"),
             loaded.Dock.PinnedApps[1].ExecutablePath,
             "可执行文件固定项未保留");
+        AssertEqual(1, loaded.Dock.HiddenApps.Count, "隐藏的应用未保留");
+        AssertEqual("Metrik", loaded.Dock.HiddenApps[0].DisplayName, "隐藏应用名称未保留");
     }
     finally
     {
