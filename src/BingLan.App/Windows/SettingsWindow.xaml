@@ -113,7 +113,7 @@
                         <Border Style="{StaticResource NavigationTileStyle}" Background="{DynamicResource SettingsIconPurpleBrush}">
                             <TextBlock Style="{StaticResource NavigationGlyphStyle}" Text="&#xE790;"/>
                         </Border>
-                        <TextBlock Text="外观"/>
+                        <TextBlock VerticalAlignment="Center" Text="外观"/>
                     </StackPanel>
                 </ListBoxItem>
                 <ListBoxItem Tag="Components" AutomationProperties.Name="桌面组件">
@@ -121,7 +121,7 @@
                         <Border Style="{StaticResource NavigationTileStyle}" Background="{DynamicResource SettingsIconOrangeBrush}">
                             <TextBlock Style="{StaticResource NavigationGlyphStyle}" Text="&#xE8A9;"/>
                         </Border>
-                        <TextBlock Text="桌面组件"/>
+                        <TextBlock VerticalAlignment="Center" Text="桌面组件"/>
                     </StackPanel>
                 </ListBoxItem>
                 <ListBoxItem Tag="Dock" AutomationProperties.Name="Dock">
@@ -129,7 +129,7 @@
                         <Border Style="{StaticResource NavigationTileStyle}" Background="{DynamicResource SettingsIconBlueBrush}">
                             <TextBlock Style="{StaticResource NavigationGlyphStyle}" Text="&#xE71D;"/>
                         </Border>
-                        <TextBlock Text="Dock"/>
+                        <TextBlock VerticalAlignment="Center" Text="Dock"/>
                     </StackPanel>
                 </ListBoxItem>
                 <ListBoxItem Tag="Taskbar" AutomationProperties.Name="任务栏">
@@ -137,7 +137,7 @@
                         <Border Style="{StaticResource NavigationTileStyle}" Background="{DynamicResource SettingsIconIndigoBrush}">
                             <TextBlock Style="{StaticResource NavigationGlyphStyle}" Text="&#xE7C4;"/>
                         </Border>
-                        <TextBlock Text="任务栏"/>
+                        <TextBlock VerticalAlignment="Center" Text="任务栏"/>
                     </StackPanel>
                 </ListBoxItem>
                 <ListBoxItem Tag="General" AutomationProperties.Name="通用">
@@ -145,7 +145,7 @@
                         <Border Style="{StaticResource NavigationTileStyle}" Background="{DynamicResource SettingsIconGrayBrush}">
                             <TextBlock Style="{StaticResource NavigationGlyphStyle}" Text="&#xE713;"/>
                         </Border>
-                        <TextBlock Text="通用"/>
+                        <TextBlock VerticalAlignment="Center" Text="通用"/>
                     </StackPanel>
                 </ListBoxItem>
             </ListBox>
@@ -1066,6 +1066,7 @@
                                 <local:SettingsRow Style="{StaticResource NestedSettingsRowStyle}" Header="颜色">
                                     <StackPanel Orientation="Horizontal">
                                         <Border x:Name="DockColorPreview"
+                                            VerticalAlignment="Center"
                                                 Width="32"
                                                 Height="32"
                                                 CornerRadius="6"
