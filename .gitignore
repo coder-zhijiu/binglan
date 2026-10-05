@@ -9,11 +9,8 @@ artifacts/
 upstream/
 
 # Kept on this machine only, not published: real-desktop screenshots, design
-# targets, multi-agent hand-offs that name local folders, and local tool state.
+# targets and local tool state.
 design-lab/audit/
 design-lab/targets/
-design-qa.md
-docs/handoffs/
-docs/PARALLEL-DEVELOPMENT-HANDOFF.md
 .claude/
 .dispatch/
