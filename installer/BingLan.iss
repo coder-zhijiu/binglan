@@ -2,7 +2,7 @@
 ; installer\obj\publish and passes the version with /DAppVersion=x.y.z.
 
 #ifndef AppVersion
-  #define AppVersion "0.2.2"
+  #define AppVersion "0.2.3"
 #endif
 
 [Setup]
@@ -25,6 +25,8 @@ SolidCompression=yes
 WizardStyle=modern
 SetupIconFile=..\src\BingLan.App\Assets\Brand\BingLan.ico
 UninstallDisplayIcon={app}\BingLan.exe
+; Tells Explorer to refresh its icon cache, so a new app icon shows after an update.
+ChangesAssociations=yes
 UninstallDisplayName=冰蓝桌面
 CloseApplications=force
 RestartApplications=no

@@ -41,6 +41,7 @@ internal static class NativeMethods
     internal const int DwmNcRenderingDisabled = 1;
     internal const int DwmColorNone = unchecked((int)0xFFFFFFFE);
     internal const int DwmSystemBackdropNone = 1;
+    internal const int DwmSystemBackdropMainWindow = 2;
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct Margins

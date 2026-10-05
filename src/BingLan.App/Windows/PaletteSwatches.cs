@@ -26,6 +26,9 @@ internal static class PaletteSwatches
             {
                 Width = Size,
                 Height = Size,
+                // A window-wide button minimum must not stretch the circle into an oval.
+                MinWidth = 0,
+                MinHeight = 0,
                 Margin = new Thickness(0, 0, 8, 0),
                 Padding = new Thickness(0),
                 Tag = palette.Key,

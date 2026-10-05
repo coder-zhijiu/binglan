@@ -36,6 +36,7 @@ Run("指针进入唤出区域应立即显示并重置计时器", TestDockAutoHid
 Run("指针悬停在 Dock 上应立即显示", TestDockAutoHidePointerOverDockShowsImmediately);
 Run("前台全屏应立即隐藏", TestDockAutoHideFullScreenHidesImmediately);
 Run("全屏优先于进行中的交互", TestDockAutoHideFullScreenOverridesInteraction);
+Run("资源管理器桌面、任务栏与账户提示窗口不算全屏应用", TestShellSurfaceWindows);
 Run("v12 状态迁移到 v13 应补齐 Dock 默认值", TestDockStateV12Migration);
 Run("Dock 状态保存与加载往返保留顺序与取值", TestDockStateRoundTrip);
 Run("重复固定项保存后应去重", TestDockStateDuplicatePinsDeduped);
@@ -819,6 +820,19 @@ static void TestDockAutoHideFullScreenOverridesInteraction()
         state.Update(new DockAutoHideInput(false, false, false, false, true), t0 + TimeSpan.FromSeconds(1)),
         "全屏结束后进行中的交互应让 Dock 重新显示");
     Assert(state.IsShown, "全屏结束后 Dock 应显示");
+}
+
+static void TestShellSurfaceWindows()
+{
+    foreach (var className in new[] { "Progman", "WorkerW", "Shell_TrayWnd", "Shell_SecondaryTrayWnd", "Shell_OOBEProxy" })
+    {
+        Assert(ShellSurfaceWindows.IsShellSurface(className), $"{className} 不应被当作全屏应用");
+    }
+
+    foreach (var className in new[] { "Chrome_WidgetWin_1", "CabinetWClass", "UnityWndClass", "" })
+    {
+        Assert(!ShellSurfaceWindows.IsShellSurface(className), $"{className} 应参与全屏判断");
+    }
 }
 
 static void TestDockStateV12Migration()

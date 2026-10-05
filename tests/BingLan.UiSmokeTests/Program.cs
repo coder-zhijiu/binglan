@@ -546,8 +546,8 @@ internal static class Program
                     "退出高对比度后的待办标题材质");
                 AssertBrushColor(
                     settings.Background,
-                    Color.FromRgb(238, 247, 253),
-                    "退出高对比度后的设置背景");
+                    settings.IsBackdropActive ? Colors.Transparent : Color.FromRgb(238, 247, 253),
+                    "退出高对比度后的设置背景（Mica 时透明，否则为冰蓝页面色）");
                 AssertResourceBrushColor(
                     "SettingsPanelBorderBrush",
                     Color.FromArgb(143, 255, 255, 255));
@@ -695,10 +695,10 @@ internal static class Program
             {
                 componentNavigationItem,
                 selectedComponentItem,
-                Require<TextBox>(window, "GreetingNameEditor"),
-                Require<CheckBox>(window, "Use24HourClockCheckBox"),
                 Require<CheckBox>(window, "SelectedComponentVisibleCheckBox"),
                 Require<CheckBox>(window, "SelectedComponentLockedCheckBox"),
+                Require<TextBox>(window, "GreetingNameEditor"),
+                Require<CheckBox>(window, "Use24HourClockCheckBox"),
                 Require<Slider>(window, "SelectedComponentFontScaleSlider"),
                 Require<TextBox>(window, "SelectedComponentTextColorEditor"),
                 Require<TextBox>(window, "SelectedComponentBackgroundColorEditor"),
@@ -1742,15 +1742,10 @@ internal static class Program
             navigation.SelectedIndex = 4;
             Pump();
             Assert(
-                Require<FrameworkElement>(settings, "PrivacyPage").IsVisible &&
+                Require<FrameworkElement>(settings, "GeneralPage").IsVisible &&
+                Require<ListBox>(settings, "BackupList").IsVisible &&
                 !Require<CheckBox>(settings, "StartupCheckBox").IsEnabled,
-                "隐私与启动页没有显示，或测试模式下仍允许修改开机启动");
-
-            navigation.SelectedIndex = 5;
-            Pump();
-            Assert(
-                Require<FrameworkElement>(settings, "BackupPage").IsVisible,
-                "备份与导入页没有显示");
+                "通用页没有显示备份，或测试模式下仍允许修改开机启动");
 
             var settingsCapturePath =
                 Environment.GetEnvironmentVariable("BINGLAN_UI_SETTINGS_CAPTURE");
@@ -2361,6 +2356,7 @@ internal static class Program
                 Require<CheckBox>(window, "DockEnabledCheckBox").IsChecked == true &&
                 Require<RadioButton>(window, "TaskbarSmartHideRadio").IsChecked == true,
                 "Dock 页与任务栏页应同步显示新设置");
+            Assert(Require<FrameworkElement>(window, "DockOptionsPanel").IsEnabled, "Dock 开启后其余 Dock 设置应可用");
 
             Require<RadioButton>(window, "TaskbarTransparentRadio").IsChecked = true;
             Pump();
@@ -2376,6 +2372,18 @@ internal static class Program
                 Require<RadioButton>(window, "AppleStyleModeRadio").IsChecked != true &&
                 Require<TextBlock>(window, "DesktopModeStatusText").Text.Contains("自定义", StringComparison.Ordinal),
                 "不属于三种模式的组合应显示为自定义");
+            Assert(!Require<FrameworkElement>(window, "DockOptionsPanel").IsEnabled, "Dock 关闭后其余 Dock 设置应变灰");
+
+            window.ShowSettingsPage("About");
+            Pump();
+            Assert(Require<FrameworkElement>(window, "GeneralPage").IsVisible, "旧的“关于”入口应打开通用页");
+            window.ShowSettingsPage("Layout");
+            Pump();
+            Assert(Require<FrameworkElement>(window, "AppearancePage").IsVisible, "旧的“布局”入口应打开外观页");
+            foreach (var swatch in Require<WrapPanel>(window, "GlassPaletteSwatches").Children.OfType<Button>())
+            {
+                Assert(Near(swatch.ActualWidth, swatch.ActualHeight), $"配色色块应为正圆，实际 {swatch.ActualWidth}×{swatch.ActualHeight}");
+            }
         }
         finally
         {

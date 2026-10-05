@@ -690,7 +690,7 @@ internal sealed class TaskbarAdapter : IDisposable
         }
     }
 
-    private static bool IsSystemTransparencyEnabled()
+    internal static bool IsSystemTransparencyEnabled()
     {
         using var key = Registry.CurrentUser.OpenSubKey(
             @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");

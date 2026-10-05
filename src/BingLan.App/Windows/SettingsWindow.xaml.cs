@@ -106,6 +106,9 @@ public partial class SettingsWindow : Window
         _maintenance = maintenance ?? new SettingsMaintenance();
 
         InitializeComponent();
+        SourceInitialized += (_, _) => IsBackdropActive = SettingsBackdrop.Apply(this);
+        AccessibilityThemeManager.HighContrastChanged += ReapplyBackdrop;
+        Closed += (_, _) => AccessibilityThemeManager.HighContrastChanged -= ReapplyBackdrop;
         PaletteSwatches.Fill(GlassPaletteSwatches, palette =>
         {
             _maintenance.Style.Palette = palette.Key;
@@ -151,7 +154,7 @@ public partial class SettingsWindow : Window
         RefreshCleanDesktopSettings();
         LoadStyle();
         RefreshBackupList();
-        ShowPage("Layout");
+        ShowPage("Appearance");
         Closing += (_, _) => CommitPendingChanges();
         Closed += (_, _) => CancelSearch();
         if (_maintenance.Updater is { } updater)
@@ -160,6 +163,11 @@ public partial class SettingsWindow : Window
             Closed += (_, _) => updater.Changed -= RefreshUpdateView;
         }
     }
+
+    /// <summary>Whether the window shows the Mica material instead of the solid page colour.</summary>
+    internal bool IsBackdropActive { get; private set; }
+
+    private void ReapplyBackdrop(object? sender, EventArgs e) => IsBackdropActive = SettingsBackdrop.Apply(this);
 
     private void LoadDesktopExperience()
     {
@@ -838,36 +846,29 @@ public partial class SettingsWindow : Window
         }
     }
 
+    // Older page names still open the page that now holds their settings.
+    private static string PageFor(string page) => page switch
+    {
+        "Theme" or "Layout" => "Appearance",
+        "Privacy" or "Backup" or "About" => "General",
+        _ => page
+    };
+
     private void ShowPage(string page)
     {
-        if (LayoutPage is null || ComponentsPage is null || DockPage is null || TaskbarPage is null ||
-            PrivacyPage is null || BackupPage is null || AboutPage is null)
+        if (AppearancePage is null || ComponentsPage is null || DockPage is null || TaskbarPage is null ||
+            GeneralPage is null)
         {
             return;
         }
 
-        LayoutPage.Visibility = page is "Theme" or "Layout"
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-        ComponentsPage.Visibility = page == "Components"
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-        DockPage.Visibility = page == "Dock"
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-        TaskbarPage.Visibility = page == "Taskbar"
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-        PrivacyPage.Visibility = page == "Privacy"
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-        BackupPage.Visibility = page == "Backup"
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-        AboutPage.Visibility = page == "About"
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-        if (page == "Backup")
+        page = PageFor(page);
+        AppearancePage.Visibility = page == "Appearance" ? Visibility.Visible : Visibility.Collapsed;
+        ComponentsPage.Visibility = page == "Components" ? Visibility.Visible : Visibility.Collapsed;
+        DockPage.Visibility = page == "Dock" ? Visibility.Visible : Visibility.Collapsed;
+        TaskbarPage.Visibility = page == "Taskbar" ? Visibility.Visible : Visibility.Collapsed;
+        GeneralPage.Visibility = page == "General" ? Visibility.Visible : Visibility.Collapsed;
+        if (page == "General")
         {
             RefreshBackupList();
         }
@@ -906,6 +907,7 @@ public partial class SettingsWindow : Window
             if (!_maintenance.CanChangeStartup)
             {
                 StartupNoteText.Text = "测试模式不修改开机启动。";
+                StartupNoteText.Visibility = Visibility.Visible;
             }
         }
         finally
@@ -1046,7 +1048,7 @@ public partial class SettingsWindow : Window
         if (look.CornerRadius is { } radius) lines.Add($"圆角：{radius:0}");
         var answer = System.Windows.MessageBox.Show(
             this,
-            $"将按“{name}”调整所有卡片：\n\n{string.Join("\n", lines)}\n\n当前设置会先备份，可在“备份与导入”中恢复。继续吗？",
+            $"将按“{name}”调整所有卡片：\n\n{string.Join("\n", lines)}\n\n当前设置会先备份，可在“通用”页的备份中恢复。继续吗？",
             "从 Rainmeter 皮肤导入外观",
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
@@ -1242,11 +1244,11 @@ public partial class SettingsWindow : Window
 
         try
         {
-            BackupStatusText.Text = _maintenance.ExportTheme(dialog.FileName, nameDialog.ThemeName);
+            ThemeStatusText.Text = _maintenance.ExportTheme(dialog.FileName, nameDialog.ThemeName);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            BackupStatusText.Text = $"导出未完成：{exception.Message}";
+            ThemeStatusText.Text = $"导出未完成：{exception.Message}";
         }
     }
 
@@ -1267,7 +1269,7 @@ public partial class SettingsWindow : Window
             var preview = _maintenance.ReadTheme(dialog.FileName);
             if (preview.Package is not { } package)
             {
-                BackupStatusText.Text = preview.Error;
+                ThemeStatusText.Text = preview.Error;
                 return;
             }
 
@@ -1277,9 +1279,9 @@ public partial class SettingsWindow : Window
                 return;
             }
 
-            BackupStatusText.Text = "正在匹配本机应用…";
+            ThemeStatusText.Text = "正在匹配本机应用…";
             var outcome = await _maintenance.ImportTheme(dialog.FileName);
-            BackupStatusText.Text = outcome.Message;
+            ThemeStatusText.Text = outcome.Message;
             LoadDockSettings();
             LoadDesktopMode();
             RefreshBackupList();
@@ -1294,7 +1296,7 @@ public partial class SettingsWindow : Window
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException
             or System.Runtime.InteropServices.COMException)
         {
-            BackupStatusText.Text = $"导入未完成：{exception.Message}";
+            ThemeStatusText.Text = $"导入未完成：{exception.Message}";
         }
     }
 
@@ -1396,6 +1398,7 @@ public partial class SettingsWindow : Window
         try
         {
             DockEnabledCheckBox.IsChecked = _dockState.IsEnabled;
+            DockOptionsPanel.IsEnabled = _dockState.IsEnabled;
             DockReserveRadio.IsChecked =
                 _dockState.VisibilityMode == DockVisibilityMode.ReserveWorkArea;
             DockSmartHideRadio.IsChecked =
@@ -1471,6 +1474,7 @@ public partial class SettingsWindow : Window
         }
 
         _dockState.IsEnabled = DockEnabledCheckBox.IsChecked == true;
+        DockOptionsPanel.IsEnabled = _dockState.IsEnabled;
         _dockState.VisibilityMode = DockSmartHideRadio.IsChecked == true
             ? DockVisibilityMode.SmartHide
             : DockVisibilityMode.ReserveWorkArea;
@@ -1590,10 +1594,10 @@ public partial class SettingsWindow : Window
             or System.Security.SecurityException or IOException)
         {
             QuietTaskbarFlashCheckBox.IsChecked = !quiet;
-            DockStatusText.Text = $"无法更改任务栏闪烁设置：{exception.Message}";
+            TaskbarStatusText.Text = $"无法更改任务栏闪烁设置：{exception.Message}";
             return;
         }
-        DockStatusText.Text = quiet
+        TaskbarStatusText.Text = quiet
             ? "已关闭任务栏应用闪烁，新消息只在 Dock 上标记"
             : "已恢复 Windows 默认的任务栏应用闪烁";
     }
@@ -1742,6 +1746,7 @@ public partial class SettingsWindow : Window
 
     private void SelectNavigationPage(string page)
     {
+        page = PageFor(page);
         foreach (var candidate in SettingsNavigationList.Items.OfType<ListBoxItem>())
         {
             if (Equals(candidate.Tag, page))

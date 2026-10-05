@@ -925,7 +925,7 @@ public partial class IceBlueDockWindow : Window
 
         var className = new StringBuilder(64);
         DockNativeMethods.GetClassNameW(window, className, className.Capacity);
-        if (className.ToString() is "Progman" or "WorkerW" or "Shell_TrayWnd" or "Shell_SecondaryTrayWnd")
+        if (ShellSurfaceWindows.IsShellSurface(className.ToString()))
         {
             return false;
         }

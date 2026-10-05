@@ -26,6 +26,11 @@ BingLan Desktop (冰蓝桌面) is a Windows 11 desktop companion built with .NET
 - **Taskbar**: default, transparent, blurred, or auto-hide; an auto-hidden taskbar can be revealed only at the bottom-left and bottom-right corners. The original state comes back on exit or after a crash.
 - **Resource use**: measured on one 1440p Windows 11 PC, BingLan uses about 56–58 MB of memory; Rainmeter, Pogget, Nexus Dock, and TranslucentTB, the tools it replaces, used about 77.5 MB together (Task Manager "Memory" column, single measurement; varies with the machine and number of cards).
 - **Look**: light glass, dark glass, or no backing; custom text and accent colours; bundled open-licence fonts. Fonts and colours can be imported, read-only, from a Rainmeter skin. Themes can be exported and shared without names, cities, to-dos, or file paths.
+- **Settings**: five pages (Appearance, Desktop components, Dock, Taskbar, General), with each setting in exactly one place. On Windows 11 the window uses the Mica material, falling back to a solid colour when transparency effects are off or high contrast is on.
+
+<p align="center">
+  <img src="docs/images/settings.png" width="760" alt="BingLan settings: desktop modes, clean desktop and card appearance on the Appearance page">
+</p>
 
 The interface is in Simplified Chinese.
 
@@ -41,7 +46,7 @@ Requires Windows 11 x64. See the [user guide (Chinese)](docs/USER-GUIDE.md) for 
 
 - No telemetry. To-dos, notes, file paths, app lists, and window titles stay on this computer under `%LOCALAPPDATA%\BingLanWidgets`.
 - The weather city is chosen by searching by hand. Requests send only the search text and the chosen city's coordinates; IP address and device location are not used.
-- Once a day the app asks GitHub for the latest version number (can be turned off under Settings → 关于与更新). A new version is only announced; you decide whether to download and install it.
+- Once a day the app asks GitHub for the latest version number (can be turned off under Settings → 通用). A new version is only announced; you decide whether to download and install it.
 - Adding, sorting, or removing items in a file group changes only the mapping. Original files are never moved, renamed, or deleted.
 
 ## Build from source
@@ -51,7 +56,7 @@ Requires the .NET 10 SDK and PowerShell 7. Building the installer also needs Inn
 ```powershell
 dotnet build .\BingLan.slnx -c Release
 dotnet run --project .\tests\BingLan.SmokeTests\BingLan.SmokeTests.csproj -c Release
-pwsh -NoProfile -File .\installer\build.ps1 -Version 0.2.2
+pwsh -NoProfile -File .\installer\build.ps1 -Version 0.2.3
 ```
 
 Full test commands, the technical design, and the current implementation are in the [development notes (Chinese)](docs/DEVELOPMENT.md); installer details are in [docs/INSTALLER.md](docs/INSTALLER.md).

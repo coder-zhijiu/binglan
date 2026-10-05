@@ -15,6 +15,7 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\Brand\BingLan.ico" />
+    <Resource Include="Assets\Brand\binglan-icon.png" />
     <Resource Include="Assets\Fonts\*.ttf" />
     <None Include="Assets\Fonts\LICENSE-*.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\BingLan.Taskbar.Xaml\bin\Release\BingLan.Taskbar.Xaml.dll"

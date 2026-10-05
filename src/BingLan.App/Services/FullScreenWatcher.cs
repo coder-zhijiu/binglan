@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Threading;
 using BingLan.App.Interop;
+using BingLan.Core.Dock;
 
 namespace BingLan.App.Services;
 
@@ -61,7 +62,7 @@ internal sealed class FullScreenWatcher : IDisposable
 
         var className = new StringBuilder(64);
         DockNativeMethods.GetClassNameW(window, className, className.Capacity);
-        if (className.ToString() is "Progman" or "WorkerW" or "Shell_TrayWnd" or "Shell_SecondaryTrayWnd")
+        if (ShellSurfaceWindows.IsShellSurface(className.ToString()))
         {
             return false;
         }

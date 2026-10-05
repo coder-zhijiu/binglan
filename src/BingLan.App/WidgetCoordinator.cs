@@ -1745,7 +1745,7 @@ public sealed class WidgetCoordinator : IDisposable
             // setting, so the result says where it is while that setting is off.
             var hint = _state.CleanDesktopEnabled
                 ? "桌面原文件未改变。"
-                : "桌面上的原图标仍会显示；在设置的“主题与布局”页开启“隐藏 Windows 桌面图标”后可只显示分组盒。";
+                : "桌面上的原图标仍会显示；在设置的“外观”页开启“清爽桌面”后可只显示分组盒。";
             _trayIcon.ShowBalloonTip(
                 6000,
                 "桌面归类完成",

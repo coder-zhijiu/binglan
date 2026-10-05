@@ -1,6 +1,7 @@
 <Window x:Class="BingLan.App.Windows.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:BingLan.App.Windows"
         Title="冰蓝桌面设置"
         Width="1180"
         Height="820"
@@ -10,1461 +11,1424 @@
         Background="{DynamicResource IcePageBrush}"
         Foreground="{DynamicResource IceInkBrush}"
         FontFamily="{StaticResource UiFont}"
+        FontSize="14"
         ShowInTaskbar="True">
     <Window.Resources>
-        <Style TargetType="TextBox">
-            <Setter Property="Foreground" Value="{DynamicResource IceInkBrush}"/>
-            <Setter Property="CaretBrush" Value="{DynamicResource IceInkBrush}"/>
-            <Setter Property="Background" Value="{DynamicResource SettingsInputBrush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource SettingsInputBorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="10,7"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-        </Style>
-        <Style TargetType="Button">
-            <Setter Property="MinHeight" Value="34"/>
-            <Setter Property="Padding" Value="14,6"/>
-            <Setter Property="Foreground" Value="{DynamicResource IceInkBrush}"/>
-            <Setter Property="Background" Value="{DynamicResource SettingsButtonBrush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource SettingsButtonBorderBrush}"/>
-        </Style>
-        <Style TargetType="CheckBox">
-            <Setter Property="Foreground" Value="{DynamicResource IceInkBrush}"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
-        <Style TargetType="RadioButton">
-            <Setter Property="Foreground" Value="{DynamicResource IceInkBrush}"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-        </Style>
-        <Style TargetType="ListBoxItem">
-            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-            <Setter Property="Padding" Value="12,9"/>
-            <Setter Property="Margin" Value="0,2"/>
-        </Style>
-        <Style x:Key="SectionCardStyle" TargetType="Border">
-            <Setter Property="Padding" Value="18"/>
-            <Setter Property="Background" Value="{DynamicResource IcePanelBrush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource SettingsPanelBorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="14"/>
-        </Style>
-        <Style x:Key="ComponentListItemStyle" TargetType="ListBoxItem">
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Margin" Value="0,0,0,8"/>
-            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ListBoxItem">
-                        <Border x:Name="Card"
-                                Padding="13,11"
-                                Background="{DynamicResource SettingsCardBrush}"
-                                BorderBrush="{DynamicResource SettingsCardBorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="11">
-                            <ContentPresenter/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Card" Property="Background" Value="{DynamicResource SettingsCardHoverBrush}"/>
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Card" Property="Background" Value="{DynamicResource SettingsCardSelectedBrush}"/>
-                                <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource SettingsCardSelectedBorderBrush}"/>
-                                <Setter Property="Foreground" Value="{DynamicResource SettingsCardSelectedTextBrush}"/>
-                                <Setter TargetName="Card" Property="BorderThickness" Value="2"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="SettingsTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <Style x:Key="ComponentListItemStyle" TargetType="ListBoxItem">
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="Margin" Value="0,0,0,6"/>
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                <Setter Property="FocusVisualStyle" Value="{StaticResource SettingsFocusVisual}"/>
+                <Setter Property="Foreground" Value="{DynamicResource IceInkBrush}"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ListBoxItem">
+                            <Border x:Name="Card"
+                                    Padding="13,10"
+                                    Background="{DynamicResource SettingsSurfaceBrush}"
+                                    BorderBrush="{DynamicResource SettingsSurfaceBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8">
+                                <ContentPresenter/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Card" Property="Background" Value="{DynamicResource SettingsSurfaceHoverBrush}"/>
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="Card" Property="Background" Value="{DynamicResource SettingsChoiceSelectedBrush}"/>
+                                    <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource IceActionBrush}"/>
+                                    <Setter TargetName="Card" Property="BorderThickness" Value="2"/>
+                                    <Setter TargetName="Card" Property="Padding" Value="12,9"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <LinearGradientBrush x:Key="ModePreviewWallpaperBrush" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Offset="0" Color="#FFB7D7F0"/>
+                <GradientStop Offset="1" Color="#FF5F8FC2"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="ModePreviewGlassBarBrush" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Offset="0" Color="#55FFFFFF"/>
+                <GradientStop Offset="1" Color="#33FFFFFF"/>
+            </LinearGradientBrush>
+            <Style x:Key="ModePreviewStyle" TargetType="Border">
+                <Setter Property="Height" Value="78"/>
+                <Setter Property="Margin" Value="0,0,0,10"/>
+                <Setter Property="CornerRadius" Value="6"/>
+                <Setter Property="ClipToBounds" Value="True"/>
+                <Setter Property="Background" Value="{StaticResource ModePreviewWallpaperBrush}"/>
+            </Style>
+            <Style x:Key="ModePreviewDockStyle" TargetType="Border">
+                <Setter Property="Width" Value="74"/>
+                <Setter Property="Height" Value="14"/>
+                <Setter Property="Margin" Value="0,0,0,14"/>
+                <Setter Property="HorizontalAlignment" Value="Center"/>
+                <Setter Property="VerticalAlignment" Value="Bottom"/>
+                <Setter Property="CornerRadius" Value="5"/>
+                <Setter Property="Background" Value="#FFF4F9FD"/>
+            </Style>
+        </ResourceDictionary>
     </Window.Resources>
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="210"/>
+            <ColumnDefinition Width="232"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <Border Padding="18,24"
-                Background="{DynamicResource SettingsNavigationBrush}"
-                BorderBrush="{DynamicResource SettingsStrokeBrush}"
-                BorderThickness="0,0,1,0">
-            <DockPanel>
-                <Button x:Name="ExitAppButton"
-                        DockPanel.Dock="Bottom"
-                        Margin="8,12,8,0"
-                        HorizontalAlignment="Stretch"
-                        Content="退出冰蓝桌面"
-                        Click="ExitApp_Click"/>
-                <StackPanel DockPanel.Dock="Top" Margin="8,0,8,20">
-                    <TextBlock FontSize="20" FontWeight="SemiBold" Text="冰蓝桌面"/>
-                    <TextBlock Margin="0,3,0,0"
+        <DockPanel Margin="12,20,12,16">
+            <StackPanel DockPanel.Dock="Top" Margin="12,0,8,22" Orientation="Horizontal">
+                <Image Width="38"
+                       Height="38"
+                       VerticalAlignment="Center"
+                       RenderOptions.BitmapScalingMode="HighQuality"
+                       Source="/BingLan;component/Assets/Brand/binglan-icon.png"/>
+                <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                    <TextBlock FontSize="15" FontWeight="SemiBold" Text="冰蓝桌面"/>
+                    <TextBlock FontSize="12"
                                Foreground="{DynamicResource IceMutedInkBrush}"
-                               Text="一个应用，三套桌面"/>
+                               Text="设置"/>
                 </StackPanel>
-                <ListBox x:Name="SettingsNavigationList"
-                         AutomationProperties.Name="设置类别"
-                         BorderThickness="0"
-                         Background="Transparent"
-                         SelectionChanged="SettingsNavigationList_SelectionChanged"
-                         SelectedIndex="0">
-                    <ListBoxItem Content="主题与布局" Tag="Layout"/>
-                    <ListBoxItem Content="桌面组件" Tag="Components"/>
-                    <ListBoxItem Content="Dock" Tag="Dock"/>
-                    <ListBoxItem Content="任务栏" Tag="Taskbar"/>
-                    <ListBoxItem Content="隐私与启动" Tag="Privacy"/>
-                    <ListBoxItem Content="备份与导入" Tag="Backup"/>
-                    <ListBoxItem Content="关于与更新" Tag="About"/>
-                </ListBox>
-            </DockPanel>
-        </Border>
+            </StackPanel>
+            <ListBox x:Name="SettingsNavigationList"
+                     AutomationProperties.Name="设置类别"
+                     Padding="0"
+                     BorderThickness="0"
+                     Background="Transparent"
+                     ItemContainerStyle="{StaticResource NavigationItemStyle}"
+                     SelectionChanged="SettingsNavigationList_SelectionChanged"
+                     SelectedIndex="0">
+                <ListBoxItem Tag="Appearance" AutomationProperties.Name="外观">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Style="{StaticResource NavigationTileStyle}" Background="{DynamicResource SettingsIconPurpleBrush}">
+                            <TextBlock Style="{StaticResource NavigationGlyphStyle}" Text="&#xE790;"/>
+                        </Border>
+                        <TextBlock Text="外观"/>
+                    </StackPanel>
+                </ListBoxItem>
+                <ListBoxItem Tag="Components" AutomationProperties.Name="桌面组件">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Style="{StaticResource NavigationTileStyle}" Background="{DynamicResource SettingsIconOrangeBrush}">
+                            <TextBlock Style="{StaticResource NavigationGlyphStyle}" Text="&#xE8A9;"/>
+                        </Border>
+                        <TextBlock Text="桌面组件"/>
+                    </StackPanel>
+                </ListBoxItem>
+                <ListBoxItem Tag="Dock" AutomationProperties.Name="Dock">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Style="{StaticResource NavigationTileStyle}" Background="{DynamicResource SettingsIconBlueBrush}">
+                            <TextBlock Style="{StaticResource NavigationGlyphStyle}" Text="&#xE71D;"/>
+                        </Border>
+                        <TextBlock Text="Dock"/>
+                    </StackPanel>
+                </ListBoxItem>
+                <ListBoxItem Tag="Taskbar" AutomationProperties.Name="任务栏">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Style="{StaticResource NavigationTileStyle}" Background="{DynamicResource SettingsIconIndigoBrush}">
+                            <TextBlock Style="{StaticResource NavigationGlyphStyle}" Text="&#xE7C4;"/>
+                        </Border>
+                        <TextBlock Text="任务栏"/>
+                    </StackPanel>
+                </ListBoxItem>
+                <ListBoxItem Tag="General" AutomationProperties.Name="通用">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Style="{StaticResource NavigationTileStyle}" Background="{DynamicResource SettingsIconGrayBrush}">
+                            <TextBlock Style="{StaticResource NavigationGlyphStyle}" Text="&#xE713;"/>
+                        </Border>
+                        <TextBlock Text="通用"/>
+                    </StackPanel>
+                </ListBoxItem>
+            </ListBox>
+        </DockPanel>
 
-        <Grid Grid.Column="1" Margin="28,24">
-            <ScrollViewer x:Name="LayoutPage" VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <TextBlock FontSize="26" FontWeight="SemiBold" Text="主题与布局"/>
-                    <TextBlock Margin="0,5,0,0"
-                               Foreground="{DynamicResource IceMutedInkBrush}"
-                               Text="这里只管理整套桌面的布局预设；单张卡片的显示、锁定、尺寸和外观统一放在“桌面组件”。"/>
+        <Grid Grid.Column="1" Margin="12,20,0,0">
+            <!-- 外观 -->
+            <ScrollViewer x:Name="AppearancePage" VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="0,0,28,28">
+                    <TextBlock Style="{StaticResource PageTitleStyle}" Text="外观"/>
+                    <TextBlock Style="{StaticResource PageSubtitleStyle}"
+                               Text="整套桌面的模式、卡片外观和布局。单张卡片可在“桌面组件”里单独调整。"/>
 
-                    <TextBlock Margin="0,18,0,8"
-                               FontSize="17"
-                               FontWeight="SemiBold"
-                               Text="桌面模式"/>
-                    <TextBlock Margin="0,0,0,8"
-                               TextWrapping="Wrap"
-                               Foreground="{DynamicResource IceMutedInkBrush}"
-                               Text="一次设置冰蓝 Dock 和 Windows 任务栏，不改变桌面卡片的位置。"/>
-                    <Border Style="{StaticResource SectionCardStyle}">
-                        <StackPanel>
-                            <UniformGrid Columns="3">
-                                <RadioButton x:Name="WindowsNativeModeRadio"
-                                             AutomationProperties.Name="Windows 原生桌面模式"
-                                             Margin="0,0,8,0"
-                                             GroupName="DesktopMode"
-                                             Tag="WindowsNative"
-                                             Checked="DesktopMode_Checked">
-                                    <StackPanel>
-                                        <TextBlock FontWeight="SemiBold" Text="Windows 原生"/>
-                                        <TextBlock Margin="0,2,0,0"
-                                                   TextWrapping="Wrap"
-                                                   Foreground="{DynamicResource IceMutedInkBrush}"
-                                                   Text="关闭 Dock，任务栏保持系统默认。"/>
-                                    </StackPanel>
-                                </RadioButton>
-                                <RadioButton x:Name="IceBlueHybridModeRadio"
-                                             AutomationProperties.Name="冰蓝混合桌面模式"
-                                             Margin="4,0"
-                                             GroupName="DesktopMode"
-                                             Tag="IceBlueHybrid"
-                                             Checked="DesktopMode_Checked">
-                                    <StackPanel>
-                                        <TextBlock FontWeight="SemiBold" Text="冰蓝混合"/>
-                                        <TextBlock Margin="0,2,0,0"
-                                                   TextWrapping="Wrap"
-                                                   Foreground="{DynamicResource IceMutedInkBrush}"
-                                                   Text="显示 Dock，任务栏透明或模糊。"/>
-                                    </StackPanel>
-                                </RadioButton>
-                                <RadioButton x:Name="AppleStyleModeRadio"
-                                             AutomationProperties.Name="苹果式桌面模式"
-                                             Margin="8,0,0,0"
-                                             GroupName="DesktopMode"
-                                             Tag="AppleStyle"
-                                             Checked="DesktopMode_Checked">
-                                    <StackPanel>
-                                        <TextBlock FontWeight="SemiBold" Text="苹果式"/>
-                                        <TextBlock Margin="0,2,0,0"
-                                                   TextWrapping="Wrap"
-                                                   Foreground="{DynamicResource IceMutedInkBrush}"
-                                                   Text="显示 Dock，任务栏自动隐藏。"/>
-                                    </StackPanel>
-                                </RadioButton>
-                            </UniformGrid>
-                            <TextBlock x:Name="DesktopModeStatusText"
-                                       Margin="0,12,0,0"
-                                       TextWrapping="Wrap"
-                                       AutomationProperties.LiveSetting="Polite"
-                                       Foreground="{DynamicResource IceMutedInkBrush}"/>
-                        </StackPanel>
-                    </Border>
+                    <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="桌面模式"/>
+                    <UniformGrid Columns="3">
+                        <RadioButton x:Name="WindowsNativeModeRadio"
+                                     AutomationProperties.Name="Windows 原生桌面模式"
+                                     Margin="0,0,6,0"
+                                     GroupName="DesktopMode"
+                                     Style="{StaticResource ChoiceCardStyle}"
+                                     Tag="WindowsNative"
+                                     Checked="DesktopMode_Checked">
+                            <StackPanel>
+                                <Border Style="{StaticResource ModePreviewStyle}">
+                                    <Border Height="10" VerticalAlignment="Bottom" Background="#FF22303F"/>
+                                </Border>
+                                <TextBlock FontWeight="SemiBold" Text="Windows 原生"/>
+                                <TextBlock Margin="0,2,0,0" Style="{StaticResource CaptionStyle}" Text="不显示 Dock，任务栏保持系统默认"/>
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton x:Name="IceBlueHybridModeRadio"
+                                     AutomationProperties.Name="冰蓝混合桌面模式"
+                                     Margin="3,0"
+                                     GroupName="DesktopMode"
+                                     Style="{StaticResource ChoiceCardStyle}"
+                                     Tag="IceBlueHybrid"
+                                     Checked="DesktopMode_Checked">
+                            <StackPanel>
+                                <Border Style="{StaticResource ModePreviewStyle}">
+                                    <Grid>
+                                        <Border Style="{StaticResource ModePreviewDockStyle}"/>
+                                        <Border Height="10" VerticalAlignment="Bottom" Background="{StaticResource ModePreviewGlassBarBrush}"/>
+                                    </Grid>
+                                </Border>
+                                <TextBlock FontWeight="SemiBold" Text="冰蓝混合"/>
+                                <TextBlock Margin="0,2,0,0" Style="{StaticResource CaptionStyle}" Text="显示 Dock，任务栏透明或模糊"/>
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton x:Name="AppleStyleModeRadio"
+                                     AutomationProperties.Name="苹果式桌面模式"
+                                     Margin="6,0,0,0"
+                                     GroupName="DesktopMode"
+                                     Style="{StaticResource ChoiceCardStyle}"
+                                     Tag="AppleStyle"
+                                     Checked="DesktopMode_Checked">
+                            <StackPanel>
+                                <Border Style="{StaticResource ModePreviewStyle}">
+                                    <Border Style="{StaticResource ModePreviewDockStyle}" Margin="0,0,0,6"/>
+                                </Border>
+                                <TextBlock FontWeight="SemiBold" Text="苹果式"/>
+                                <TextBlock Margin="0,2,0,0" Style="{StaticResource CaptionStyle}" Text="显示 Dock，任务栏自动隐藏"/>
+                            </StackPanel>
+                        </RadioButton>
+                    </UniformGrid>
+                    <TextBlock x:Name="DesktopModeStatusText"
+                               Margin="2,8,0,4"
+                               AutomationProperties.LiveSetting="Polite"
+                               Style="{StaticResource CaptionStyle}"/>
 
-                    <TextBlock Margin="0,18,0,8"
-                               FontSize="17"
-                               FontWeight="SemiBold"
-                               Text="清爽桌面"/>
-                    <Border Style="{StaticResource SectionCardStyle}">
-                        <StackPanel>
-                            <CheckBox x:Name="CleanDesktopCheckBox"
-                                      AutomationProperties.Name="隐藏 Windows 桌面图标"
-                                      Content="隐藏 Windows 桌面图标"
-                                      Checked="CleanDesktopCheckBox_Changed"
-                                      Unchecked="CleanDesktopCheckBox_Changed"/>
-                            <TextBlock Margin="22,4,0,0"
-                                       TextWrapping="Wrap"
-                                       Foreground="{DynamicResource IceMutedInkBrush}"
-                                       Text="桌面文件保持原位，只隐藏图标。开启时在分组盒中加入此电脑、回收站、下载和桌面入口；关闭或退出冰蓝桌面时恢复图标。"/>
+                    <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="桌面"/>
+                    <local:SettingsGroup>
+                    <local:SettingsRow Glyph="&#xE7F4;"
+                                       GlyphBrush="{DynamicResource SettingsIconTealBrush}"
+                                       Header="清爽桌面"
+                                       Description="只隐藏 Windows 桌面图标，文件保持原位；关闭或退出冰蓝桌面时恢复。">
+                        <StackPanel Orientation="Horizontal">
                             <TextBlock x:Name="CleanDesktopStatusText"
-                                       Margin="22,8,0,0"
-                                       TextWrapping="Wrap"
+                                       MaxWidth="240"
+                                       Margin="0,0,12,0"
+                                       VerticalAlignment="Center"
                                        AutomationProperties.LiveSetting="Polite"
-                                       Foreground="{DynamicResource IceInkBrush}"/>
+                                       Style="{StaticResource CaptionStyle}"/>
                             <Button x:Name="CleanDesktopRetryButton"
-                                    Margin="22,10,0,0"
-                                    HorizontalAlignment="Left"
+                                    Margin="0,0,12,0"
                                     Content="重新恢复"
                                     Visibility="Collapsed"
                                     Click="CleanDesktopRetry_Click"/>
+                            <CheckBox x:Name="CleanDesktopCheckBox"
+                                      AutomationProperties.Name="隐藏 Windows 桌面图标"
+                                      Style="{StaticResource ToggleSwitchStyle}"
+                                      Checked="CleanDesktopCheckBox_Changed"
+                                      Unchecked="CleanDesktopCheckBox_Changed"/>
                         </StackPanel>
-                    </Border>
+                    </local:SettingsRow>
+                    </local:SettingsGroup>
 
-                    <TextBlock Margin="0,18,0,8"
-                               FontSize="17"
-                               FontWeight="SemiBold"
-                               Text="卡片外观"/>
-                    <Border Style="{StaticResource SectionCardStyle}">
-                        <StackPanel>
+                    <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="卡片外观"/>
+                    <local:SettingsGroup>
+                    <local:SettingsRow Glyph="&#xE790;"
+                                       GlyphBrush="{DynamicResource SettingsIconPurpleBrush}"
+                                       Header="材质"
+                                       Description="应用到所有卡片，之后仍可单独调整">
+                        <Border Style="{StaticResource SegmentHostStyle}">
                             <StackPanel Orientation="Horizontal">
                                 <RadioButton x:Name="GlassLightRadio"
                                              GroupName="GlassMode"
+                                             Style="{StaticResource SegmentRadioStyle}"
                                              Tag="Light"
                                              Content="浅色玻璃"
                                              Checked="Glass_Changed"/>
                                 <RadioButton x:Name="GlassDarkRadio"
-                                             Margin="22,0,0,0"
                                              GroupName="GlassMode"
+                                             Style="{StaticResource SegmentRadioStyle}"
                                              Tag="Dark"
                                              Content="深色玻璃"
                                              Checked="Glass_Changed"/>
                                 <RadioButton x:Name="GlassClearRadio"
-                                             Margin="22,0,0,0"
                                              GroupName="GlassMode"
+                                             Style="{StaticResource SegmentRadioStyle}"
                                              Tag="Clear"
                                              Content="无底板"
                                              Checked="Glass_Changed"/>
                             </StackPanel>
-                            <StackPanel x:Name="GlassPalettePanel" Margin="0,14,0,0" Orientation="Horizontal">
-                                <TextBlock Width="72" VerticalAlignment="Center" Text="配色"/>
-                                <WrapPanel x:Name="GlassPaletteSwatches"/>
-                            </StackPanel>
-                            <StackPanel x:Name="GlassDensityPanel" Margin="0,14,0,0" Orientation="Horizontal">
-                                <TextBlock Width="72" VerticalAlignment="Center" Text="玻璃浓度"/>
-                                <Slider x:Name="GlassDensitySlider"
-                                        Width="300"
-                                        Minimum="0.05"
-                                        Maximum="0.96"
-                                        SmallChange="0.02"
-                                        LargeChange="0.1"
-                                        AutomationProperties.Name="玻璃浓度"
-                                        ValueChanged="GlassDensity_Changed"/>
-                                <TextBlock x:Name="GlassDensityText"
-                                           Margin="12,0,0,0"
-                                           VerticalAlignment="Center"/>
-                            </StackPanel>
-                            <StackPanel Margin="0,14,0,0" Orientation="Horizontal">
-                                <TextBlock Width="72" VerticalAlignment="Center" Text="文字颜色"/>
-                                <RadioButton x:Name="TextInkAutoRadio"
-                                             GroupName="TextInk"
-                                             Content="跟随外观"
-                                             Checked="Glass_Changed"/>
-                                <RadioButton x:Name="TextInkWhiteRadio"
-                                             Margin="22,0,0,0"
-                                             GroupName="TextInk"
-                                             Content="白色（深色壁纸）"
-                                             Checked="Glass_Changed"/>
-                                <RadioButton x:Name="TextInkDarkRadio"
-                                             Margin="22,0,0,0"
-                                             GroupName="TextInk"
-                                             Content="深色（浅色壁纸）"
-                                             Checked="Glass_Changed"/>
-                                <RadioButton x:Name="TextInkCustomRadio"
-                                             Margin="22,0,0,0"
-                                             GroupName="TextInk"
-                                             Content="自定义"
-                                             Checked="Glass_Changed"/>
-                                <Button x:Name="CustomTextColorButton"
-                                        Margin="8,0,0,0"
-                                        Padding="6,2"
-                                        VerticalAlignment="Center"
-                                        AutomationProperties.Name="选择文字颜色"
-                                        ToolTip="选择文字颜色"
-                                        Click="CustomTextColor_Click">
-                                    <StackPanel Orientation="Horizontal">
-                                        <Border x:Name="CustomTextColorChip"
-                                                Width="14"
-                                                Height="14"
-                                                VerticalAlignment="Center"
-                                                CornerRadius="7"
-                                                BorderBrush="{DynamicResource SettingsResultBorderBrush}"
-                                                BorderThickness="1"/>
-                                        <TextBlock Margin="5,0,0,0" VerticalAlignment="Center" Text="选色…"/>
-                                    </StackPanel>
-                                </Button>
-                            </StackPanel>
-                            <TextBlock Margin="0,10,0,0"
-                                       TextWrapping="Wrap"
-                                       Foreground="{DynamicResource IceMutedInkBrush}"
-                                       Text="选择后应用到所有卡片，之后仍可在“桌面组件”页单独调整某张卡片。无底板时卡片只显示文字和图标，并自动加上柔和文字阴影。"/>
-                            <StackPanel Margin="0,14,0,0" Orientation="Horizontal">
-                                <Button Content="从 Rainmeter 皮肤导入外观…"
-                                        AutomationProperties.Name="从 Rainmeter 皮肤导入外观"
-                                        Click="ImportRainmeterLook_Click"/>
-                                <TextBlock x:Name="RainmeterImportStatusText"
-                                           Margin="12,0,0,0"
-                                           VerticalAlignment="Center"
-                                           TextWrapping="Wrap"
-                                           AutomationProperties.LiveSetting="Polite"
-                                           Foreground="{DynamicResource IceMutedInkBrush}"
-                                           Text="只读取皮肤里的字体和颜色，不运行脚本或插件"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-
-                    <TextBlock Margin="0,18,0,8"
-                               FontSize="17"
-                               FontWeight="SemiBold"
-                               Text="整体风格"/>
-                    <Border Style="{StaticResource SectionCardStyle}">
-                        <StackPanel>
-                            <UniformGrid Columns="3">
-                                <StackPanel Margin="0,0,8,0">
-                                    <TextBlock Margin="0,0,0,5" Text="文字阴影"/>
-                                    <ComboBox x:Name="CardShadowSelector"
-                                              Height="34"
-                                              AutomationProperties.Name="文字阴影"
-                                              SelectionChanged="StyleSelector_SelectionChanged">
-                                        <ComboBoxItem Content="无" Tag="None"/>
-                                        <ComboBoxItem Content="柔和" Tag="Soft"/>
-                                        <ComboBoxItem Content="明显" Tag="Strong"/>
-                                    </ComboBox>
-                                </StackPanel>
-                                <StackPanel Margin="4,0">
-                                    <TextBlock Margin="0,0,0,5" Text="吸附间距"/>
-                                    <ComboBox x:Name="CardSpacingSelector"
-                                              Height="34"
-                                              AutomationProperties.Name="吸附间距"
-                                              SelectionChanged="StyleSelector_SelectionChanged">
-                                        <ComboBoxItem Content="紧凑（8）" Tag="8"/>
-                                        <ComboBoxItem Content="标准（16）" Tag="16"/>
-                                        <ComboBoxItem Content="宽松（24）" Tag="24"/>
-                                    </ComboBox>
-                                </StackPanel>
-                                <StackPanel Margin="8,0,0,0">
-                                    <TextBlock Margin="0,0,0,5" Text="Dock 动效"/>
-                                    <ComboBox x:Name="MotionSelector"
-                                              Height="34"
-                                              AutomationProperties.Name="Dock 动效"
-                                              SelectionChanged="StyleSelector_SelectionChanged">
-                                        <ComboBoxItem Content="标准" Tag="Standard"/>
-                                        <ComboBoxItem Content="减弱" Tag="Reduced"/>
-                                        <ComboBoxItem Content="关闭" Tag="Off"/>
-                                    </ComboBox>
-                                </StackPanel>
-                            </UniformGrid>
-                            <TextBlock Margin="0,10,0,0"
-                                       TextWrapping="Wrap"
-                                       Foreground="{DynamicResource IceMutedInkBrush}"
-                                       Text="文字阴影让卡片上的文字和图标更清楚；吸附间距是拖动卡片靠近其他卡片时保留的距离。任务栏透明或模糊在“任务栏”页设置。导出主题时一并保存。"/>
-                        </StackPanel>
-                    </Border>
-
-                    <Border Margin="0,18,0,0" Style="{StaticResource SectionCardStyle}">
-                        <Border Height="322"
-                                Background="{DynamicResource SettingsPreviewBrush}"
-                                BorderBrush="{DynamicResource SettingsPreviewBorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="12"
-                                ClipToBounds="True">
-                            <Image x:Name="PresetPreviewImage"
-                                   Stretch="Uniform"/>
                         </Border>
+                    </local:SettingsRow>
+                    <local:SettingsRow x:Name="GlassPalettePanel" Style="{StaticResource NestedSettingsRowStyle}" Header="配色">
+                        <WrapPanel x:Name="GlassPaletteSwatches"/>
+                    </local:SettingsRow>
+                    <local:SettingsRow x:Name="GlassDensityPanel"
+                                       Style="{StaticResource NestedSettingsRowStyle}"
+                                       Header="玻璃浓度"
+                                       Description="无底板时不可用">
+                        <StackPanel Orientation="Horizontal">
+                            <Slider x:Name="GlassDensitySlider"
+                                    Width="220"
+                                    Minimum="0.05"
+                                    Maximum="0.96"
+                                    SmallChange="0.02"
+                                    LargeChange="0.1"
+                                    AutomationProperties.Name="玻璃浓度"
+                                    ValueChanged="GlassDensity_Changed"/>
+                            <TextBlock x:Name="GlassDensityText" Style="{StaticResource ValueTextStyle}"/>
+                        </StackPanel>
+                    </local:SettingsRow>
+                    <local:SettingsRow Glyph="&#xE8D2;"
+                                       GlyphBrush="{DynamicResource SettingsIconIndigoBrush}"
+                                       Header="文字颜色"
+                                       Description="无底板时自动加上柔和文字阴影">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Style="{StaticResource SegmentHostStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton x:Name="TextInkAutoRadio"
+                                                 GroupName="TextInk"
+                                                 Style="{StaticResource SegmentRadioStyle}"
+                                                 Content="跟随外观"
+                                                 Checked="Glass_Changed"/>
+                                    <RadioButton x:Name="TextInkWhiteRadio"
+                                                 GroupName="TextInk"
+                                                 Style="{StaticResource SegmentRadioStyle}"
+                                                 Content="白色"
+                                                 ToolTip="适合深色壁纸"
+                                                 AutomationProperties.Name="白色文字"
+                                                 Checked="Glass_Changed"/>
+                                    <RadioButton x:Name="TextInkDarkRadio"
+                                                 GroupName="TextInk"
+                                                 Style="{StaticResource SegmentRadioStyle}"
+                                                 Content="深色"
+                                                 ToolTip="适合浅色壁纸"
+                                                 AutomationProperties.Name="深色文字"
+                                                 Checked="Glass_Changed"/>
+                                    <RadioButton x:Name="TextInkCustomRadio"
+                                                 GroupName="TextInk"
+                                                 Style="{StaticResource SegmentRadioStyle}"
+                                                 Content="自定义"
+                                                 Checked="Glass_Changed"/>
+                                </StackPanel>
+                            </Border>
+                            <Button x:Name="CustomTextColorButton"
+                                    Margin="8,0,0,0"
+                                    Padding="10,5"
+                                    AutomationProperties.Name="选择文字颜色"
+                                    ToolTip="选择文字颜色"
+                                    Click="CustomTextColor_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border x:Name="CustomTextColorChip"
+                                            Width="14"
+                                            Height="14"
+                                            VerticalAlignment="Center"
+                                            CornerRadius="7"
+                                            BorderBrush="{DynamicResource SettingsControlBorderBrush}"
+                                            BorderThickness="1"/>
+                                    <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="选色…"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </local:SettingsRow>
+                    <local:SettingsRow Glyph="&#xE81E;"
+                                       GlyphBrush="{DynamicResource SettingsIconGrayBrush}"
+                                       Header="文字阴影"
+                                       Description="让卡片上的文字和图标在复杂壁纸上更清楚">
+                        <ComboBox x:Name="CardShadowSelector"
+                                  Width="160"
+                                  AutomationProperties.Name="文字阴影"
+                                  SelectionChanged="StyleSelector_SelectionChanged">
+                            <ComboBoxItem Content="无" Tag="None"/>
+                            <ComboBoxItem Content="柔和" Tag="Soft"/>
+                            <ComboBoxItem Content="明显" Tag="Strong"/>
+                        </ComboBox>
+                    </local:SettingsRow>
+                    <local:SettingsRow Glyph="&#xE7C2;"
+                                       GlyphBrush="{DynamicResource SettingsIconOrangeBrush}"
+                                       Header="吸附间距"
+                                       Description="拖动卡片靠近其他卡片时保留的距离">
+                        <ComboBox x:Name="CardSpacingSelector"
+                                  Width="160"
+                                  AutomationProperties.Name="吸附间距"
+                                  SelectionChanged="StyleSelector_SelectionChanged">
+                            <ComboBoxItem Content="紧凑（8）" Tag="8"/>
+                            <ComboBoxItem Content="标准（16）" Tag="16"/>
+                            <ComboBoxItem Content="宽松（24）" Tag="24"/>
+                        </ComboBox>
+                    </local:SettingsRow>
+                    <local:SettingsRow Glyph="&#xE8B5;"
+                                       GlyphBrush="{DynamicResource SettingsIconGreenBrush}"
+                                       Header="从 Rainmeter 皮肤导入"
+                                       Description="只读取皮肤里的字体和颜色，不运行脚本或插件">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="RainmeterImportStatusText"
+                                       MaxWidth="220"
+                                       Margin="0,0,12,0"
+                                       VerticalAlignment="Center"
+                                       AutomationProperties.LiveSetting="Polite"
+                                       Style="{StaticResource CaptionStyle}"/>
+                            <Button Content="选择皮肤…"
+                                    AutomationProperties.Name="从 Rainmeter 皮肤导入外观"
+                                    Click="ImportRainmeterLook_Click"/>
+                        </StackPanel>
+                    </local:SettingsRow>
+                    </local:SettingsGroup>
+
+                    <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="布局预设"/>
+                    <Border Style="{StaticResource SettingsPanelStyle}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource CaptionStyle}"
+                                       Text="改变桌面卡片的摆放位置，不影响 Dock 和任务栏。选好后点击“应用布局”。"/>
+                            <Border Height="250"
+                                    Margin="0,12,0,12"
+                                    Background="{DynamicResource SettingsPreviewBrush}"
+                                    BorderBrush="{DynamicResource SettingsSurfaceBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    ClipToBounds="True">
+                                <Image x:Name="PresetPreviewImage" Stretch="Uniform"/>
+                            </Border>
+                            <UniformGrid Columns="4">
+                                <RadioButton x:Name="QuietInformationPresetRadio"
+                                             AutomationProperties.Name="静谧信息层布局"
+                                             Margin="0,0,6,0"
+                                             GroupName="LayoutPreset"
+                                             Style="{StaticResource ChoiceCardStyle}"
+                                             Tag="QuietInformation"
+                                             Checked="PresetRadio_Checked">
+                                    <StackPanel>
+                                        <Border Height="86" CornerRadius="5" ClipToBounds="True">
+                                            <Image x:Name="QuietPresetThumb" Stretch="UniformToFill"/>
+                                        </Border>
+                                        <TextBlock Margin="0,8,0,0" HorizontalAlignment="Center" Text="静谧信息层"/>
+                                    </StackPanel>
+                                </RadioButton>
+                                <RadioButton x:Name="GlacierWorkbenchPresetRadio"
+                                             AutomationProperties.Name="冰川工作台布局"
+                                             Margin="3,0"
+                                             GroupName="LayoutPreset"
+                                             Style="{StaticResource ChoiceCardStyle}"
+                                             Tag="GlacierWorkbench"
+                                             Checked="PresetRadio_Checked">
+                                    <StackPanel>
+                                        <Border Height="86" CornerRadius="5" ClipToBounds="True">
+                                            <Image x:Name="GlacierPresetThumb" Stretch="UniformToFill"/>
+                                        </Border>
+                                        <TextBlock Margin="0,8,0,0" HorizontalAlignment="Center" Text="冰川工作台"/>
+                                    </StackPanel>
+                                </RadioButton>
+                                <RadioButton x:Name="TransparentApplePresetRadio"
+                                             AutomationProperties.Name="通透苹果桌面布局"
+                                             Margin="3,0"
+                                             GroupName="LayoutPreset"
+                                             Style="{StaticResource ChoiceCardStyle}"
+                                             Tag="TransparentApple"
+                                             Checked="PresetRadio_Checked">
+                                    <StackPanel>
+                                        <Border Height="86" CornerRadius="5" ClipToBounds="True">
+                                            <Image x:Name="ApplePresetThumb" Stretch="UniformToFill"/>
+                                        </Border>
+                                        <TextBlock Margin="0,8,0,0" HorizontalAlignment="Center" Text="通透苹果桌面"/>
+                                    </StackPanel>
+                                </RadioButton>
+                                <RadioButton x:Name="CenterClockPresetRadio"
+                                             AutomationProperties.Name="居中时钟布局"
+                                             Margin="6,0,0,0"
+                                             GroupName="LayoutPreset"
+                                             Style="{StaticResource ChoiceCardStyle}"
+                                             Tag="CenterClock"
+                                             Checked="PresetRadio_Checked">
+                                    <StackPanel>
+                                        <Border Height="86" CornerRadius="5" ClipToBounds="True">
+                                            <Image x:Name="CenterClockPresetThumb" Stretch="UniformToFill"/>
+                                        </Border>
+                                        <TextBlock Margin="0,8,0,0" HorizontalAlignment="Center" Text="居中时钟"/>
+                                    </StackPanel>
+                                </RadioButton>
+                            </UniformGrid>
+                            <Grid Margin="0,14,0,0">
+                                <TextBlock x:Name="LayoutStatusText"
+                                           VerticalAlignment="Center"
+                                           AutomationProperties.LiveSetting="Polite"
+                                           Style="{StaticResource CaptionStyle}"/>
+                                <Button x:Name="ApplyLayoutButton"
+                                        MinWidth="120"
+                                        HorizontalAlignment="Right"
+                                        Style="{StaticResource AccentButtonStyle}"
+                                        Content="应用布局"
+                                        Click="ApplyLayout_Click"/>
+                            </Grid>
+                        </StackPanel>
                     </Border>
 
-                    <TextBlock Margin="0,18,0,8"
-                               FontSize="17"
-                               FontWeight="SemiBold"
-                               Text="布局预设"/>
-                    <TextBlock Margin="0,0,0,8"
-                               TextWrapping="Wrap"
-                               Foreground="{DynamicResource IceMutedInkBrush}"
-                               Text="改变桌面卡片的摆放位置，不影响 Dock 和任务栏；选中后点击“应用布局”。"/>
-                    <UniformGrid Columns="4">
-                        <RadioButton x:Name="QuietInformationPresetRadio"
-                                     AutomationProperties.Name="静谧信息层布局"
-                                     Margin="0,0,8,0"
-                                     GroupName="LayoutPreset"
-                                     Tag="QuietInformation"
-                                     Checked="PresetRadio_Checked">
-                            <StackPanel>
-                                <Border Height="106" CornerRadius="10" ClipToBounds="True">
-                                    <Image x:Name="QuietPresetThumb"
-                                           Stretch="UniformToFill"/>
-                                </Border>
-                                <TextBlock Margin="0,7,0,0"
-                                           HorizontalAlignment="Center"
-                                           FontWeight="SemiBold"
-                                           Text="静谧信息层"/>
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton x:Name="GlacierWorkbenchPresetRadio"
-                                     AutomationProperties.Name="冰川工作台布局"
-                                     Margin="4,0"
-                                     GroupName="LayoutPreset"
-                                     Tag="GlacierWorkbench"
-                                     Checked="PresetRadio_Checked">
-                            <StackPanel>
-                                <Border Height="106" CornerRadius="10" ClipToBounds="True">
-                                    <Image x:Name="GlacierPresetThumb"
-                                           Stretch="UniformToFill"/>
-                                </Border>
-                                <TextBlock Margin="0,7,0,0"
-                                           HorizontalAlignment="Center"
-                                           FontWeight="SemiBold"
-                                           Text="冰川工作台"/>
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton x:Name="TransparentApplePresetRadio"
-                                     AutomationProperties.Name="通透苹果桌面布局"
-                                     Margin="8,0,0,0"
-                                     GroupName="LayoutPreset"
-                                     Tag="TransparentApple"
-                                     Checked="PresetRadio_Checked">
-                            <StackPanel>
-                                <Border Height="106" CornerRadius="10" ClipToBounds="True">
-                                    <Image x:Name="ApplePresetThumb"
-                                           Stretch="UniformToFill"/>
-                                </Border>
-                                <TextBlock Margin="0,7,0,0"
-                                           HorizontalAlignment="Center"
-                                           FontWeight="SemiBold"
-                                           Text="通透苹果桌面"/>
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton x:Name="CenterClockPresetRadio"
-                                     AutomationProperties.Name="居中时钟布局"
-                                     Margin="8,0,0,0"
-                                     GroupName="LayoutPreset"
-                                     Tag="CenterClock"
-                                     Checked="PresetRadio_Checked">
-                            <StackPanel>
-                                <Border Height="106" CornerRadius="10" ClipToBounds="True">
-                                    <Image x:Name="CenterClockPresetThumb"
-                                           Stretch="UniformToFill"/>
-                                </Border>
-                                <TextBlock Margin="0,7,0,0"
-                                           HorizontalAlignment="Center"
-                                           FontWeight="SemiBold"
-                                           Text="居中时钟"/>
-                            </StackPanel>
-                        </RadioButton>
-                    </UniformGrid>
-
-                    <Grid Margin="0,18,0,4">
-                        <TextBlock x:Name="LayoutStatusText"
-                                   AutomationProperties.LiveSetting="Polite"
-                                   VerticalAlignment="Center"
-                                   Foreground="{DynamicResource IceMutedInkBrush}"/>
-                        <Button x:Name="ApplyLayoutButton"
-                                Width="132"
-                                HorizontalAlignment="Right"
-                                Foreground="{DynamicResource IceActionTextBrush}"
-                                Background="{DynamicResource IceActionBrush}"
-                                BorderBrush="{DynamicResource IceActionBrush}"
-                                Content="应用布局"
-                                Click="ApplyLayout_Click"/>
-                    </Grid>
+                    <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="主题包"/>
+                    <local:SettingsGroup>
+                    <local:SettingsRow Glyph="&#xE72D;"
+                                       GlyphBrush="{DynamicResource SettingsIconPinkBrush}"
+                                       Header="导出或导入主题"
+                                       Description="包含颜色、材质、圆角、字号、相对布局和 Dock 应用槽位；不含称呼、城市、待办、便签、文件映射、本机路径、壁纸和字体。">
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="导出主题…" Click="ExportTheme_Click"/>
+                            <Button Margin="8,0,0,0" Content="导入主题…" Click="ImportTheme_Click"/>
+                        </StackPanel>
+                    </local:SettingsRow>
+                    </local:SettingsGroup>
+                    <TextBlock x:Name="ThemeStatusText"
+                               Margin="2,6,0,0"
+                               AutomationProperties.LiveSetting="Polite"
+                               Style="{StaticResource CaptionStyle}"/>
                 </StackPanel>
             </ScrollViewer>
 
-            <Grid x:Name="ComponentsPage" Visibility="Collapsed">
+            <!-- 桌面组件 -->
+            <Grid x:Name="ComponentsPage" Margin="0,0,28,20" Visibility="Collapsed">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <StackPanel>
-                    <TextBlock FontSize="26" FontWeight="SemiBold" Text="桌面组件"/>
-                    <TextBlock Margin="0,5,0,0"
-                               Foreground="{DynamicResource IceMutedInkBrush}"
-                               Text="选择一张卡片后，在右侧集中调整显示、锁定、尺寸、外观和对应内容；修改后立即生效。"/>
-                    <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center" Text="新建："/>
-                        <Button x:Name="AddTodoButton" Margin="8,0,0,0" Content="待办便签" Click="AddTodo_Click"/>
-                        <Button x:Name="AddNoteButton" Margin="8,0,0,0" Content="普通便签" Click="AddNote_Click"/>
-                        <Button x:Name="AddFileBoxButton" Margin="8,0,0,0" Content="桌面分组盒" Click="AddFileBox_Click"/>
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource PageTitleStyle}" Text="桌面组件"/>
+                        <TextBlock Style="{StaticResource PageSubtitleStyle}" Text="选择一张卡片，在右侧调整它的显示、内容和外观；修改立即生效。"/>
                     </StackPanel>
-                </StackPanel>
+                    <StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,0,6" Orientation="Horizontal">
+                        <Button x:Name="AddTodoButton" AutomationProperties.Name="新建待办便签" Click="AddTodo_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource ButtonGlyphStyle}" Text="&#xE710;"/>
+                                <TextBlock Text="待办便签"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="AddNoteButton" Margin="8,0,0,0" AutomationProperties.Name="新建普通便签" Click="AddNote_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource ButtonGlyphStyle}" Text="&#xE710;"/>
+                                <TextBlock Text="普通便签"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="AddFileBoxButton" Margin="8,0,0,0" AutomationProperties.Name="新建桌面分组盒" Click="AddFileBox_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource ButtonGlyphStyle}" Text="&#xE710;"/>
+                                <TextBlock Text="桌面分组盒"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
 
-                <Grid Grid.Row="1" Margin="0,18,0,0">
+                <Grid Grid.Row="1" Margin="0,14,0,0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="270"/>
-                        <ColumnDefinition Width="18"/>
+                        <ColumnDefinition Width="250"/>
+                        <ColumnDefinition Width="16"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <Border Padding="14"
-                            Background="{DynamicResource SettingsComponentNavigationBrush}"
-                            BorderBrush="{DynamicResource SettingsComponentBorderBrush}"
-                            BorderThickness="1"
-                            CornerRadius="14">
-                        <DockPanel>
-                            <StackPanel DockPanel.Dock="Top" Margin="4,2,4,12">
-                                <TextBlock FontSize="17" FontWeight="SemiBold" Text="我的桌面卡片"/>
-                                <TextBlock Margin="0,4,0,0"
-                                           Foreground="{DynamicResource IceMutedInkBrush}"
-                                           Text="可拖动 / 已锁定状态一目了然"/>
-                            </StackPanel>
-                            <ListBox x:Name="DesktopComponentList"
-                                     AutomationProperties.Name="桌面组件列表"
-                                     Background="Transparent"
-                                     BorderThickness="0"
-                                     ItemContainerStyle="{StaticResource ComponentListItemStyle}"
-                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                     SelectionChanged="DesktopComponentList_SelectionChanged">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="Auto"/>
-                                            </Grid.RowDefinitions>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock FontSize="15"
-                                                       FontWeight="SemiBold"
-                                                       Text="{Binding Name}"
-                                                       TextTrimming="CharacterEllipsis"/>
-                                            <TextBlock Grid.Column="1"
-                                                       Margin="8,0,0,0"
-                                                       Padding="7,2"
-                                                       FontSize="11"
-                                                       Foreground="{DynamicResource SettingsBadgeTextBrush}"
-                                                       Background="{DynamicResource SettingsBadgeBrush}"
-                                                       Text="{Binding Status}"/>
-                                            <TextBlock Grid.Row="1"
-                                                       Grid.ColumnSpan="2"
-                                                       Margin="0,4,0,0"
-                                                       FontSize="12"
-                                                       Foreground="{DynamicResource IceMutedInkBrush}"
-                                                       Text="{Binding TypeName}"/>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-                        </DockPanel>
-                    </Border>
+                    <ListBox x:Name="DesktopComponentList"
+                             AutomationProperties.Name="桌面组件列表"
+                             Padding="0,0,4,0"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             ItemContainerStyle="{StaticResource ComponentListItemStyle}"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             SelectionChanged="DesktopComponentList_SelectionChanged">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock FontWeight="SemiBold"
+                                               Text="{Binding Name}"
+                                               TextTrimming="CharacterEllipsis"/>
+                                    <Border Grid.Column="1"
+                                            Margin="8,0,0,0"
+                                            Padding="7,1"
+                                            VerticalAlignment="Center"
+                                            Background="{DynamicResource SettingsBadgeBrush}"
+                                            CornerRadius="4">
+                                        <TextBlock FontSize="11"
+                                                   Foreground="{DynamicResource SettingsBadgeTextBrush}"
+                                                   Text="{Binding Status}"/>
+                                    </Border>
+                                    <TextBlock Grid.Row="1"
+                                               Grid.ColumnSpan="2"
+                                               Margin="0,3,0,0"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource IceMutedInkBrush}"
+                                               Text="{Binding TypeName}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
 
                     <ScrollViewer x:Name="ComponentDetailsScrollViewer"
                                   Grid.Column="2"
                                   VerticalScrollBarVisibility="Auto">
-                        <StackPanel>
-                            <Border x:Name="DisplayContentSettingsCard"
-                                    Visibility="Collapsed"
-                                    Margin="0,0,0,14"
-                                    Style="{StaticResource SectionCardStyle}">
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    <TextBlock FontSize="17" FontWeight="SemiBold" Text="时间与问候内容"/>
-                                    <Grid Grid.Row="1" Margin="0,13,0,0">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="88"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="150"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock VerticalAlignment="Center" Text="问候称呼"/>
-                                        <TextBox x:Name="GreetingNameEditor"
-                                                 Grid.Column="1"
-                                                 Height="36"
-                                                 AutomationProperties.Name="问候称呼"
-                                                 TextChanged="DisplaySettings_Changed"/>
-                                        <CheckBox x:Name="Use24HourClockCheckBox"
-                                                  Grid.Column="2"
-                                                  Margin="18,0,0,0"
-                                                  Content="使用 24 小时制"
-                                                  Checked="DisplaySettings_Changed"
-                                                  Unchecked="DisplaySettings_Changed"/>
-                                    </Grid>
-                                    <StackPanel Grid.Row="2" Margin="88,12,0,0" Orientation="Horizontal">
-                                        <CheckBox x:Name="ClockDividerCheckBox"
-                                                  VerticalAlignment="Center"
-                                                  Content="时间下方显示两端渐隐的细线"
-                                                  Checked="ClockDivider_Changed"
-                                                  Unchecked="ClockDivider_Changed"/>
-                                        <TextBlock Margin="22,0,8,0" VerticalAlignment="Center" Text="粗细"/>
-                                        <Slider x:Name="ClockDividerThicknessSlider"
-                                                Width="140"
-                                                VerticalAlignment="Center"
-                                                Minimum="1"
-                                                Maximum="6"
-                                                SmallChange="0.5"
-                                                LargeChange="1"
-                                                IsSnapToTickEnabled="True"
-                                                TickFrequency="0.5"
-                                                AutomationProperties.Name="细线粗细"
-                                                ValueChanged="ClockDivider_Changed"/>
-                                        <TextBlock x:Name="ClockDividerThicknessText" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                    <TextBlock x:Name="DisplaySettingsStatusText"
-                                               Grid.Row="3"
-                                               Margin="0,12,0,0"
-                                               AutomationProperties.LiveSetting="Polite"
-                                               Foreground="{DynamicResource IceMutedInkBrush}"
-                                               Text="修改后立即生效"/>
-                                </Grid>
-                            </Border>
-
-                            <Border x:Name="WeatherContentSettingsCard"
-                                    Visibility="Collapsed"
-                                    Margin="0,0,0,14"
-                                    Style="{StaticResource SectionCardStyle}">
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    <TextBlock FontSize="17" FontWeight="SemiBold" Text="天气城市"/>
-                                    <TextBlock x:Name="CurrentCityText" Grid.Row="1" Margin="0,6,0,0" Foreground="{DynamicResource IceMutedInkBrush}"/>
-                                    <Grid Grid.Row="2" Margin="0,13,0,0">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBox x:Name="CityQueryEditor"
-                                                 AutomationProperties.Name="城市关键词"
-                                                 Height="32"
-                                                 VerticalContentAlignment="Center"
-                                                 ToolTip="输入城市名后按 Enter 搜索"
-                                                 KeyDown="CityQueryEditor_KeyDown"/>
-                                        <Button x:Name="SearchCityButton"
-                                                Grid.Column="1"
-                                                Width="72"
-                                                Height="32"
-                                                Margin="8,0,0,0"
-                                                Content="搜索"
-                                                Click="SearchCity_Click"/>
-                                    </Grid>
-                                    <ListBox x:Name="CityResultsList"
-                                             AutomationProperties.Name="城市搜索结果"
-                                             Grid.Row="3"
-                                             Margin="0,8,0,0"
-                                             MaxHeight="160"
-                                             Visibility="Collapsed"
-                                             Background="{DynamicResource SettingsResultBrush}"
-                                             BorderBrush="{DynamicResource SettingsResultBorderBrush}"
-                                             BorderThickness="1"
-                                             SelectionChanged="CityResultsList_SelectionChanged">
-                                        <ListBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <Grid Margin="8,6">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock FontWeight="SemiBold" Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis"/>
-                                                    <TextBlock Grid.Column="1" Margin="12,0,0,0" Foreground="{DynamicResource SettingsCoordinateTextBrush}" Text="{Binding CoordinateText}"/>
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ListBox.ItemTemplate>
-                                    </ListBox>
-                                    <Grid Grid.Row="4" Margin="0,10,0,0">
-                                        <TextBlock x:Name="CitySearchStatusText"
-                                                   AutomationProperties.LiveSetting="Polite"
-                                                   VerticalAlignment="Center"
-                                                   Foreground="{DynamicResource IceMutedInkBrush}"/>
-                                        <Button x:Name="ApplyCityButton"
-                                                HorizontalAlignment="Right"
-                                                IsEnabled="False"
-                                                Content="使用所选城市"
-                                                Click="ApplyCity_Click"/>
-                                    </Grid>
-                                    <TextBlock Grid.Row="5"
-                                               Margin="0,12,0,0"
-                                               FontSize="12"
-                                               Foreground="{DynamicResource IceMutedInkBrush}"
-                                               TextWrapping="Wrap"
-                                               Text="只有点击搜索时才发送城市关键词；选择后仅把城市名和坐标保存在本机。不使用 IP、GPS、Wi-Fi 或设备位置。"/>
-                                </Grid>
-                            </Border>
-
-                            <Border x:Name="QuickPlacesSettingsCard"
-                                    Visibility="Collapsed"
-                                    Margin="0,0,0,14"
-                                    Style="{StaticResource SectionCardStyle}">
-                                <StackPanel>
-                                    <TextBlock FontSize="17" FontWeight="SemiBold" Text="快捷入口内容"/>
-                                    <TextBlock Margin="0,6,0,10"
-                                               TextWrapping="Wrap"
-                                               Foreground="{DynamicResource IceMutedInkBrush}"
-                                               Text="选中一项后可换图标、改名称和位置；位置可以是文件夹、程序或文件。最多 12 个，修改立即生效。"/>
-                                    <ListBox x:Name="QuickPlaceList"
-                                             MaxHeight="210"
-                                             AutomationProperties.Name="快捷入口列表"
-                                             Background="{DynamicResource SettingsResultBrush}"
-                                             BorderBrush="{DynamicResource SettingsResultBorderBrush}"
-                                             BorderThickness="1"
-                                             SelectionChanged="QuickPlaceList_SelectionChanged">
-                                        <ListBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <Grid Margin="4,3">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="30"/>
-                                                        <ColumnDefinition Width="110"/>
-                                                        <ColumnDefinition Width="*"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16"
-                                                               VerticalAlignment="Center" Text="{Binding Glyph}"/>
-                                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding Name}"
-                                                               TextTrimming="CharacterEllipsis"/>
-                                                    <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="{Binding Target}"
-                                                               TextTrimming="CharacterEllipsis"
-                                                               Foreground="{DynamicResource IceMutedInkBrush}"/>
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ListBox.ItemTemplate>
-                                    </ListBox>
-                                    <WrapPanel Margin="0,8,0,0">
-                                        <Button Content="添加" Click="QuickPlaceAdd_Click"/>
-                                        <Button Margin="8,0,0,0" Content="删除" Click="QuickPlaceRemove_Click"/>
-                                        <Button Margin="8,0,0,0" Content="上移" Click="QuickPlaceUp_Click"/>
-                                        <Button Margin="8,0,0,0" Content="下移" Click="QuickPlaceDown_Click"/>
-                                        <Button Margin="8,0,0,0" Content="恢复默认" Click="QuickPlaceReset_Click"/>
-                                    </WrapPanel>
-                                    <Grid x:Name="QuickPlaceEditor" Margin="0,12,0,0" IsEnabled="False">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="52"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-                                        <TextBlock VerticalAlignment="Center" Text="图标"/>
-                                        <ComboBox x:Name="QuickPlaceIconPicker"
-                                                  Grid.Column="1"
-                                                  Height="32"
-                                                  AutomationProperties.Name="快捷入口图标"
-                                                  SelectionChanged="QuickPlaceIcon_SelectionChanged">
-                                            <ComboBox.ItemTemplate>
-                                                <DataTemplate>
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <TextBlock Width="26" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                                                                   FontSize="15" VerticalAlignment="Center" Text="{Binding Glyph}"/>
-                                                        <TextBlock VerticalAlignment="Center" Text="{Binding Name}"/>
-                                                    </StackPanel>
-                                                </DataTemplate>
-                                            </ComboBox.ItemTemplate>
-                                        </ComboBox>
-                                        <TextBlock Grid.Row="1" Margin="0,8,0,0" VerticalAlignment="Center" Text="名称"/>
-                                        <TextBox x:Name="QuickPlaceNameEditor"
-                                                 Grid.Row="1"
-                                                 Grid.Column="1"
-                                                 Height="32"
-                                                 Margin="0,8,0,0"
-                                                 VerticalContentAlignment="Center"
-                                                 MaxLength="20"
-                                                 AutomationProperties.Name="快捷入口名称"
-                                                 LostFocus="QuickPlaceName_Commit"
-                                                 KeyDown="QuickPlaceEditor_KeyDown"/>
-                                        <TextBlock Grid.Row="2" Margin="0,8,0,0" VerticalAlignment="Center" Text="位置"/>
-                                        <Grid Grid.Row="2" Grid.Column="1" Margin="0,8,0,0">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBox x:Name="QuickPlaceTargetEditor"
-                                                     Height="32"
-                                                     VerticalContentAlignment="Center"
-                                                     AutomationProperties.Name="快捷入口位置"
-                                                     ToolTip="文件夹、程序或文件的路径；按回车或离开输入框后生效"
-                                                     LostFocus="QuickPlaceTarget_Commit"
-                                                     KeyDown="QuickPlaceEditor_KeyDown"/>
-                                            <Button Grid.Column="1" Margin="8,0,0,0" Content="选文件夹…" Click="QuickPlaceChooseFolder_Click"/>
-                                            <Button Grid.Column="2" Margin="8,0,0,0" Content="选程序或文件…" Click="QuickPlaceChooseFile_Click"/>
-                                        </Grid>
-                                    </Grid>
-                                </StackPanel>
-                            </Border>
-
+                        <StackPanel Margin="0,0,6,0">
                             <StackPanel x:Name="BuiltInComponentEditorPanel">
-                                <Border Style="{StaticResource SectionCardStyle}">
-                                    <StackPanel>
-                                        <TextBlock x:Name="SelectedComponentHeadingText"
-                                                   FontSize="20"
-                                                   FontWeight="SemiBold"/>
-                                        <TextBlock Margin="0,5,0,0"
-                                                   Foreground="{DynamicResource IceMutedInkBrush}"
-                                                   Text="未锁定时可直接拖动桌面空白区；锁定后位置和尺寸不会被误改。"/>
-                                        <StackPanel Margin="0,15,0,0" Orientation="Horizontal">
-                                            <CheckBox x:Name="SelectedComponentVisibleCheckBox"
-                                                      Content="显示此组件"
-                                                      Checked="ComponentToggle_Changed"
-                                                      Unchecked="ComponentToggle_Changed"/>
-                                            <CheckBox x:Name="SelectedComponentLockedCheckBox"
-                                                      Margin="28,0,0,0"
-                                                      Content="锁定卡片位置"
-                                                      Checked="ComponentToggle_Changed"
-                                                      Unchecked="ComponentToggle_Changed"/>
-                                            <Button Margin="28,0,0,0"
-                                                    Content="恢复默认位置"
-                                                    Click="ResetComponentPlacement_Click"/>
-                                            <Button x:Name="DeleteComponentButton"
-                                                    Margin="10,0,0,0"
-                                                    Content="删除此卡片"
-                                                    Click="DeleteComponent_Click"/>
-                                        </StackPanel>
-                                    </StackPanel>
-                                </Border>
-
-                                <Border Margin="0,14,0,0" Style="{StaticResource SectionCardStyle}">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="24"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <StackPanel>
-                                            <TextBlock FontSize="17" FontWeight="SemiBold" Text="文字与材质"/>
-                                            <TextBlock Margin="0,14,0,5" Text="这张卡片的外观"/>
-                                            <StackPanel Orientation="Horizontal">
-                                                <Button Content="浅色玻璃" Tag="Light" Click="ComponentLook_Click"/>
-                                                <Button Margin="8,0,0,0" Content="深色玻璃" Tag="Dark" Click="ComponentLook_Click"/>
-                                                <Button Margin="8,0,0,0" Content="无底板" Tag="Clear" Click="ComponentLook_Click"/>
-                                            </StackPanel>
-                                            <TextBlock Margin="0,14,0,5" Text="字体"/>
-                                            <ComboBox x:Name="SelectedComponentFontPicker"
-                                                      Height="34"
-                                                      AutomationProperties.Name="卡片字体"
-                                                      IsTextSearchEnabled="True"
-                                                      MaxDropDownHeight="280"
-                                                      VirtualizingPanel.IsVirtualizing="True"
-                                                      SelectionChanged="ComponentFont_SelectionChanged"/>
-                                            <TextBlock Margin="0,14,0,5" Text="字号缩放"/>
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="48"/>
-                                                </Grid.ColumnDefinitions>
-                                                <Slider x:Name="SelectedComponentFontScaleSlider"
-                                                        AutomationProperties.Name="字号缩放"
-                                                        Minimum="0.7"
-                                                        Maximum="2"
-                                                        TickFrequency="0.1"
-                                                        ValueChanged="ComponentStyleSlider_ValueChanged"/>
-                                                <TextBlock x:Name="SelectedComponentFontScaleValueText"
-                                                           Grid.Column="1"
-                                                           HorizontalAlignment="Right"/>
-                                            </Grid>
-                                            <TextBlock Margin="0,14,0,5" Text="快速配色"/>
-                                            <WrapPanel x:Name="ComponentPaletteSwatches"/>
-                                            <TextBlock Margin="0,14,0,5" Text="文字颜色"/>
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="52"/>
-                                                    <ColumnDefinition Width="52"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBox x:Name="SelectedComponentTextColorEditor"
-                                                         Height="34"
-                                                         AutomationProperties.Name="文字颜色"
-                                                         TextChanged="ComponentEditor_TextChanged"/>
-                                                <Button Grid.Column="1" Margin="6,0,0,0" Padding="4" Content="白" Tag="#FFFFFF" AutomationProperties.Name="文字颜色设为白色" Click="QuickTextColor_Click"/>
-                                                <Button Grid.Column="2" Margin="6,0,0,0" Padding="4" Content="黑" Tag="#000000" AutomationProperties.Name="文字颜色设为黑色" Click="QuickTextColor_Click"/>
-                                            </Grid>
-                                            <TextBlock Margin="0,14,0,5" Text="玻璃颜色"/>
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="52"/>
-                                                    <ColumnDefinition Width="52"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBox x:Name="SelectedComponentBackgroundColorEditor"
-                                                         Height="34"
-                                                         AutomationProperties.Name="玻璃颜色"
-                                                         TextChanged="ComponentEditor_TextChanged"/>
-                                                <Button Grid.Column="1" Margin="6,0,0,0" Padding="4" Content="白" Tag="#FFFFFF" AutomationProperties.Name="玻璃颜色设为白色" Click="QuickBackgroundColor_Click"/>
-                                                <Button Grid.Column="2" Margin="6,0,0,0" Padding="4" Content="蓝" Tag="#A0B4E1" AutomationProperties.Name="玻璃颜色设为蓝色" Click="QuickBackgroundColor_Click"/>
-                                            </Grid>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Column="2">
-                                            <TextBlock FontSize="17" FontWeight="SemiBold" Text="形状与尺寸"/>
-                                            <TextBlock Margin="0,14,0,5" Text="玻璃不透明度"/>
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="48"/>
-                                                </Grid.ColumnDefinitions>
-                                                <Slider x:Name="SelectedComponentOpacitySlider"
-                                                        AutomationProperties.Name="玻璃不透明度"
-                                                        Minimum="0"
-                                                        Maximum="1"
-                                                        TickFrequency="0.04"
-                                                        ValueChanged="ComponentStyleSlider_ValueChanged"/>
-                                                <TextBlock x:Name="SelectedComponentOpacityValueText"
-                                                           Grid.Column="1"
-                                                           HorizontalAlignment="Right"/>
-                                            </Grid>
-                                            <TextBlock Margin="0,14,0,5" Text="圆角"/>
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="48"/>
-                                                </Grid.ColumnDefinitions>
-                                                <Slider x:Name="SelectedComponentCornerRadiusSlider"
-                                                        AutomationProperties.Name="组件圆角"
-                                                        Minimum="0"
-                                                        Maximum="32"
-                                                        TickFrequency="1"
-                                                        ValueChanged="ComponentStyleSlider_ValueChanged"/>
-                                                <TextBlock x:Name="SelectedComponentCornerRadiusValueText"
-                                                           Grid.Column="1"
-                                                           HorizontalAlignment="Right"/>
-                                            </Grid>
-                                            <TextBlock Margin="0,14,0,5" Text="信息密度"/>
-                                            <ComboBox x:Name="SelectedComponentDensitySelector"
-                                                      Height="34"
-                                                      AutomationProperties.Name="信息密度"
-                                                      SelectionChanged="ComponentDensity_SelectionChanged">
-                                                <ComboBoxItem Content="舒适" Tag="Comfortable"/>
-                                                <ComboBoxItem Content="标准" Tag="Standard"/>
-                                                <ComboBoxItem Content="紧凑" Tag="Compact"/>
-                                            </ComboBox>
-                                            <TextBlock Margin="0,14,0,5" Text="卡片尺寸"/>
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="14"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Margin="0,0,6,0" VerticalAlignment="Center" Text="宽"/>
-                                                <TextBox x:Name="SelectedComponentWidthEditor" Grid.Column="1" Height="34" AutomationProperties.Name="卡片宽度" TextChanged="ComponentEditor_TextChanged"/>
-                                                <TextBlock Grid.Column="3" Margin="0,0,6,0" VerticalAlignment="Center" Text="高"/>
-                                                <TextBox x:Name="SelectedComponentHeightEditor" Grid.Column="4" Height="34" AutomationProperties.Name="卡片高度" TextChanged="ComponentEditor_TextChanged"/>
-                                            </Grid>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
-
-                                <Grid Margin="0,14,0,0">
-                                    <TextBlock x:Name="ComponentSettingsStatusText"
-                                               AutomationProperties.LiveSetting="Polite"
-                                               VerticalAlignment="Center"
-                                               Foreground="{DynamicResource IceMutedInkBrush}"
-                                               Text="修改后立即生效"/>
-                                </Grid>
-                            </StackPanel>
-
-                            <Border x:Name="SelectedWidgetEditorPanel"
-                                    Visibility="Collapsed"
-                                    Style="{StaticResource SectionCardStyle}">
-                                <StackPanel>
-                                    <TextBlock x:Name="SelectedWidgetHeadingText"
-                                               FontSize="20"
-                                               FontWeight="SemiBold"/>
-                                    <CheckBox x:Name="SelectedWidgetLockedCheckBox"
-                                              AutomationProperties.Name="锁定所选卡片位置"
-                                              Margin="0,12,0,14"
-                                              Content="锁定卡片位置"
-                                              Click="SelectedWidgetLockedCheckBox_Click"/>
-                                    <StackPanel Margin="0,0,0,14" Orientation="Horizontal">
-                                        <Button x:Name="ResetWidgetPlacementButton"
-                                                Content="恢复默认位置"
-                                                Click="ResetComponentPlacement_Click"/>
-                                        <Button Margin="10,0,0,0"
+                                <TextBlock x:Name="SelectedComponentHeadingText"
+                                           FontSize="20"
+                                           FontWeight="SemiBold"/>
+                                <TextBlock Margin="0,2,0,12"
+                                           Style="{StaticResource CaptionStyle}"
+                                           Text="未锁定时可直接拖动桌面空白区；锁定后位置和尺寸不会被误改。"/>
+                                <local:SettingsGroup>
+                                <local:SettingsRow Glyph="&#xE7B3;" Header="显示此组件">
+                                    <CheckBox x:Name="SelectedComponentVisibleCheckBox"
+                                              Style="{StaticResource ToggleSwitchStyle}"
+                                              Checked="ComponentToggle_Changed"
+                                              Unchecked="ComponentToggle_Changed"/>
+                                </local:SettingsRow>
+                                <local:SettingsRow Glyph="&#xE72E;" GlyphBrush="{DynamicResource SettingsIconOrangeBrush}" Header="锁定卡片位置">
+                                    <CheckBox x:Name="SelectedComponentLockedCheckBox"
+                                              Style="{StaticResource ToggleSwitchStyle}"
+                                              Checked="ComponentToggle_Changed"
+                                              Unchecked="ComponentToggle_Changed"/>
+                                </local:SettingsRow>
+                                <local:SettingsRow Glyph="&#xE7A7;" GlyphBrush="{DynamicResource SettingsIconGrayBrush}" Header="位置" Description="删除内置卡片只是隐藏，设置会保留">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Content="恢复默认位置" Click="ResetComponentPlacement_Click"/>
+                                        <Button x:Name="DeleteComponentButton"
+                                                Margin="8,0,0,0"
                                                 Content="删除此卡片"
                                                 Click="DeleteComponent_Click"/>
                                     </StackPanel>
-                                    <StackPanel x:Name="FileBoxCollectPanel" Margin="0,0,0,18" Visibility="Collapsed">
-                                        <TextBlock FontSize="16" FontWeight="SemiBold" Text="自动整理时收纳"/>
-                                        <TextBlock Margin="0,4,0,8"
-                                                   TextWrapping="Wrap"
-                                                   Foreground="{DynamicResource IceMutedInkBrush}"
-                                                   Text="点击分组盒底部的“自动整理”时，桌面上这些类型的项目会放进这个盒子（只建立映射，不移动文件）。几个盒子都勾选同一类型时，放进列表中靠前的盒子。"/>
-                                        <WrapPanel x:Name="FileBoxCollectTypes"/>
-                                        <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
-                                            <TextBlock Width="92" VerticalAlignment="Center" Text="其他扩展名"/>
-                                            <TextBox x:Name="FileBoxExtraExtensionsEditor"
-                                                     Width="320"
-                                                     Height="34"
-                                                     AutomationProperties.Name="其他扩展名"
-                                                     ToolTip="用空格或逗号分隔，例如：psd ai dwg"
-                                                     LostFocus="FileBoxCollect_Changed"/>
+                                </local:SettingsRow>
+                                </local:SettingsGroup>
+
+                                <StackPanel x:Name="DisplayContentSettingsCard" Visibility="Collapsed">
+                                    <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="时间与问候"/>
+                                    <local:SettingsGroup>
+                                    <local:SettingsRow Glyph="&#xE77B;" GlyphBrush="{DynamicResource SettingsIconPinkBrush}" Header="问候称呼" Description="显示在问候语里的名字">
+                                        <TextBox x:Name="GreetingNameEditor"
+                                                 Width="220"
+                                                 AutomationProperties.Name="问候称呼"
+                                                 TextChanged="DisplaySettings_Changed"/>
+                                    </local:SettingsRow>
+                                    <local:SettingsRow Glyph="&#xE823;" GlyphBrush="{DynamicResource SettingsIconIndigoBrush}" Header="使用 24 小时制">
+                                        <CheckBox x:Name="Use24HourClockCheckBox"
+                                                  Style="{StaticResource ToggleSwitchStyle}"
+                                                  Checked="DisplaySettings_Changed"
+                                                  Unchecked="DisplaySettings_Changed"/>
+                                    </local:SettingsRow>
+                                    <local:SettingsRow Glyph="&#xE76F;" GlyphBrush="{DynamicResource SettingsIconTealBrush}" Header="时间下方的细线" Description="两端渐隐">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Slider x:Name="ClockDividerThicknessSlider"
+                                                    Width="140"
+                                                    Minimum="1"
+                                                    Maximum="6"
+                                                    SmallChange="0.5"
+                                                    LargeChange="1"
+                                                    IsSnapToTickEnabled="True"
+                                                    TickFrequency="0.5"
+                                                    AutomationProperties.Name="细线粗细"
+                                                    ValueChanged="ClockDivider_Changed"/>
+                                            <TextBlock x:Name="ClockDividerThicknessText" Margin="10,0,20,0" Style="{StaticResource ValueTextStyle}"/>
+                                            <CheckBox x:Name="ClockDividerCheckBox"
+                                                      AutomationProperties.Name="时间下方显示两端渐隐的细线"
+                                                      Style="{StaticResource ToggleSwitchStyle}"
+                                                      Checked="ClockDivider_Changed"
+                                                      Unchecked="ClockDivider_Changed"/>
                                         </StackPanel>
-                                    </StackPanel>
-                                    <ContentControl x:Name="SelectedWidgetAppearanceHost"/>
+                                    </local:SettingsRow>
+                                    </local:SettingsGroup>
+                                    <TextBlock x:Name="DisplaySettingsStatusText"
+                                               Margin="2,4,0,0"
+                                               AutomationProperties.LiveSetting="Polite"
+                                               Style="{StaticResource CaptionStyle}"
+                                               Text="修改后立即生效"/>
                                 </StackPanel>
-                            </Border>
+
+                                <StackPanel x:Name="WeatherContentSettingsCard" Visibility="Collapsed">
+                                    <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="天气城市"/>
+                                    <Border Style="{StaticResource SettingsPanelStyle}">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock x:Name="CurrentCityText" FontWeight="SemiBold"/>
+                                            <Grid Grid.Row="1" Margin="0,12,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox x:Name="CityQueryEditor"
+                                                         AutomationProperties.Name="城市关键词"
+                                                         ToolTip="输入城市名后按 Enter 搜索"
+                                                         KeyDown="CityQueryEditor_KeyDown"/>
+                                                <Button x:Name="SearchCityButton"
+                                                        Grid.Column="1"
+                                                        MinWidth="72"
+                                                        Margin="8,0,0,0"
+                                                        Content="搜索"
+                                                        Click="SearchCity_Click"/>
+                                            </Grid>
+                                            <ListBox x:Name="CityResultsList"
+                                                     Grid.Row="2"
+                                                     Margin="0,8,0,0"
+                                                     MaxHeight="160"
+                                                     AutomationProperties.Name="城市搜索结果"
+                                                     Visibility="Collapsed"
+                                                     SelectionChanged="CityResultsList_SelectionChanged">
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock FontWeight="SemiBold" Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis"/>
+                                                            <TextBlock Grid.Column="1" Margin="12,0,0,0" Foreground="{DynamicResource SettingsCoordinateTextBrush}" Text="{Binding CoordinateText}"/>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+                                            <Grid Grid.Row="3" Margin="0,10,0,0">
+                                                <TextBlock x:Name="CitySearchStatusText"
+                                                           VerticalAlignment="Center"
+                                                           AutomationProperties.LiveSetting="Polite"
+                                                           Style="{StaticResource CaptionStyle}"/>
+                                                <Button x:Name="ApplyCityButton"
+                                                        HorizontalAlignment="Right"
+                                                        IsEnabled="False"
+                                                        Style="{StaticResource AccentButtonStyle}"
+                                                        Content="使用所选城市"
+                                                        Click="ApplyCity_Click"/>
+                                            </Grid>
+                                            <TextBlock Grid.Row="4"
+                                                       Margin="0,12,0,0"
+                                                       Style="{StaticResource CaptionStyle}"
+                                                       Text="只有点击搜索时才发送城市关键词；选择后仅把城市名和坐标保存在本机。不使用 IP、GPS、Wi-Fi 或设备位置。"/>
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+
+                                <StackPanel x:Name="QuickPlacesSettingsCard" Visibility="Collapsed">
+                                    <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="快捷入口内容"/>
+                                    <Border Style="{StaticResource SettingsPanelStyle}">
+                                        <StackPanel>
+                                            <TextBlock Margin="0,0,0,10"
+                                                       Style="{StaticResource CaptionStyle}"
+                                                       Text="选中一项后可换图标、改名称和位置；位置可以是文件夹、程序或文件。最多 12 个。"/>
+                                            <ListBox x:Name="QuickPlaceList"
+                                                     MaxHeight="210"
+                                                     AutomationProperties.Name="快捷入口列表"
+                                                     SelectionChanged="QuickPlaceList_SelectionChanged">
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="30"/>
+                                                                <ColumnDefinition Width="110"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock FontFamily="{StaticResource SettingsIconFont}" FontSize="16"
+                                                                       VerticalAlignment="Center" Text="{Binding Glyph}"/>
+                                                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding Name}"
+                                                                       TextTrimming="CharacterEllipsis"/>
+                                                            <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="{Binding Target}"
+                                                                       TextTrimming="CharacterEllipsis"
+                                                                       Foreground="{DynamicResource IceMutedInkBrush}"/>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+                                            <WrapPanel Margin="0,10,0,0">
+                                                <Button Content="添加" Click="QuickPlaceAdd_Click"/>
+                                                <Button Margin="8,0,0,0" Content="删除" Click="QuickPlaceRemove_Click"/>
+                                                <Button Margin="8,0,0,0" Content="上移" Click="QuickPlaceUp_Click"/>
+                                                <Button Margin="8,0,0,0" Content="下移" Click="QuickPlaceDown_Click"/>
+                                                <Button Margin="8,0,0,0" Content="恢复默认" Click="QuickPlaceReset_Click"/>
+                                            </WrapPanel>
+                                            <Grid x:Name="QuickPlaceEditor" Margin="0,14,0,0" IsEnabled="False">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="52"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+                                                <TextBlock VerticalAlignment="Center" Text="图标"/>
+                                                <ComboBox x:Name="QuickPlaceIconPicker"
+                                                          Grid.Column="1"
+                                                          AutomationProperties.Name="快捷入口图标"
+                                                          SelectionChanged="QuickPlaceIcon_SelectionChanged">
+                                                    <ComboBox.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <TextBlock Width="26" FontFamily="{StaticResource SettingsIconFont}"
+                                                                           FontSize="15" VerticalAlignment="Center" Text="{Binding Glyph}"/>
+                                                                <TextBlock VerticalAlignment="Center" Text="{Binding Name}"/>
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </ComboBox.ItemTemplate>
+                                                </ComboBox>
+                                                <TextBlock Grid.Row="1" Margin="0,8,0,0" VerticalAlignment="Center" Text="名称"/>
+                                                <TextBox x:Name="QuickPlaceNameEditor"
+                                                         Grid.Row="1"
+                                                         Grid.Column="1"
+                                                         Margin="0,8,0,0"
+                                                         MaxLength="20"
+                                                         AutomationProperties.Name="快捷入口名称"
+                                                         LostFocus="QuickPlaceName_Commit"
+                                                         KeyDown="QuickPlaceEditor_KeyDown"/>
+                                                <TextBlock Grid.Row="2" Margin="0,8,0,0" VerticalAlignment="Center" Text="位置"/>
+                                                <Grid Grid.Row="2" Grid.Column="1" Margin="0,8,0,0">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBox x:Name="QuickPlaceTargetEditor"
+                                                             AutomationProperties.Name="快捷入口位置"
+                                                             ToolTip="文件夹、程序或文件的路径；按回车或离开输入框后生效"
+                                                             LostFocus="QuickPlaceTarget_Commit"
+                                                             KeyDown="QuickPlaceEditor_KeyDown"/>
+                                                    <Button Grid.Column="1" Margin="8,0,0,0" Content="选文件夹…" Click="QuickPlaceChooseFolder_Click"/>
+                                                    <Button Grid.Column="2" Margin="8,0,0,0" Content="选程序或文件…" Click="QuickPlaceChooseFile_Click"/>
+                                                </Grid>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+
+                                <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="文字与材质"/>
+                                <local:SettingsGroup>
+                                <local:SettingsRow Header="这张卡片的外观">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Content="浅色玻璃" Tag="Light" Click="ComponentLook_Click"/>
+                                        <Button Margin="8,0,0,0" Content="深色玻璃" Tag="Dark" Click="ComponentLook_Click"/>
+                                        <Button Margin="8,0,0,0" Content="无底板" Tag="Clear" Click="ComponentLook_Click"/>
+                                    </StackPanel>
+                                </local:SettingsRow>
+                                <local:SettingsRow Header="字体">
+                                    <ComboBox x:Name="SelectedComponentFontPicker"
+                                              Width="240"
+                                              AutomationProperties.Name="卡片字体"
+                                              IsTextSearchEnabled="True"
+                                              MaxDropDownHeight="280"
+                                              VirtualizingPanel.IsVirtualizing="True"
+                                              SelectionChanged="ComponentFont_SelectionChanged"/>
+                                </local:SettingsRow>
+                                <local:SettingsRow Header="字号缩放">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Slider x:Name="SelectedComponentFontScaleSlider"
+                                                Width="190"
+                                                AutomationProperties.Name="字号缩放"
+                                                Minimum="0.7"
+                                                Maximum="2"
+                                                TickFrequency="0.1"
+                                                ValueChanged="ComponentStyleSlider_ValueChanged"/>
+                                        <TextBlock x:Name="SelectedComponentFontScaleValueText" Style="{StaticResource ValueTextStyle}"/>
+                                    </StackPanel>
+                                </local:SettingsRow>
+                                <local:SettingsRow Header="快速配色">
+                                    <WrapPanel x:Name="ComponentPaletteSwatches"/>
+                                </local:SettingsRow>
+                                <local:SettingsRow Header="文字颜色">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBox x:Name="SelectedComponentTextColorEditor"
+                                                 Width="120"
+                                                 AutomationProperties.Name="文字颜色"
+                                                 TextChanged="ComponentEditor_TextChanged"/>
+                                        <Button Margin="8,0,0,0" Content="白" Tag="#FFFFFF" AutomationProperties.Name="文字颜色设为白色" Click="QuickTextColor_Click"/>
+                                        <Button Margin="6,0,0,0" Content="黑" Tag="#000000" AutomationProperties.Name="文字颜色设为黑色" Click="QuickTextColor_Click"/>
+                                    </StackPanel>
+                                </local:SettingsRow>
+                                <local:SettingsRow Header="玻璃颜色">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBox x:Name="SelectedComponentBackgroundColorEditor"
+                                                 Width="120"
+                                                 AutomationProperties.Name="玻璃颜色"
+                                                 TextChanged="ComponentEditor_TextChanged"/>
+                                        <Button Margin="8,0,0,0" Content="白" Tag="#FFFFFF" AutomationProperties.Name="玻璃颜色设为白色" Click="QuickBackgroundColor_Click"/>
+                                        <Button Margin="6,0,0,0" Content="蓝" Tag="#A0B4E1" AutomationProperties.Name="玻璃颜色设为蓝色" Click="QuickBackgroundColor_Click"/>
+                                    </StackPanel>
+                                </local:SettingsRow>
+                                </local:SettingsGroup>
+
+                                <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="形状与尺寸"/>
+                                <local:SettingsGroup>
+                                <local:SettingsRow Header="玻璃不透明度">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Slider x:Name="SelectedComponentOpacitySlider"
+                                                Width="190"
+                                                AutomationProperties.Name="玻璃不透明度"
+                                                Minimum="0"
+                                                Maximum="1"
+                                                TickFrequency="0.04"
+                                                ValueChanged="ComponentStyleSlider_ValueChanged"/>
+                                        <TextBlock x:Name="SelectedComponentOpacityValueText" Style="{StaticResource ValueTextStyle}"/>
+                                    </StackPanel>
+                                </local:SettingsRow>
+                                <local:SettingsRow Header="圆角">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Slider x:Name="SelectedComponentCornerRadiusSlider"
+                                                Width="190"
+                                                AutomationProperties.Name="组件圆角"
+                                                Minimum="0"
+                                                Maximum="32"
+                                                TickFrequency="1"
+                                                ValueChanged="ComponentStyleSlider_ValueChanged"/>
+                                        <TextBlock x:Name="SelectedComponentCornerRadiusValueText" Style="{StaticResource ValueTextStyle}"/>
+                                    </StackPanel>
+                                </local:SettingsRow>
+                                <local:SettingsRow Header="信息密度">
+                                    <ComboBox x:Name="SelectedComponentDensitySelector"
+                                              Width="160"
+                                              AutomationProperties.Name="信息密度"
+                                              SelectionChanged="ComponentDensity_SelectionChanged">
+                                        <ComboBoxItem Content="舒适" Tag="Comfortable"/>
+                                        <ComboBoxItem Content="标准" Tag="Standard"/>
+                                        <ComboBoxItem Content="紧凑" Tag="Compact"/>
+                                    </ComboBox>
+                                </local:SettingsRow>
+                                <local:SettingsRow Header="卡片尺寸">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Margin="0,0,6,0" VerticalAlignment="Center" Text="宽"/>
+                                        <TextBox x:Name="SelectedComponentWidthEditor" Width="80" AutomationProperties.Name="卡片宽度" TextChanged="ComponentEditor_TextChanged"/>
+                                        <TextBlock Margin="14,0,6,0" VerticalAlignment="Center" Text="高"/>
+                                        <TextBox x:Name="SelectedComponentHeightEditor" Width="80" AutomationProperties.Name="卡片高度" TextChanged="ComponentEditor_TextChanged"/>
+                                    </StackPanel>
+                                </local:SettingsRow>
+                                </local:SettingsGroup>
+
+                                <TextBlock x:Name="ComponentSettingsStatusText"
+                                           Margin="2,8,0,0"
+                                           AutomationProperties.LiveSetting="Polite"
+                                           Style="{StaticResource CaptionStyle}"
+                                           Text="修改后立即生效"/>
+                            </StackPanel>
+
+                            <StackPanel x:Name="SelectedWidgetEditorPanel" Visibility="Collapsed">
+                                <TextBlock x:Name="SelectedWidgetHeadingText"
+                                           Margin="0,0,0,12"
+                                           FontSize="20"
+                                           FontWeight="SemiBold"/>
+                                <local:SettingsGroup>
+                                <local:SettingsRow Glyph="&#xE72E;" GlyphBrush="{DynamicResource SettingsIconOrangeBrush}" Header="锁定卡片位置">
+                                    <CheckBox x:Name="SelectedWidgetLockedCheckBox"
+                                              AutomationProperties.Name="锁定所选卡片位置"
+                                              Style="{StaticResource ToggleSwitchStyle}"
+                                              Click="SelectedWidgetLockedCheckBox_Click"/>
+                                </local:SettingsRow>
+                                <local:SettingsRow Glyph="&#xE7A7;" GlyphBrush="{DynamicResource SettingsIconGrayBrush}" Header="位置">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button x:Name="ResetWidgetPlacementButton"
+                                                Content="恢复默认位置"
+                                                Click="ResetComponentPlacement_Click"/>
+                                        <Button Margin="8,0,0,0"
+                                                Content="删除此卡片"
+                                                Click="DeleteComponent_Click"/>
+                                    </StackPanel>
+                                </local:SettingsRow>
+                                </local:SettingsGroup>
+                                <StackPanel x:Name="FileBoxCollectPanel" Visibility="Collapsed">
+                                    <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="自动整理时收纳"/>
+                                    <Border Style="{StaticResource SettingsPanelStyle}">
+                                        <StackPanel>
+                                            <TextBlock Margin="0,0,0,10"
+                                                       Style="{StaticResource CaptionStyle}"
+                                                       Text="点击分组盒底部的“自动整理”时，桌面上这些类型的项目会放进这个盒子（只建立映射，不移动文件）。几个盒子都勾选同一类型时，放进列表中靠前的盒子。"/>
+                                            <WrapPanel x:Name="FileBoxCollectTypes"/>
+                                            <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
+                                                <TextBlock Width="92" VerticalAlignment="Center" Text="其他扩展名"/>
+                                                <TextBox x:Name="FileBoxExtraExtensionsEditor"
+                                                         Width="320"
+                                                         AutomationProperties.Name="其他扩展名"
+                                                         ToolTip="用空格或逗号分隔，例如：psd ai dwg"
+                                                         LostFocus="FileBoxCollect_Changed"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                                <Border Margin="0,18,0,4" Style="{StaticResource SettingsPanelStyle}">
+                                    <ContentControl x:Name="SelectedWidgetAppearanceHost" Focusable="False"/>
+                                </Border>
+                            </StackPanel>
                         </StackPanel>
                     </ScrollViewer>
                 </Grid>
             </Grid>
 
+            <!-- Dock -->
             <ScrollViewer x:Name="DockPage"
                           Visibility="Collapsed"
                           VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <TextBlock FontSize="26" FontWeight="SemiBold" Text="冰蓝 Dock"/>
-                    <TextBlock Margin="0,5,0,0"
-                               TextWrapping="Wrap"
-                               Foreground="{DynamicResource IceMutedInkBrush}"
+                <StackPanel Margin="0,0,28,28">
+                    <TextBlock Style="{StaticResource PageTitleStyle}" Text="冰蓝 Dock"/>
+                    <TextBlock Style="{StaticResource PageSubtitleStyle}"
                                Text="在屏幕底部居中显示固定的应用和正在运行的应用。开始菜单、系统托盘和通知仍由 Windows 任务栏提供。"/>
 
-                    <Border Margin="0,18,0,0" Style="{StaticResource SectionCardStyle}">
-                        <StackPanel>
+                    <local:SettingsGroup Margin="0,14,0,4">
+                        <local:SettingsRow Glyph="&#xE71D;" Header="显示冰蓝 Dock" Description="关闭后，下面的设置会保留，重新打开时继续使用">
                             <CheckBox x:Name="DockEnabledCheckBox"
                                       AutomationProperties.Name="显示冰蓝 Dock"
-                                      FontWeight="SemiBold"
-                                      Content="显示冰蓝 Dock"
+                                      Style="{StaticResource ToggleSwitchStyle}"
                                       Checked="DockSetting_Changed"
                                       Unchecked="DockSetting_Changed"/>
+                        </local:SettingsRow>
+                    </local:SettingsGroup>
 
-                            <TextBlock Margin="0,18,0,6" FontWeight="SemiBold" Text="显示器"/>
-                            <ComboBox x:Name="DockMonitorComboBox"
-                                      Width="380"
-                                      HorizontalAlignment="Left"
-                                      AutomationProperties.Name="Dock 所在显示器"
-                                      SelectionChanged="DockSetting_Changed"/>
-
-                            <TextBlock Margin="0,18,0,6" FontWeight="SemiBold" Text="显示方式"/>
-                            <RadioButton x:Name="DockReserveRadio"
-                                         GroupName="DockVisibility"
-                                         Content="始终显示，并保留屏幕底部空间"
-                                         Checked="DockSetting_Changed"/>
-                            <TextBlock Margin="22,2,0,10"
-                                       TextWrapping="Wrap"
-                                       Foreground="{DynamicResource IceMutedInkBrush}"
-                                       Text="最大化的窗口停在 Dock 上方；全屏应用运行时 Dock 退到后面。"/>
-                            <RadioButton x:Name="DockSmartHideRadio"
-                                         GroupName="DockVisibility"
-                                         Content="智能隐藏"
-                                         Checked="DockSetting_Changed"/>
-                            <TextBlock Margin="22,2,0,0"
-                                       TextWrapping="Wrap"
-                                       Foreground="{DynamicResource IceMutedInkBrush}"
-                                       Text="当前窗口移到 Dock 所在位置时隐藏；鼠标移到屏幕底边中间时重新显示。全屏应用运行时保持隐藏。"/>
-
-                            <CheckBox x:Name="QuietTaskbarFlashCheckBox"
-                                      Margin="0,18,0,0"
-                                      AutomationProperties.Name="有新消息时不弹出 Windows 任务栏"
-                                      Content="有新消息时不弹出 Windows 任务栏"
-                                      Click="QuietTaskbarFlash_Click"/>
-                            <TextBlock Margin="22,2,0,0"
-                                       TextWrapping="Wrap"
-                                       Foreground="{DynamicResource IceMutedInkBrush}"
-                                       Text="微信等应用来消息时，Dock 上的图标会出现橙色标记。勾选后关闭 Windows 的“任务栏应用闪烁”，自动隐藏的任务栏不再因此弹出；取消勾选即恢复 Windows 默认。"/>
-
-                            <TextBlock Margin="0,18,0,6" FontWeight="SemiBold" Text="图标大小"/>
-                            <StackPanel Orientation="Horizontal">
-                                <Slider x:Name="DockIconSizeSlider"
-                                        Width="300"
-                                        Minimum="32"
-                                        Maximum="64"
-                                        TickFrequency="4"
-                                        IsSnapToTickEnabled="True"
-                                        AutomationProperties.Name="Dock 图标大小"
-                                        ValueChanged="DockIconSize_Changed"/>
-                                <TextBlock x:Name="DockIconSizeText"
-                                           Margin="12,0,0,0"
-                                           VerticalAlignment="Center"/>
-                            </StackPanel>
-
-                            <TextBlock Margin="0,18,0,6" FontWeight="SemiBold" Text="外观"/>
-                            <StackPanel Orientation="Horizontal">
-                                <RadioButton x:Name="DockFollowLookRadio"
-                                             GroupName="DockLook"
-                                             Content="跟随卡片外观"
-                                             Checked="DockLook_Changed"/>
-                                <RadioButton x:Name="DockCustomLookRadio"
-                                             Margin="22,0,0,0"
-                                             GroupName="DockLook"
-                                             Content="自定义"
-                                             Checked="DockLook_Changed"/>
-                            </StackPanel>
-                            <StackPanel x:Name="DockCustomLookPanel" Margin="0,12,0,0">
+                    <StackPanel x:Name="DockOptionsPanel">
+                        <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="位置与行为"/>
+                        <local:SettingsGroup>
+                            <local:SettingsRow Glyph="&#xE7F4;" GlyphBrush="{DynamicResource SettingsIconTealBrush}" Header="显示器">
+                                <ComboBox x:Name="DockMonitorComboBox"
+                                          Width="300"
+                                          AutomationProperties.Name="Dock 所在显示器"
+                                          SelectionChanged="DockSetting_Changed"/>
+                            </local:SettingsRow>
+                            <local:SettingsRow Glyph="&#xE7C4;" GlyphBrush="{DynamicResource SettingsIconIndigoBrush}" Header="显示方式"/>
+                            <local:SettingsRow Style="{StaticResource NestedSettingsRowStyle}"
+                                               Header="始终显示，并保留屏幕底部空间"
+                                               Description="最大化的窗口停在 Dock 上方；全屏应用运行时 Dock 退到后面">
+                                <RadioButton x:Name="DockReserveRadio"
+                                             GroupName="DockVisibility"
+                                             AutomationProperties.Name="始终显示，并保留屏幕底部空间"
+                                             Checked="DockSetting_Changed"/>
+                            </local:SettingsRow>
+                            <local:SettingsRow Style="{StaticResource NestedSettingsRowStyle}"
+                                               Header="智能隐藏"
+                                               Description="窗口移到 Dock 位置时隐藏，鼠标移到屏幕底边中间时显示">
+                                <RadioButton x:Name="DockSmartHideRadio"
+                                             GroupName="DockVisibility"
+                                             AutomationProperties.Name="智能隐藏"
+                                             Checked="DockSetting_Changed"/>
+                            </local:SettingsRow>
+                            <local:SettingsRow Glyph="&#xE740;" GlyphBrush="{DynamicResource SettingsIconOrangeBrush}" Header="图标大小">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Width="72" VerticalAlignment="Center" Text="配色"/>
+                                    <Slider x:Name="DockIconSizeSlider"
+                                            Width="220"
+                                            Minimum="32"
+                                            Maximum="64"
+                                            TickFrequency="4"
+                                            IsSnapToTickEnabled="True"
+                                            AutomationProperties.Name="Dock 图标大小"
+                                            ValueChanged="DockIconSize_Changed"/>
+                                    <TextBlock x:Name="DockIconSizeText" Style="{StaticResource ValueTextStyle}"/>
+                                </StackPanel>
+                            </local:SettingsRow>
+                            <local:SettingsRow Glyph="&#xE945;" GlyphBrush="{DynamicResource SettingsIconPurpleBrush}" Header="动效" Description="图标放大和弹出的动画">
+                                <ComboBox x:Name="MotionSelector"
+                                          Width="160"
+                                          AutomationProperties.Name="Dock 动效"
+                                          SelectionChanged="StyleSelector_SelectionChanged">
+                                    <ComboBoxItem Content="标准" Tag="Standard"/>
+                                    <ComboBoxItem Content="减弱" Tag="Reduced"/>
+                                    <ComboBoxItem Content="关闭" Tag="Off"/>
+                                </ComboBox>
+                            </local:SettingsRow>
+                        </local:SettingsGroup>
+
+                        <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="外观"/>
+                        <local:SettingsGroup>
+                            <local:SettingsRow Glyph="&#xE790;" GlyphBrush="{DynamicResource SettingsIconPinkBrush}" Header="Dock 外观">
+                                <Border Style="{StaticResource SegmentHostStyle}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <RadioButton x:Name="DockFollowLookRadio"
+                                                     GroupName="DockLook"
+                                                     Style="{StaticResource SegmentRadioStyle}"
+                                                     Content="跟随卡片外观"
+                                                     Checked="DockLook_Changed"/>
+                                        <RadioButton x:Name="DockCustomLookRadio"
+                                                     GroupName="DockLook"
+                                                     Style="{StaticResource SegmentRadioStyle}"
+                                                     Content="自定义"
+                                                     Checked="DockLook_Changed"/>
+                                    </StackPanel>
+                                </Border>
+                            </local:SettingsRow>
+                            <StackPanel x:Name="DockCustomLookPanel">
+                                <local:SettingsRow Style="{StaticResource NestedSettingsRowStyle}" Header="配色">
                                     <WrapPanel x:Name="DockPaletteSwatches"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
-                                    <TextBlock Width="72" VerticalAlignment="Center" Text="颜色"/>
-                                    <Border x:Name="DockColorPreview"
-                                            Width="34"
-                                            Height="34"
-                                            CornerRadius="8"
-                                            BorderThickness="1"
-                                            BorderBrush="{DynamicResource SettingsInputBorderBrush}"/>
-                                    <TextBox x:Name="DockColorEditor"
-                                             Width="120"
-                                             Height="34"
-                                             Margin="10,0,0,0"
-                                             AutomationProperties.Name="Dock 颜色"
-                                             LostFocus="DockColorEditor_Commit"
-                                             KeyDown="DockColorEditor_KeyDown"/>
-                                    <Button Margin="10,0,0,0" Content="选择颜色…" Click="DockChooseColor_Click"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
-                                    <TextBlock Width="72" VerticalAlignment="Center" Text="不透明度"/>
-                                    <Slider x:Name="DockOpacitySlider"
-                                            Width="300"
-                                            Minimum="0"
-                                            Maximum="1"
-                                            SmallChange="0.02"
-                                            LargeChange="0.1"
-                                            AutomationProperties.Name="Dock 不透明度"
-                                            ValueChanged="DockOpacity_Changed"/>
-                                    <TextBlock x:Name="DockOpacityText"
-                                               Margin="12,0,0,0"
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
+                                </local:SettingsRow>
+                                <local:SettingsRow Style="{StaticResource NestedSettingsRowStyle}" Header="颜色">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border x:Name="DockColorPreview"
+                                                Width="32"
+                                                Height="32"
+                                                CornerRadius="6"
+                                                BorderThickness="1"
+                                                BorderBrush="{DynamicResource SettingsControlBorderBrush}"/>
+                                        <TextBox x:Name="DockColorEditor"
+                                                 Width="110"
+                                                 Margin="8,0,0,0"
+                                                 AutomationProperties.Name="Dock 颜色"
+                                                 LostFocus="DockColorEditor_Commit"
+                                                 KeyDown="DockColorEditor_KeyDown"/>
+                                        <Button Margin="8,0,0,0" Content="选择颜色…" Click="DockChooseColor_Click"/>
+                                    </StackPanel>
+                                </local:SettingsRow>
+                                <local:SettingsRow Style="{StaticResource NestedSettingsRowStyle}" Header="不透明度">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Slider x:Name="DockOpacitySlider"
+                                                Width="220"
+                                                Minimum="0"
+                                                Maximum="1"
+                                                SmallChange="0.02"
+                                                LargeChange="0.1"
+                                                AutomationProperties.Name="Dock 不透明度"
+                                                ValueChanged="DockOpacity_Changed"/>
+                                        <TextBlock x:Name="DockOpacityText" Style="{StaticResource ValueTextStyle}"/>
+                                    </StackPanel>
+                                </local:SettingsRow>
                             </StackPanel>
-                        </StackPanel>
-                    </Border>
+                        </local:SettingsGroup>
 
-                    <TextBlock Margin="0,18,0,8"
-                               FontSize="17"
-                               FontWeight="SemiBold"
-                               Text="固定的应用"/>
-                    <Border Style="{StaticResource SectionCardStyle}">
-                        <StackPanel>
-                            <ListBox x:Name="DockPinnedList"
-                                     MinHeight="96"
-                                     MaxHeight="300"
-                                     AutomationProperties.Name="固定的应用"
-                                     Background="{DynamicResource SettingsInputBrush}"
-                                     BorderBrush="{DynamicResource SettingsInputBorderBrush}">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel>
-                                            <TextBlock FontWeight="SemiBold" Text="{Binding DisplayName}"/>
-                                            <TextBlock Margin="0,2,0,0"
-                                                       FontSize="12"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       Foreground="{DynamicResource IceMutedInkBrush}"
-                                                       Text="{Binding Detail}"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-                            <TextBlock x:Name="DockPinnedEmptyText"
-                                       Margin="0,8,0,0"
-                                       Foreground="{DynamicResource IceMutedInkBrush}"
-                                       Text="还没有固定的应用。"/>
-                            <WrapPanel Margin="0,12,0,0">
-                                <Button Content="添加应用…" Click="AddDockApp_Click"/>
-                                <Button Margin="8,0,0,0" Content="导入任务栏应用" Click="ImportTaskbarPins_Click"/>
-                                <Button Margin="8,0,0,0" Content="上移" Click="MoveDockAppUp_Click"/>
-                                <Button Margin="8,0,0,0" Content="下移" Click="MoveDockAppDown_Click"/>
-                                <Button Margin="8,0,0,0" Content="取消固定" Click="UnpinDockApp_Click"/>
-                            </WrapPanel>
-                            <TextBlock Margin="0,10,0,0"
-                                       TextWrapping="Wrap"
-                                       Foreground="{DynamicResource IceMutedInkBrush}"
-                                       Text="也可以把程序或快捷方式拖到 Dock 上，或在 Dock 中右键正在运行的应用选择“固定到 Dock”；拖动图标可调整顺序。"/>
-                        </StackPanel>
-                    </Border>
+                        <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="固定的应用"/>
+                        <Border Style="{StaticResource SettingsPanelStyle}">
+                            <StackPanel>
+                                <ListBox x:Name="DockPinnedList"
+                                         MinHeight="96"
+                                         MaxHeight="300"
+                                         AutomationProperties.Name="固定的应用">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding DisplayName}"/>
+                                                <TextBlock Margin="0,2,0,0"
+                                                           FontSize="12"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Foreground="{DynamicResource IceMutedInkBrush}"
+                                                           Text="{Binding Detail}"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                                <TextBlock x:Name="DockPinnedEmptyText"
+                                           Margin="0,8,0,0"
+                                           Style="{StaticResource CaptionStyle}"
+                                           Text="还没有固定的应用。"/>
+                                <WrapPanel Margin="0,12,0,0">
+                                    <Button Style="{StaticResource AccentButtonStyle}" Content="添加应用…" Click="AddDockApp_Click"/>
+                                    <Button Margin="8,0,0,0" Content="导入任务栏应用" Click="ImportTaskbarPins_Click"/>
+                                    <Button Margin="8,0,0,0" Content="上移" Click="MoveDockAppUp_Click"/>
+                                    <Button Margin="8,0,0,0" Content="下移" Click="MoveDockAppDown_Click"/>
+                                    <Button Margin="8,0,0,0" Content="取消固定" Click="UnpinDockApp_Click"/>
+                                </WrapPanel>
+                                <TextBlock Margin="0,10,0,0"
+                                           Style="{StaticResource CaptionStyle}"
+                                           Text="也可以把程序或快捷方式拖到 Dock 上，或在 Dock 中右键正在运行的应用选择“固定到 Dock”；拖动图标可调整顺序。"/>
+                            </StackPanel>
+                        </Border>
 
-                    <TextBlock Margin="0,18,0,8"
-                               FontSize="17"
-                               FontWeight="SemiBold"
-                               Text="不在 Dock 中显示的应用"/>
-                    <Border Style="{StaticResource SectionCardStyle}">
-                        <StackPanel>
-                            <ListBox x:Name="DockHiddenList"
-                                     MinHeight="64"
-                                     MaxHeight="200"
-                                     AutomationProperties.Name="不在 Dock 中显示的应用"
-                                     Background="{DynamicResource SettingsInputBrush}"
-                                     BorderBrush="{DynamicResource SettingsInputBorderBrush}">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel>
-                                            <TextBlock FontWeight="SemiBold" Text="{Binding DisplayName}"/>
-                                            <TextBlock Margin="0,2,0,0"
-                                                       FontSize="12"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       Foreground="{DynamicResource IceMutedInkBrush}"
-                                                       Text="{Binding Detail}"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-                            <TextBlock x:Name="DockHiddenEmptyText"
-                                       Margin="0,8,0,0"
-                                       Foreground="{DynamicResource IceMutedInkBrush}"
-                                       Text="没有隐藏的应用。"/>
-                            <WrapPanel Margin="0,12,0,0">
-                                <Button Content="恢复显示" Click="UnhideDockApp_Click"/>
-                            </WrapPanel>
-                            <TextBlock Margin="0,10,0,0"
-                                       TextWrapping="Wrap"
-                                       Foreground="{DynamicResource IceMutedInkBrush}"
-                                       Text="在 Dock 中右键正在运行的应用，选择“不在 Dock 中显示此应用”，它的窗口就不再出现在 Dock 上。适合悬浮条、小工具这类不在任务栏显示的窗口。"/>
-                        </StackPanel>
-                    </Border>
+                        <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="不在 Dock 中显示的应用"/>
+                        <Border Style="{StaticResource SettingsPanelStyle}">
+                            <StackPanel>
+                                <ListBox x:Name="DockHiddenList"
+                                         MinHeight="64"
+                                         MaxHeight="200"
+                                         AutomationProperties.Name="不在 Dock 中显示的应用">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding DisplayName}"/>
+                                                <TextBlock Margin="0,2,0,0"
+                                                           FontSize="12"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Foreground="{DynamicResource IceMutedInkBrush}"
+                                                           Text="{Binding Detail}"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                                <TextBlock x:Name="DockHiddenEmptyText"
+                                           Margin="0,8,0,0"
+                                           Style="{StaticResource CaptionStyle}"
+                                           Text="没有隐藏的应用。"/>
+                                <WrapPanel Margin="0,12,0,0">
+                                    <Button Content="恢复显示" Click="UnhideDockApp_Click"/>
+                                </WrapPanel>
+                                <TextBlock Margin="0,10,0,0"
+                                           Style="{StaticResource CaptionStyle}"
+                                           Text="在 Dock 中右键正在运行的应用，选择“不在 Dock 中显示此应用”。适合悬浮条、小工具这类不在任务栏显示的窗口。"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
 
                     <TextBlock x:Name="DockStatusText"
-                               Margin="0,14,0,4"
+                               Margin="2,10,0,0"
                                AutomationProperties.LiveSetting="Polite"
-                               Foreground="{DynamicResource IceMutedInkBrush}"/>
+                               Style="{StaticResource CaptionStyle}"/>
                 </StackPanel>
             </ScrollViewer>
 
+            <!-- 任务栏 -->
             <ScrollViewer x:Name="TaskbarPage"
                           Visibility="Collapsed"
                           VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <TextBlock FontSize="26" FontWeight="SemiBold" Text="Windows 任务栏"/>
-                    <TextBlock Margin="0,5,0,0"
-                               TextWrapping="Wrap"
-                               Foreground="{DynamicResource IceMutedInkBrush}"
-                               Text="只调整 Windows 任务栏的外观和显示方式；开始菜单、系统托盘、通知和任务栏按钮保持不变。"/>
+                <StackPanel Margin="0,0,28,28">
+                    <TextBlock Style="{StaticResource PageTitleStyle}" Text="Windows 任务栏"/>
+                    <TextBlock Style="{StaticResource PageSubtitleStyle}"
+                               Text="只调整任务栏的外观和显示方式；开始菜单、系统托盘、通知和任务栏按钮保持不变。退出冰蓝桌面时恢复系统默认。"/>
 
-                    <Border Margin="0,18,0,0" Style="{StaticResource SectionCardStyle}">
-                        <StackPanel>
-                            <RadioButton x:Name="TaskbarDefaultRadio"
-                                         GroupName="TaskbarMode"
-                                         Tag="SystemDefault"
-                                         Content="保持系统默认"
-                                         Checked="TaskbarMode_Checked"/>
-                            <RadioButton x:Name="TaskbarTransparentRadio"
-                                         Margin="0,14,0,0"
-                                         GroupName="TaskbarMode"
-                                         Tag="Transparent"
-                                         Content="透明"
-                                         Checked="TaskbarMode_Checked"/>
-                            <TextBlock Margin="22,2,0,0"
-                                       TextWrapping="Wrap"
-                                       Foreground="{DynamicResource IceMutedInkBrush}"
-                                       Text="显示任务栏后方的背景。需要开启 Windows 透明效果；不支持时保持系统默认。"/>
-                            <RadioButton x:Name="TaskbarBlurRadio"
-                                         Margin="0,14,0,0"
-                                         GroupName="TaskbarMode"
-                                         Tag="Blur"
-                                         Content="模糊"
-                                         Checked="TaskbarMode_Checked"/>
-                            <TextBlock Margin="22,2,0,0"
-                                       TextWrapping="Wrap"
-                                       Foreground="{DynamicResource IceMutedInkBrush}"
-                                       Text="使用系统模糊材质，效果随 Windows 版本变化。需要开启 Windows 透明效果。"/>
-                            <RadioButton x:Name="TaskbarSmartHideRadio"
-                                         Margin="0,14,0,0"
-                                         GroupName="TaskbarMode"
-                                         Tag="SmartHide"
-                                         Content="自动隐藏"
-                                         Checked="TaskbarMode_Checked"/>
-                            <TextBlock Margin="22,2,0,0"
-                                       TextWrapping="Wrap"
-                                       Foreground="{DynamicResource IceMutedInkBrush}"
-                                       Text="任务栏平时隐藏，鼠标移到屏幕边缘时显示。与冰蓝 Dock 一起使用时接近苹果式桌面。"/>
-                            <CheckBox x:Name="RevealOnlyAtCornersCheckBox"
-                                      Margin="0,16,0,0"
-                                      AutomationProperties.Name="只在屏幕左下角或右下角唤出任务栏"
-                                      Content="只在屏幕左下角或右下角唤出任务栏"
-                                      Click="RevealOnlyAtCorners_Click"/>
-                            <TextBlock Margin="22,2,0,0"
-                                       TextWrapping="Wrap"
-                                       Foreground="{DynamicResource IceMutedInkBrush}"
-                                       Text="任务栏在底部自动隐藏时生效：鼠标碰到底边中间不再弹出任务栏，移到底边左右两端才弹出；全屏应用运行时暂停。不修改 Windows 设置，取消勾选即恢复。"/>
-                        </StackPanel>
-                    </Border>
-
+                    <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="任务栏样式"/>
+                    <UniformGrid Columns="4">
+                        <RadioButton x:Name="TaskbarDefaultRadio"
+                                     Margin="0,0,6,0"
+                                     GroupName="TaskbarMode"
+                                     Style="{StaticResource ChoiceCardStyle}"
+                                     Tag="SystemDefault"
+                                     AutomationProperties.Name="保持系统默认"
+                                     Checked="TaskbarMode_Checked">
+                            <StackPanel>
+                                <Border Style="{StaticResource ModePreviewStyle}" Height="60">
+                                    <Border Height="10" VerticalAlignment="Bottom" Background="#FF22303F"/>
+                                </Border>
+                                <TextBlock FontWeight="SemiBold" Text="系统默认"/>
+                                <TextBlock Margin="0,2,0,0" Style="{StaticResource CaptionStyle}" Text="不做任何调整"/>
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton x:Name="TaskbarTransparentRadio"
+                                     Margin="3,0"
+                                     GroupName="TaskbarMode"
+                                     Style="{StaticResource ChoiceCardStyle}"
+                                     Tag="Transparent"
+                                     AutomationProperties.Name="透明"
+                                     Checked="TaskbarMode_Checked">
+                            <StackPanel>
+                                <Border Style="{StaticResource ModePreviewStyle}" Height="60">
+                                    <Border Height="10" VerticalAlignment="Bottom" BorderBrush="#FFEAF3FB" BorderThickness="0,1,0,0"/>
+                                </Border>
+                                <TextBlock FontWeight="SemiBold" Text="透明"/>
+                                <TextBlock Margin="0,2,0,0" Style="{StaticResource CaptionStyle}" Text="露出后方背景，需开启 Windows 透明效果"/>
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton x:Name="TaskbarBlurRadio"
+                                     Margin="3,0"
+                                     GroupName="TaskbarMode"
+                                     Style="{StaticResource ChoiceCardStyle}"
+                                     Tag="Blur"
+                                     AutomationProperties.Name="模糊"
+                                     Checked="TaskbarMode_Checked">
+                            <StackPanel>
+                                <Border Style="{StaticResource ModePreviewStyle}" Height="60">
+                                    <Border Height="10" VerticalAlignment="Bottom" Background="{StaticResource ModePreviewGlassBarBrush}"/>
+                                </Border>
+                                <TextBlock FontWeight="SemiBold" Text="模糊"/>
+                                <TextBlock Margin="0,2,0,0" Style="{StaticResource CaptionStyle}" Text="系统模糊材质，效果随 Windows 版本变化"/>
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton x:Name="TaskbarSmartHideRadio"
+                                     Margin="6,0,0,0"
+                                     GroupName="TaskbarMode"
+                                     Style="{StaticResource ChoiceCardStyle}"
+                                     Tag="SmartHide"
+                                     AutomationProperties.Name="自动隐藏"
+                                     Checked="TaskbarMode_Checked">
+                            <StackPanel>
+                                <Border Style="{StaticResource ModePreviewStyle}" Height="60"/>
+                                <TextBlock FontWeight="SemiBold" Text="自动隐藏"/>
+                                <TextBlock Margin="0,2,0,0" Style="{StaticResource CaptionStyle}" Text="平时隐藏，鼠标移到屏幕边缘时显示"/>
+                            </StackPanel>
+                        </RadioButton>
+                    </UniformGrid>
                     <TextBlock x:Name="TaskbarStatusText"
-                               Margin="0,14,0,0"
-                               TextWrapping="Wrap"
+                               Margin="2,8,0,0"
                                AutomationProperties.LiveSetting="Polite"
-                               Foreground="{DynamicResource IceInkBrush}"/>
-                    <TextBlock Margin="0,8,0,4"
-                               TextWrapping="Wrap"
-                               Foreground="{DynamicResource IceMutedInkBrush}"
-                               Text="退出冰蓝桌面时恢复系统默认；程序异常退出后，下次启动时恢复。"/>
+                               Style="{StaticResource CaptionStyle}"/>
+
+                    <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="弹出方式"/>
+                    <local:SettingsGroup>
+                        <local:SettingsRow Glyph="&#xE7C4;"
+                                           GlyphBrush="{DynamicResource SettingsIconIndigoBrush}"
+                                           Header="只在屏幕左下角或右下角唤出"
+                                           Description="任务栏自动隐藏时生效（包括在 Windows 设置里开启的）：碰到底边中间不弹出，移到底边左右两端才弹出；全屏应用运行时暂停">
+                            <CheckBox x:Name="RevealOnlyAtCornersCheckBox"
+                                      AutomationProperties.Name="只在屏幕左下角或右下角唤出任务栏"
+                                      Style="{StaticResource ToggleSwitchStyle}"
+                                      Click="RevealOnlyAtCorners_Click"/>
+                        </local:SettingsRow>
+                        <local:SettingsRow Glyph="&#xEA8F;"
+                                           GlyphBrush="{DynamicResource SettingsIconOrangeBrush}"
+                                           Header="有新消息时不弹出任务栏"
+                                           Description="关闭 Windows 的任务栏应用闪烁，新消息只在 Dock 图标上显示橙色标记；关掉此项即恢复 Windows 默认">
+                            <CheckBox x:Name="QuietTaskbarFlashCheckBox"
+                                      AutomationProperties.Name="有新消息时不弹出 Windows 任务栏"
+                                      Style="{StaticResource ToggleSwitchStyle}"
+                                      Click="QuietTaskbarFlash_Click"/>
+                        </local:SettingsRow>
+                    </local:SettingsGroup>
                 </StackPanel>
             </ScrollViewer>
 
-            <ScrollViewer x:Name="PrivacyPage"
+            <!-- 通用 -->
+            <ScrollViewer x:Name="GeneralPage"
                           Visibility="Collapsed"
                           VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <TextBlock FontSize="26" FontWeight="SemiBold" Text="隐私与启动"/>
+                <StackPanel Margin="0,0,28,28">
+                    <TextBlock Style="{StaticResource PageTitleStyle}" Text="通用"/>
 
-                    <Border Margin="0,18,0,0" Style="{StaticResource SectionCardStyle}">
-                        <StackPanel>
+                    <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="启动"/>
+                    <local:SettingsGroup>
+                        <local:SettingsRow Glyph="&#xE7E8;"
+                                           GlyphBrush="{DynamicResource SettingsIconGreenBrush}"
+                                           Header="登录 Windows 时启动冰蓝桌面"
+                                           Description="只添加一个当前用户的启动项，不需要管理员权限">
                             <CheckBox x:Name="StartupCheckBox"
                                       AutomationProperties.Name="登录 Windows 时启动冰蓝桌面"
-                                      Content="登录 Windows 时启动冰蓝桌面"
+                                      Style="{StaticResource ToggleSwitchStyle}"
                                       Checked="StartupCheckBox_Changed"
                                       Unchecked="StartupCheckBox_Changed"/>
-                            <TextBlock x:Name="StartupNoteText"
-                                       Margin="22,4,0,0"
-                                       TextWrapping="Wrap"
-                                       Foreground="{DynamicResource IceMutedInkBrush}"
-                                       Text="只添加一个当前用户的启动项，不需要管理员权限。"/>
+                        </local:SettingsRow>
+                    </local:SettingsGroup>
+                    <TextBlock x:Name="StartupNoteText"
+                               Margin="6,2,0,0"
+                               Style="{StaticResource CaptionStyle}"
+                               Visibility="Collapsed"/>
+
+                    <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="更新"/>
+                    <local:SettingsGroup>
+                        <Grid Margin="14,10" MinHeight="34">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Width="28"
+                                    Height="28"
+                                    Margin="0,0,14,0"
+                                    VerticalAlignment="Center"
+                                    Background="{DynamicResource SettingsIconBlueBrush}"
+                                    CornerRadius="7">
+                                <TextBlock HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           FontFamily="{StaticResource SettingsIconFont}"
+                                           FontSize="15"
+                                           Foreground="{DynamicResource SettingsIconGlyphBrush}"
+                                           Text="&#xE895;"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock x:Name="AppVersionText"/>
+                                <TextBlock x:Name="UpdateStatusText"
+                                           Margin="0,2,0,0"
+                                           AutomationProperties.LiveSetting="Polite"
+                                           Style="{StaticResource CaptionStyle}"/>
+                            </StackPanel>
+                            <Button x:Name="CheckUpdatesButton"
+                                    Grid.Column="2"
+                                    Margin="20,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Content="检查更新"
+                                    Click="CheckUpdates_Click"/>
+                        </Grid>
+                        <local:SettingsRow Style="{StaticResource NestedSettingsRowStyle}"
+                                           Header="每天自动检查更新"
+                                           Description="只向 GitHub 查询最新版本号，不发送个人数据；发现新版本时提示，不会自动下载或安装">
+                            <CheckBox x:Name="AutoCheckUpdatesCheckBox"
+                                      AutomationProperties.Name="每天自动检查更新"
+                                      Style="{StaticResource ToggleSwitchStyle}"
+                                      Checked="AutoCheckUpdates_Changed"
+                                      Unchecked="AutoCheckUpdates_Changed"/>
+                        </local:SettingsRow>
+                    </local:SettingsGroup>
+                    <Border x:Name="UpdateAvailableCard"
+                            Margin="0,4,0,4"
+                            Style="{StaticResource SettingsPanelStyle}"
+                            BorderBrush="{DynamicResource IceActionBrush}"
+                            Visibility="Collapsed">
+                        <StackPanel>
+                            <TextBlock x:Name="UpdateAvailableTitle" FontSize="16" FontWeight="SemiBold"/>
+                            <TextBox x:Name="UpdateNotesText"
+                                     Margin="0,10,0,0"
+                                     MaxHeight="260"
+                                     IsReadOnly="True"
+                                     TextWrapping="Wrap"
+                                     VerticalContentAlignment="Top"
+                                     VerticalScrollBarVisibility="Auto"
+                                     AutomationProperties.Name="更新内容"/>
+                            <WrapPanel Margin="0,12,0,0">
+                                <Button x:Name="InstallUpdateButton"
+                                        Style="{StaticResource AccentButtonStyle}"
+                                        Content="下载并安装"
+                                        Click="InstallUpdate_Click"/>
+                                <Button Margin="8,0,0,0" Content="查看发布页" Click="OpenReleasePage_Click"/>
+                            </WrapPanel>
+                            <TextBlock x:Name="InstallUpdateNoteText"
+                                       Margin="0,10,0,0"
+                                       Style="{StaticResource CaptionStyle}"
+                                       Text="安装时冰蓝桌面会暂时退出，装完自动重新打开；设置和桌面内容保留。"/>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="备份"/>
+                    <Border Style="{StaticResource SettingsPanelStyle}">
+                        <StackPanel>
+                            <TextBlock Margin="0,0,0,10"
+                                       Style="{StaticResource CaptionStyle}"
+                                       Text="备份包含全部桌面组件、个人内容和设置，只保存在本机数据目录的 Backups 文件夹。恢复前会先备份当前状态，然后重新启动冰蓝桌面。"/>
+                            <ListBox x:Name="BackupList"
+                                     MinHeight="96"
+                                     MaxHeight="260"
+                                     AutomationProperties.Name="已有备份"
+                                     DisplayMemberPath="Label"/>
+                            <TextBlock x:Name="BackupEmptyText"
+                                       Margin="0,8,0,0"
+                                       Style="{StaticResource CaptionStyle}"
+                                       Text="还没有备份。"/>
+                            <WrapPanel Margin="0,12,0,0">
+                                <Button Style="{StaticResource AccentButtonStyle}" Content="立即备份" Click="CreateBackup_Click"/>
+                                <Button Margin="8,0,0,0" Content="从备份恢复…" Click="RestoreBackup_Click"/>
+                            </WrapPanel>
+                            <TextBlock x:Name="BackupStatusText"
+                                       Margin="0,10,0,0"
+                                       AutomationProperties.LiveSetting="Polite"
+                                       Style="{StaticResource CaptionStyle}"/>
                         </StackPanel>
                     </Border>
 
-                    <TextBlock Margin="0,18,0,8"
-                               FontSize="17"
-                               FontWeight="SemiBold"
-                               Text="数据与网络"/>
-                    <Border Style="{StaticResource SectionCardStyle}">
+                    <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="隐私与数据"/>
+                    <Border Style="{StaticResource SettingsPanelStyle}">
                         <StackPanel>
-                            <TextBlock TextWrapping="Wrap"
-                                       Text="待办、便签、文件映射、Dock 固定应用和各项设置只保存在本机："/>
+                            <TextBlock TextWrapping="Wrap" Text="待办、便签、文件映射、Dock 固定应用和各项设置只保存在本机："/>
                             <TextBlock x:Name="DataDirectoryText"
                                        Margin="0,4,0,0"
-                                       TextWrapping="Wrap"
-                                       Foreground="{DynamicResource IceMutedInkBrush}"/>
+                                       Style="{StaticResource CaptionStyle}"/>
                             <TextBlock Margin="0,12,0,0"
-                                       TextWrapping="Wrap"
-                                       Text="只有搜索天气城市和刷新天气时联网，发送的是搜索关键词或所选城市坐标；不使用 IP、GPS 或 Wi-Fi 定位。"/>
-                            <TextBlock Margin="0,8,0,0"
-                                       TextWrapping="Wrap"
-                                       Text="检查更新时向 GitHub 查询最新版本号，不发送个人数据；可在“关于与更新”页关闭自动检查。"/>
-                            <TextBlock Margin="0,8,0,0"
-                                       TextWrapping="Wrap"
-                                       Text="不收集使用数据，不上传待办、文件路径、应用列表或窗口标题。"/>
+                                       Style="{StaticResource CaptionStyle}"
+                                       Text="· 只有搜索天气城市和刷新天气时联网，发送搜索关键词或所选城市坐标；不使用 IP、GPS 或 Wi-Fi 定位。"/>
+                            <TextBlock Margin="0,4,0,0"
+                                       Style="{StaticResource CaptionStyle}"
+                                       Text="· 检查更新时只向 GitHub 查询最新版本号。"/>
+                            <TextBlock Margin="0,4,0,0"
+                                       Style="{StaticResource CaptionStyle}"
+                                       Text="· 不收集使用数据，不上传待办、文件路径、应用列表或窗口标题。"/>
                             <Button Margin="0,14,0,0"
                                     HorizontalAlignment="Left"
                                     Content="打开数据目录"
                                     Click="OpenDataDirectory_Click"/>
                         </StackPanel>
                     </Border>
-                </StackPanel>
-            </ScrollViewer>
 
-            <ScrollViewer x:Name="BackupPage"
-                          Visibility="Collapsed"
-                          VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <TextBlock FontSize="26" FontWeight="SemiBold" Text="备份与导入"/>
-                    <TextBlock Margin="0,5,0,0"
-                               TextWrapping="Wrap"
-                               Foreground="{DynamicResource IceMutedInkBrush}"
-                               Text="备份包含全部桌面组件、个人内容和设置，只保存在本机数据目录的 Backups 文件夹。"/>
-
-                    <Border Margin="0,18,0,0" Style="{StaticResource SectionCardStyle}">
-                        <StackPanel>
-                            <ListBox x:Name="BackupList"
-                                     MinHeight="96"
-                                     MaxHeight="300"
-                                     AutomationProperties.Name="已有备份"
-                                     Background="{DynamicResource SettingsInputBrush}"
-                                     BorderBrush="{DynamicResource SettingsInputBorderBrush}"
-                                     DisplayMemberPath="Label"/>
-                            <TextBlock x:Name="BackupEmptyText"
-                                       Margin="0,8,0,0"
-                                       Foreground="{DynamicResource IceMutedInkBrush}"
-                                       Text="还没有备份。"/>
-                            <WrapPanel Margin="0,12,0,0">
-                                <Button Content="立即备份" Click="CreateBackup_Click"/>
-                                <Button Margin="8,0,0,0" Content="从备份恢复…" Click="RestoreBackup_Click"/>
-                            </WrapPanel>
-                            <TextBlock Margin="0,10,0,0"
-                                       TextWrapping="Wrap"
-                                       Foreground="{DynamicResource IceMutedInkBrush}"
-                                       Text="恢复前会先备份当前状态，然后重新启动冰蓝桌面。"/>
-                        </StackPanel>
-                    </Border>
-
-                    <TextBlock Margin="0,18,0,8"
-                               FontSize="17"
-                               FontWeight="SemiBold"
-                               Text="主题包"/>
-                    <Border Style="{StaticResource SectionCardStyle}">
-                        <StackPanel>
-                            <TextBlock TextWrapping="Wrap"
-                                       Text="主题包包含组件的颜色、材质、圆角、字号、显示开关、相对布局和 Dock 应用槽位，可分享给其他电脑。"/>
-                            <TextBlock Margin="0,6,0,0"
-                                       TextWrapping="Wrap"
-                                       Foreground="{DynamicResource IceMutedInkBrush}"
-                                       Text="不包含称呼、天气城市、待办、便签、文件映射和本机路径，也不包含壁纸和字体；导入后 Dock 应用会对应到本机已安装的同类应用。"/>
-                            <WrapPanel Margin="0,12,0,0">
-                                <Button Content="导出主题…" Click="ExportTheme_Click"/>
-                                <Button Margin="8,0,0,0" Content="导入主题…" Click="ImportTheme_Click"/>
-                            </WrapPanel>
-                        </StackPanel>
-                    </Border>
-
-                    <TextBlock x:Name="BackupStatusText"
-                               Margin="0,14,0,4"
-                               TextWrapping="Wrap"
-                               AutomationProperties.LiveSetting="Polite"
-                               Foreground="{DynamicResource IceMutedInkBrush}"/>
-                </StackPanel>
-            </ScrollViewer>
-            <ScrollViewer x:Name="AboutPage"
-                          Visibility="Collapsed"
-                          VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <TextBlock FontSize="26" FontWeight="SemiBold" Text="关于与更新"/>
-
-                    <Border Margin="0,18,0,0" Style="{StaticResource SectionCardStyle}">
-                        <StackPanel>
-                            <TextBlock x:Name="AppVersionText" FontSize="17" FontWeight="SemiBold"/>
-                            <CheckBox x:Name="AutoCheckUpdatesCheckBox"
-                                      Margin="0,14,0,0"
-                                      AutomationProperties.Name="每天自动检查更新"
-                                      Content="每天自动检查更新"
-                                      Checked="AutoCheckUpdates_Changed"
-                                      Unchecked="AutoCheckUpdates_Changed"/>
-                            <TextBlock Margin="22,4,0,0"
-                                       TextWrapping="Wrap"
-                                       Foreground="{DynamicResource IceMutedInkBrush}"
-                                       Text="只向 GitHub 查询最新版本号，不发送个人数据。发现新版本时提示，不会自动下载或安装。"/>
-                            <WrapPanel Margin="0,14,0,0">
-                                <Button x:Name="CheckUpdatesButton" Content="检查更新" Click="CheckUpdates_Click"/>
-                            </WrapPanel>
-                            <TextBlock x:Name="UpdateStatusText"
-                                       Margin="0,10,0,0"
-                                       TextWrapping="Wrap"
-                                       AutomationProperties.LiveSetting="Polite"
-                                       Foreground="{DynamicResource IceMutedInkBrush}"/>
-                        </StackPanel>
-                    </Border>
-
-                    <Border x:Name="UpdateAvailableCard"
-                            Margin="0,18,0,0"
-                            Visibility="Collapsed"
-                            Style="{StaticResource SectionCardStyle}">
-                        <StackPanel>
-                            <TextBlock x:Name="UpdateAvailableTitle" FontSize="17" FontWeight="SemiBold"/>
-                            <TextBox x:Name="UpdateNotesText"
-                                     Margin="0,10,0,0"
-                                     MaxHeight="260"
-                                     IsReadOnly="True"
-                                     TextWrapping="Wrap"
-                                     VerticalScrollBarVisibility="Auto"
-                                     AutomationProperties.Name="更新内容"
-                                     Background="{DynamicResource SettingsInputBrush}"
-                                     BorderBrush="{DynamicResource SettingsInputBorderBrush}"/>
-                            <WrapPanel Margin="0,12,0,0">
-                                <Button x:Name="InstallUpdateButton" Content="下载并安装" Click="InstallUpdate_Click"/>
-                                <Button Margin="8,0,0,0" Content="查看发布页" Click="OpenReleasePage_Click"/>
-                            </WrapPanel>
-                            <TextBlock x:Name="InstallUpdateNoteText"
-                                       Margin="0,10,0,0"
-                                       TextWrapping="Wrap"
-                                       Foreground="{DynamicResource IceMutedInkBrush}"
-                                       Text="安装时冰蓝桌面会暂时退出，装完自动重新打开；设置和桌面内容保留。"/>
-                        </StackPanel>
-                    </Border>
+                    <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="退出"/>
+                    <local:SettingsGroup>
+                        <local:SettingsRow Glyph="&#xE7E8;"
+                                           GlyphBrush="{DynamicResource SettingsIconGrayBrush}"
+                                           Header="退出冰蓝桌面"
+                                           Description="关闭所有卡片和 Dock，并把任务栏与桌面图标恢复为系统默认">
+                            <Button x:Name="ExitAppButton" Content="退出" AutomationProperties.Name="退出冰蓝桌面" Click="ExitApp_Click"/>
+                        </local:SettingsRow>
+                    </local:SettingsGroup>
                 </StackPanel>
             </ScrollViewer>
         </Grid>
