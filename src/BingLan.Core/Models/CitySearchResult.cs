@@ -5,14 +5,14 @@ namespace BingLan.Core.Models;
 public sealed record CitySearchResult(
     long Id,
     string Name,
-    string Admin1,
+    string Region,
     string Country,
     double Latitude,
     double Longitude)
 {
     public string DisplayName => string.Join(
         " · ",
-        new[] { Name, Admin1, Country }
+        new[] { Name, Region, Country }
             .Where(value => !string.IsNullOrWhiteSpace(value))
             .Distinct(StringComparer.OrdinalIgnoreCase));
 

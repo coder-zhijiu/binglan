@@ -38,12 +38,12 @@
 2. 运行安装包。按当前用户安装，不需要管理员权限，自带 .NET 运行时。安装包尚未加入代码签名，首次运行需按 Windows 提示手动放行。
 3. 首次启动后按引导选择布局和常用应用。之后可从托盘图标或卡片右键菜单打开设置中心。
 
-系统要求：Windows 11 x64。各模块的详细用法见[使用说明](docs/USER-GUIDE.md)。
+系统要求：Windows 11 x64；Windows 10 版本 2004 及以上可安装使用，但任务栏外观（透明、模糊、自动隐藏）不可用，设置窗口不显示 Mica 材质。各模块的详细用法见[使用说明](docs/USER-GUIDE.md)。
 
 ## 隐私
 
 - 不采集遥测；待办、便签、文件路径、应用列表和窗口标题只保存在本机 `%LOCALAPPDATA%\BingLanWidgets`。
-- 天气城市由用户手动搜索选择，网络请求只发送搜索关键词和所选城市的坐标，不使用 IP 或设备位置。
+- 天气城市由用户手动搜索选择（可搜到区县和乡镇），网络请求只发送搜索关键词和所选地点的坐标，不使用 IP 或设备位置。地名搜索使用 OpenStreetMap Nominatim，天气数据来自 Open-Meteo。
 - 每天自动检查一次新版本（可在设置“通用”页关闭），只向 GitHub 查询版本号；发现新版本只提示，由你决定是否下载安装。
 - 分组盒的添加、排序和移除只改变映射，不移动、重命名或删除原文件。
 
@@ -54,7 +54,7 @@
 ```powershell
 dotnet build .\BingLan.slnx -c Release
 dotnet run --project .\tests\BingLan.SmokeTests\BingLan.SmokeTests.csproj -c Release
-pwsh -NoProfile -File .\installer\build.ps1 -Version 0.2.4
+pwsh -NoProfile -File .\installer\build.ps1 -Version 0.2.5
 ```
 
 完整测试命令、技术方案和当前实现见[开发说明](docs/DEVELOPMENT.md)，安装包细节见[安装包](docs/INSTALLER.md)。

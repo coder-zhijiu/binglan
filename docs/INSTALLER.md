@@ -3,14 +3,14 @@
 ## 构建
 
 ```powershell
-pwsh -NoProfile -File .\installer\build.ps1 -Version 0.2.4
+pwsh -NoProfile -File .\installer\build.ps1 -Version 0.2.5
 ```
 
-输出 `installer\bin\BingLan-Setup-0.2.4.exe`（约 53 MB）。脚本先把应用发布为 win-x64 自包含程序（附带 .NET 运行时，只保留中文和英文资源），再用 Inno Setup 打包为按用户安装的安装程序。构建还需要 .NET 10 SDK、PowerShell 7、Visual Studio 2022 C++ x64 工具链和 Windows SDK；自有任务栏 DLL 随发布输出进入安装包，细节见 [任务栏 XAML 适配](TASKBAR-XAML.md)。需要 Inno Setup 6：`winget install JRSoftware.InnoSetup --scope user`。
+输出 `installer\bin\BingLan-Setup-0.2.5.exe`（约 53 MB）。脚本先把应用发布为 win-x64 自包含程序（附带 .NET 运行时，只保留中文和英文资源），再用 Inno Setup 打包为按用户安装的安装程序。构建还需要 .NET 10 SDK、PowerShell 7、Visual Studio 2022 C++ x64 工具链和 Windows SDK；自有任务栏 DLL 随发布输出进入安装包，细节见 [任务栏 XAML 适配](TASKBAR-XAML.md)。需要 Inno Setup 6：`winget install JRSoftware.InnoSetup --scope user`。
 
 ## 安装程序行为
 
-- 安装到 `%LOCALAPPDATA%\Programs\BingLan`，不需要管理员权限，不写入 `Program Files` 或 `HKLM`；要求 Windows 11 x64。
+- 安装到 `%LOCALAPPDATA%\Programs\BingLan`，不需要管理员权限，不写入 `Program Files` 或 `HKLM`；要求 Windows 11 x64，Windows 10 版本 2004（Build 19041）及以上也可安装，但任务栏外观不可用。
 - 在开始菜单添加“冰蓝桌面”；桌面快捷方式为可选项，默认不勾选。
 - “登录 Windows 时启动冰蓝桌面”默认勾选，写入当前用户的单个启动项；可在设置中心“通用”页开关。卸载时只要启动项启动的正是本安装位置的程序就删除，不论它由安装程序还是应用创建；指向其他位置的同名启动项保留。
 - 安装目录附带面向用户的 `使用说明.md`，开始菜单提供“冰蓝桌面使用说明”入口。

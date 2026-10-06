@@ -672,7 +672,7 @@
                                                 </Grid.ColumnDefinitions>
                                                 <TextBox x:Name="CityQueryEditor"
                                                          AutomationProperties.Name="城市关键词"
-                                                         ToolTip="输入城市名后按 Enter 搜索"
+                                                         ToolTip="输入城市或区县名后按 Enter 搜索"
                                                          KeyDown="CityQueryEditor_KeyDown"/>
                                                 <Button x:Name="SearchCityButton"
                                                         Grid.Column="1"
@@ -695,7 +695,7 @@
                                                                 <ColumnDefinition Width="*"/>
                                                                 <ColumnDefinition Width="Auto"/>
                                                             </Grid.ColumnDefinitions>
-                                                            <TextBlock FontWeight="SemiBold" Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis"/>
+                                                            <TextBlock FontWeight="SemiBold" Text="{Binding DisplayName}" ToolTip="{Binding DisplayName}" TextTrimming="CharacterEllipsis"/>
                                                             <TextBlock Grid.Column="1" Margin="12,0,0,0" Foreground="{DynamicResource SettingsCoordinateTextBrush}" Text="{Binding CoordinateText}"/>
                                                         </Grid>
                                                     </DataTemplate>
@@ -716,7 +716,7 @@
                                             <TextBlock Grid.Row="4"
                                                        Margin="0,12,0,0"
                                                        Style="{StaticResource CaptionStyle}"
-                                                       Text="只有点击搜索时才发送城市关键词；选择后仅把城市名和坐标保存在本机。不使用 IP、GPS、Wi-Fi 或设备位置。"/>
+                                                       Text="可搜索城市、区县或乡镇。只有点击搜索时才发送关键词；选择后仅把地名和坐标保存在本机。不使用 IP、GPS、Wi-Fi 或设备位置。地名数据 © OpenStreetMap 贡献者，天气数据来自 Open-Meteo。"/>
                                         </Grid>
                                     </Border>
                                 </StackPanel>

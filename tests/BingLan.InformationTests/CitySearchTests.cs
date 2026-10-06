@@ -9,35 +9,35 @@ namespace BingLan.InformationTests;
 internal static class CitySearchTests
 {
     private const string SearchJson = """
-        {
-          "results": [
-            {
-              "id": 1816670,
-              "name": "北京",
-              "latitude": 39.9075,
-              "longitude": 116.3972,
-              "country": "中国",
-              "admin1": "北京市"
-            },
-            {
-              "id": 0,
-              "name": "无效坐标",
-              "latitude": 999,
-              "longitude": 116.4,
-              "country": "中国"
-            }
-          ]
-        }
+        [
+          {
+            "place_id": 231468810,
+            "lat": "30.1861",
+            "lon": "120.2597",
+            "name": "萧山区",
+            "display_name": "萧山区, 杭州市, 浙江省, 311200, 中国",
+            "address": { "city": "萧山区", "state": "浙江省", "country": "中国" }
+          },
+          {
+            "place_id": 1,
+            "lat": "999",
+            "lon": "116.4",
+            "name": "无效坐标",
+            "display_name": "无效坐标, 中国"
+          }
+        ]
         """;
 
     public static void SuccessParseAndUrl()
     {
         Uri? requestedUri = null;
+        string? lastUserAgent = null;
         var stub = new StubHttpMessageHandler
         {
             Behavior = (request, _) =>
             {
                 requestedUri = request.RequestUri;
+                lastUserAgent = request.Headers.UserAgent.ToString();
                 return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
                 {
                     Content = new StringContent(SearchJson)
@@ -45,24 +45,27 @@ internal static class CitySearchTests
             }
         };
         var service = new CitySearchService(stub);
-        var outcome = Await(service.SearchAsync("  北京  "));
+        var outcome = Await(service.SearchAsync("  萧山  "));
 
         Assert(outcome.Succeeded, "搜索成功状态");
         AssertEqual(1, outcome.Results.Count, "过滤非法坐标结果");
         var result = outcome.Results[0];
-        AssertEqual("北京 · 北京市 · 中国", result.DisplayName, "候选显示名称");
-        AssertEqual(39.9075, result.Latitude, "候选纬度");
-        AssertEqual(116.3972, result.Longitude, "候选经度");
+        AssertEqual("萧山区 · 杭州市 · 浙江省 · 中国", result.DisplayName, "候选显示上级行政区，省略邮编");
+        AssertEqual(30.1861, result.Latitude, "候选纬度");
+        AssertEqual(120.2597, result.Longitude, "候选经度");
         AssertEqual(1, stub.CallCount, "只请求一次");
         Assert(requestedUri is not null, "记录请求地址");
         var url = requestedUri!.AbsoluteUri;
         Assert(url.StartsWith(CitySearchService.GeocodingEndpoint, StringComparison.Ordinal),
-            "使用 Open-Meteo 地理编码端点");
-        Assert(url.Contains("name=%E5%8C%97%E4%BA%AC", StringComparison.OrdinalIgnoreCase),
-            "城市关键词进行 URL 编码");
-        Assert(url.Contains("count=8", StringComparison.Ordinal), "候选数量参数");
-        Assert(url.Contains("language=zh", StringComparison.Ordinal), "中文结果参数");
-        Assert(url.Contains("format=json", StringComparison.Ordinal), "JSON 格式参数");
+            "使用 Nominatim 地理编码端点");
+        Assert(url.Contains("q=%E8%90%A7%E5%B1%B1&", StringComparison.OrdinalIgnoreCase),
+            "城市关键词去除空白并进行 URL 编码");
+        Assert(url.Contains("limit=8", StringComparison.Ordinal), "候选数量参数");
+        Assert(url.Contains("accept-language=zh-CN", StringComparison.Ordinal), "中文结果参数");
+        Assert(url.Contains("featureType=settlement", StringComparison.Ordinal), "只搜索居民点");
+        Assert(url.Contains("format=jsonv2", StringComparison.Ordinal), "JSON 格式参数");
+        Assert(lastUserAgent?.Contains("BingLan", StringComparison.Ordinal) == true,
+            "请求带应用标识");
     }
 
     public static void ShortQuerySkipsNetwork()
@@ -82,7 +85,7 @@ internal static class CitySearchTests
         {
             Behavior = (_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = new StringContent("{}")
+                Content = new StringContent("[]")
             })
         };
         var outcome = Await(new CitySearchService(stub).SearchAsync("不存在城市"));
@@ -90,6 +93,30 @@ internal static class CitySearchTests
         Assert(outcome.Succeeded, "空结果仍是成功请求");
         AssertEqual(0, outcome.Results.Count, "空结果列表");
         Assert(outcome.Message.Contains("没有找到"), "空结果提示");
+    }
+
+    // Nominatim 使用政策：每秒最多 1 次请求。
+    public static void ConsecutiveSearchesAreSpaced()
+    {
+        var times = new List<DateTimeOffset>();
+        var stub = new StubHttpMessageHandler
+        {
+            Behavior = (_, _) =>
+            {
+                times.Add(DateTimeOffset.UtcNow);
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("[]")
+                });
+            }
+        };
+        var service = new CitySearchService(stub);
+        Await(service.SearchAsync("北京"));
+        Await(service.SearchAsync("上海"));
+
+        AssertEqual(2, times.Count, "两次搜索都发出请求");
+        Assert(times[1] - times[0] >= CitySearchService.MinimumRequestInterval - TimeSpan.FromMilliseconds(20),
+            "相邻请求至少间隔 1 秒");
     }
 
     public static void FailuresAreQuiet()

@@ -12,18 +12,16 @@ namespace BingLan.InformationTests;
 internal static class SettingsWindowTests
 {
     private const string SearchJson = """
-        {
-          "results": [
-            {
-              "id": 1816670,
-              "name": "北京",
-              "latitude": 39.9075,
-              "longitude": 116.3972,
-              "country": "中国",
-              "admin1": "北京市"
-            }
-          ]
-        }
+        [
+          {
+            "place_id": 219704754,
+            "lat": "39.9057",
+            "lon": "116.3913",
+            "name": "北京市",
+            "display_name": "北京市, 中国",
+            "address": { "city": "北京市", "country": "中国" }
+          }
+        ]
         """;
 
     public static void SearchSelectAndSave()
@@ -72,7 +70,7 @@ internal static class SettingsWindowTests
             Assert(apply.IsEnabled, "选择候选后允许应用");
             Click(apply);
             Assert(savedCity is not null, "选择结果传给宿主");
-            AssertEqual("北京 · 北京市 · 中国", savedCity!.DisplayName, "选择城市显示名称");
+            AssertEqual("北京市 · 中国", savedCity!.DisplayName, "选择城市显示名称");
             Assert(currentCity.Text.Contains("北京"), "当前城市立即更新");
 
             Require<TextBox>(window, "GreetingNameEditor").Text = "  小明  ";

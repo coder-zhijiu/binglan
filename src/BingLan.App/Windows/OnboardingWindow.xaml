@@ -158,7 +158,7 @@
                 <TextBlock x:Name="CitySearchStatusText" Margin="0,6,0,0" Style="{StaticResource NoteStyle}"/>
                 <TextBlock Margin="0,8,0,0"
                            Style="{StaticResource NoteStyle}"
-                           Text="天气需要联网：只有点击搜索时才发送城市关键词，选定后只把城市名和坐标保存在本机。不使用 IP、GPS 或 Wi-Fi 定位。可以跳过，之后在设置中心填写。"/>
+                           Text="天气需要联网：可搜索城市、区县或乡镇，只有点击搜索时才发送关键词，选定后只把地名和坐标保存在本机。不使用 IP、GPS 或 Wi-Fi 定位。地名数据 © OpenStreetMap 贡献者。可以跳过，之后在设置中心填写。"/>
             </StackPanel>
         </ScrollViewer>
 

@@ -37,6 +37,7 @@ internal static class Program
         Run("城市搜索成功解析与请求结构", CitySearchTests.SuccessParseAndUrl, failures);
         Run("城市搜索短关键词不联网", CitySearchTests.ShortQuerySkipsNetwork, failures);
         Run("城市搜索空结果", CitySearchTests.EmptyResults, failures);
+        Run("城市搜索请求间隔", CitySearchTests.ConsecutiveSearchesAreSpaced, failures);
         Run("城市搜索失败安静回退", CitySearchTests.FailuresAreQuiet, failures);
         Run("城市搜索超时安静回退", CitySearchTests.TimeoutIsQuiet, failures);
 

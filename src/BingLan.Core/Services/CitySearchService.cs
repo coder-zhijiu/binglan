@@ -1,16 +1,22 @@
+using System.Globalization;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using BingLan.Core.Models;
 
 namespace BingLan.Core.Services;
 
-// Open-Meteo 地理编码客户端。只有调用 SearchAsync 时才联网，不读取设备位置。
+// OpenStreetMap Nominatim 地理编码客户端。只有调用 SearchAsync 时才联网，不读取设备位置。
+// 使用政策要求：带应用标识、每秒最多 1 次请求、不做输入即搜，界面需注明 © OpenStreetMap。
 public sealed class CitySearchService
 {
-    public const string GeocodingEndpoint =
-        "https://geocoding-api.open-meteo.com/v1/search";
+    public const string GeocodingEndpoint = "https://nominatim.openstreetmap.org/search";
+
+    public static readonly TimeSpan MinimumRequestInterval = TimeSpan.FromSeconds(1);
 
     private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(10);
     private readonly HttpClient _httpClient;
+    private readonly SemaphoreSlim _requestGate = new(1, 1);
+    private DateTimeOffset _lastRequestAt = DateTimeOffset.MinValue;
 
     public CitySearchService()
         : this(null, null)
@@ -21,6 +27,11 @@ public sealed class CitySearchService
     {
         _httpClient = handler is null ? new HttpClient() : new HttpClient(handler);
         _httpClient.Timeout = timeout ?? DefaultTimeout;
+        var version = typeof(CitySearchService).Assembly.GetName().Version ?? new Version(0, 0, 0);
+        _httpClient.DefaultRequestHeaders.UserAgent.Add(
+            new ProductInfoHeaderValue("BingLan", version.ToString(3)));
+        _httpClient.DefaultRequestHeaders.UserAgent.Add(
+            new ProductInfoHeaderValue("(+https://github.com/keros68/binglan)"));
     }
 
     public async Task<CitySearchOutcome> SearchAsync(
@@ -33,8 +44,16 @@ public sealed class CitySearchService
             return new CitySearchOutcome(false, [], "请至少输入 2 个字符");
         }
 
+        await _requestGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            var wait = _lastRequestAt + MinimumRequestInterval - DateTimeOffset.UtcNow;
+            if (wait > TimeSpan.Zero)
+            {
+                await Task.Delay(wait, cancellationToken).ConfigureAwait(false);
+            }
+            _lastRequestAt = DateTimeOffset.UtcNow;
+
             var json = await _httpClient
                 .GetStringAsync(BuildRequestUrl(trimmedQuery), cancellationToken)
                 .ConfigureAwait(false);
@@ -42,7 +61,7 @@ public sealed class CitySearchService
             return new CitySearchOutcome(
                 true,
                 results,
-                results.Count == 0 ? "没有找到匹配城市" : $"找到 {results.Count} 个候选城市");
+                results.Count == 0 ? "没有找到匹配地点" : $"找到 {results.Count} 个候选地点");
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
@@ -56,60 +75,78 @@ public sealed class CitySearchService
         {
             return new CitySearchOutcome(false, [], "城市搜索结果无法解析");
         }
+        finally
+        {
+            _requestGate.Release();
+        }
     }
 
+    // featureType=settlement 只返回国家、省、市、区县、乡镇、村等居民点，排除车站、街道和山峰。
     public static string BuildRequestUrl(
         string query,
         int count = 8,
-        string language = "zh")
+        string language = "zh-CN")
     {
-        var safeCount = Math.Clamp(count, 1, 100);
-        var safeLanguage = string.IsNullOrWhiteSpace(language)
-            ? "zh"
-            : language.Trim().ToLowerInvariant();
-        return $"{GeocodingEndpoint}?name={Uri.EscapeDataString(query.Trim())}" +
-               $"&count={safeCount}&language={Uri.EscapeDataString(safeLanguage)}&format=json";
+        var safeCount = Math.Clamp(count, 1, 40);
+        var safeLanguage = string.IsNullOrWhiteSpace(language) ? "zh-CN" : language.Trim();
+        return $"{GeocodingEndpoint}?q={Uri.EscapeDataString(query.Trim())}" +
+               $"&format=jsonv2&addressdetails=1&featureType=settlement&limit={safeCount}" +
+               $"&accept-language={Uri.EscapeDataString(safeLanguage)}";
     }
 
     public static IReadOnlyList<CitySearchResult> ParseResults(string json)
     {
         using var document = JsonDocument.Parse(json);
         var root = document.RootElement;
-        if (root.ValueKind != JsonValueKind.Object ||
-            !root.TryGetProperty("results", out var resultsElement))
+        if (root.ValueKind != JsonValueKind.Array)
         {
-            return [];
-        }
-        if (resultsElement.ValueKind != JsonValueKind.Array)
-        {
-            throw new JsonException("results 不是数组");
+            throw new JsonException("搜索结果不是数组");
         }
 
         var results = new List<CitySearchResult>();
-        foreach (var item in resultsElement.EnumerateArray())
+        foreach (var item in root.EnumerateArray())
         {
             if (item.ValueKind != JsonValueKind.Object ||
-                !TryReadString(item, "name", out var name) ||
-                !TryReadDouble(item, "latitude", out var latitude) ||
-                !TryReadDouble(item, "longitude", out var longitude) ||
+                !TryReadCoordinate(item, "lat", out var latitude) ||
+                !TryReadCoordinate(item, "lon", out var longitude) ||
                 latitude is < -90d or > 90d ||
                 longitude is < -180d or > 180d)
             {
                 continue;
             }
 
-            var id = item.TryGetProperty("id", out var idElement) &&
+            _ = TryReadString(item, "display_name", out var displayName);
+            var parts = (displayName ?? string.Empty)
+                .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                .ToList();
+            if (!TryReadString(item, "name", out var name))
+            {
+                name = parts.FirstOrDefault();
+            }
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                continue;
+            }
+
+            var country = item.TryGetProperty("address", out var address) &&
+                          address.ValueKind == JsonValueKind.Object &&
+                          TryReadString(address, "country", out var addressCountry)
+                ? addressCountry!
+                : string.Empty;
+            // display_name 形如“萧山区, 杭州市, 浙江省, 中国”；中间各级行政区用于区分同名地点，邮编不显示。
+            var region = parts
+                .Skip(parts.Count > 0 && parts[0] == name ? 1 : 0)
+                .Where(part => part != country && !part.All(char.IsAsciiDigit));
+            var id = item.TryGetProperty("place_id", out var idElement) &&
                      idElement.ValueKind == JsonValueKind.Number &&
                      idElement.TryGetInt64(out var parsedId)
                 ? parsedId
                 : 0L;
-            _ = TryReadString(item, "admin1", out var admin1);
-            _ = TryReadString(item, "country", out var country);
             results.Add(new CitySearchResult(
                 id,
                 name!,
-                admin1 ?? string.Empty,
-                country ?? string.Empty,
+                string.Join(" · ", region),
+                country,
                 latitude,
                 longitude));
         }
@@ -132,15 +169,15 @@ public sealed class CitySearchService
         return !string.IsNullOrWhiteSpace(value);
     }
 
-    private static bool TryReadDouble(
+    // Nominatim 以字符串返回经纬度。
+    private static bool TryReadCoordinate(
         JsonElement item,
         string propertyName,
         out double value)
     {
         value = 0d;
-        return item.TryGetProperty(propertyName, out var element) &&
-               element.ValueKind == JsonValueKind.Number &&
-               element.TryGetDouble(out value) &&
+        return TryReadString(item, propertyName, out var text) &&
+               double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out value) &&
                double.IsFinite(value);
     }
 }
