@@ -173,8 +173,10 @@ public sealed class WidgetCoordinator : IDisposable
         }
         foreach (var window in _windows)
         {
+            window.RestoreDisplayLayout();
             WindowScreenRecovery.EnsureOnScreen(window);
         }
+        WindowScreenRecovery.SettleLayout();
         StartShellModulesAsync().ContinueWith(
             task => StartupLog.Write($"启动未完成：{task.Exception?.GetBaseException().Message}"),
             CancellationToken.None,
@@ -186,6 +188,7 @@ public sealed class WidgetCoordinator : IDisposable
         _fullScreenWatcher.Changed += () => _cornerReveal.SetSuspended(_fullScreenWatcher.IsFullScreenInFront);
         _fullScreenWatcher.Start();
         SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
+        WindowScreenRecovery.LayoutChanged += OnDisplayLayoutChanged;
         SaveNow();
         if (_showOnboarding && !_state.OnboardingCompleted)
         {
@@ -552,20 +555,23 @@ public sealed class WidgetCoordinator : IDisposable
             _desktopHidden));
 
     // Runs after monitors are added, removed or rearranged, or scaling changes.
-    private void OnDisplaySettingsChanged(object? sender, EventArgs e) =>
+    private void OnDisplaySettingsChanged(object? sender, EventArgs e) => OnDisplayLayoutChanged();
+
+    // Cards go back to where they last sat on the arrangement now in use; on an arrangement
+    // seen for the first time they are only kept in view.
+    private void OnDisplayLayoutChanged() =>
         System.Windows.Application.Current?.Dispatcher.BeginInvoke(
             DispatcherPriority.Background,
             () =>
             {
-                var moved = false;
                 foreach (var window in _windows.ToList())
                 {
-                    moved |= WindowScreenRecovery.EnsureOnScreen(window);
+                    window.RestoreDisplayLayout();
+                    WindowScreenRecovery.EnsureOnScreen(window);
                 }
-                if (moved)
-                {
-                    ScheduleSave();
-                }
+                // Saving captures the cards again, now remembered for this arrangement.
+                WindowScreenRecovery.SettleLayout();
+                ScheduleSave();
             });
 
     private void ToggleDesktop()
@@ -611,6 +617,7 @@ public sealed class WidgetCoordinator : IDisposable
         _settingsWindow?.Close();
         _settingsWindow = null;
         SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
+        WindowScreenRecovery.LayoutChanged -= OnDisplayLayoutChanged;
         AccessibilityThemeManager.HighContrastChanged -= OnHighContrastChanged;
         _fullScreenWatcher.Dispose();
         _dock.Dispose();

@@ -10,6 +10,7 @@ using System.Windows.Media.Media3D;
 using System.Windows.Threading;
 using BingLan.App.Dock;
 using BingLan.App.Interop;
+using BingLan.App.Services;
 using BingLan.Core.Models;
 using BingLan.Core.Services;
 using ContextMenu = System.Windows.Controls.ContextMenu;
@@ -195,6 +196,7 @@ public class WidgetWindowBase : Window
         IsWidgetSelectedPropertyKey.DependencyProperty;
 
     private HwndSource? _source;
+    private WindowPlacement? _placement;
     private bool _isUpdatingNativeWindowShape;
     private bool _isApplyingTaskbarSafeBounds;
     private bool _titleEditorHooked;
@@ -403,6 +405,7 @@ public class WidgetWindowBase : Window
         var top = placement.Top;
         var width = Math.Max(MinWidth, placement.Width);
         var height = Math.Max(MinHeight, placement.Height);
+        _placement = placement;
         Left = left;
         Top = top;
         Width = width;
@@ -440,7 +443,12 @@ public class WidgetWindowBase : Window
         placement.Top = Top;
         placement.Width = Width;
         placement.Height = Height;
+        WindowScreenRecovery.RememberLayout(this, placement);
     }
+
+    /// <summary>Puts the card back where it last sat on the arrangement of monitors now in use.</summary>
+    internal bool RestoreDisplayLayout() =>
+        _placement is not null && WindowScreenRecovery.RestoreLayout(this, _placement);
 
     public void RefreshBackdrop()
     {

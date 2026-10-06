@@ -17,6 +17,22 @@ public sealed class WindowPlacement
     public double Top { get; set; } = 92;
     public double Width { get; set; } = 286;
     public double Height { get; set; } = 336;
+
+    /// <summary>
+    /// Where the card last sat on each arrangement of monitors, so plugging a second
+    /// screen back in puts the card where it was on that arrangement.
+    /// </summary>
+    public List<DisplayLayoutPlacement> DisplayLayouts { get; set; } = [];
+}
+
+/// <summary>The card's bounds, in physical pixels, on one arrangement of monitors.</summary>
+public sealed class DisplayLayoutPlacement
+{
+    public string Layout { get; set; } = string.Empty;
+    public int Left { get; set; }
+    public int Top { get; set; }
+    public int Right { get; set; }
+    public int Bottom { get; set; }
 }
 
 public sealed class WidgetAppearanceState

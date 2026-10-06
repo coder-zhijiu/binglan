@@ -1324,8 +1324,17 @@
                                 <TextBlock x:Name="AppVersionText"/>
                                 <TextBlock x:Name="UpdateStatusText"
                                            Margin="0,2,0,0"
-                                           AutomationProperties.LiveSetting="Polite"
-                                           Style="{StaticResource CaptionStyle}"/>
+                                           AutomationProperties.LiveSetting="Polite">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource CaptionStyle}">
+                                            <Style.Triggers>
+                                                <Trigger Property="Text" Value="">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                             </StackPanel>
                             <Button x:Name="CheckUpdatesButton"
                                     Grid.Column="2"

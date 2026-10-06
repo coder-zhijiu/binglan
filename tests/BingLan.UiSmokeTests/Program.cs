@@ -118,10 +118,12 @@ internal static class Program
         Run("托盘隐藏与显示桌面组件", TestTrayToggleDesktop, failures);
         Run("组件恢复默认位置", TestResetComponentPlacement, failures);
         Run("清爽桌面开关", TestCleanDesktopToggle, failures);
+        Run("设置行分隔线对齐标题", TestSettingsRowDividersAlignWithTitles, failures);
         Run("整体风格与清爽桌面恢复提示", TestStyleSettingsAndRestoreNotice, failures);
         Run("便签尺寸输入后自动生效", TestAppearancePanelSizeAppliesOnItsOwn, failures);
         Run("首次使用引导逐步应用设置", TestOnboardingWizard, failures);
         Run("卡片拖动吸附到相邻卡片且不会被系统吸附成半屏", () => SnapMoveTests.Run(ShowAndPump, Pump), failures);
+        Run("显示器排列切换后卡片回到该排列下的位置", () => DisplayLayoutWindowTests.Run(ShowAndPump, Pump), failures);
         Run("主题导入对话框显示名称与预览图", TestThemeImportDialogShowsNameAndPreview, failures);
 
         if (failures.Count > 0)
@@ -2127,6 +2129,41 @@ internal static class Program
             Assert(
                 Require<TextBlock>(window, "ComponentSettingsStatusText").Text == "已恢复默认位置",
                 "恢复默认位置后应显示结果");
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    private static void TestSettingsRowDividersAlignWithTitles()
+    {
+        var window = new SettingsWindow(
+            new CitySearchService(),
+            new InformationWidgetState(),
+            DesktopExperienceRules.CreateDefault(),
+            (_, _) => { },
+            _ => { },
+            _ => { });
+        ShowAndPump(window);
+        try
+        {
+            var navigation = Require<ListBox>(window, "SettingsNavigationList");
+            for (var page = 0; page < navigation.Items.Count; page++)
+            {
+                navigation.SelectedIndex = page;
+                Pump();
+                foreach (var row in FindVisualChildren<SettingsRow>(window).Where(row => row.IsVisible))
+                {
+                    var divider = (FrameworkElement)row.Template.FindName("Divider", row);
+                    var title = FindVisualChildren<StackPanel>(row).First(panel => Grid.GetColumn(panel) == 1);
+                    var dividerLeft = divider.TranslatePoint(new Point(), row).X;
+                    var titleLeft = title.TranslatePoint(new Point(), row).X;
+                    Assert(
+                        Math.Abs(dividerLeft - titleLeft) < 0.5,
+                        $"设置行“{row.Header}”的分隔线应与标题左对齐（{dividerLeft} ≠ {titleLeft}）");
+                }
+            }
         }
         finally
         {

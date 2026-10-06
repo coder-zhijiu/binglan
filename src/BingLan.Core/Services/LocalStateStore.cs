@@ -422,6 +422,13 @@ public sealed class LocalStateStore
             // Update checking is new and starts on: one check a day, only to say a release exists.
             state.SchemaVersion = 21;
         }
+
+        if (state.SchemaVersion < 22)
+        {
+            // Cards remember a position per arrangement of monitors; the list starts empty
+            // and fills on the arrangement in use.
+            state.SchemaVersion = 22;
+        }
         state.Updates ??= new UpdateState();
         state.QuickPlaces = QuickPlaceRules.Normalize(state.QuickPlaces);
         state.DismissedDesktopCategories = (state.DismissedDesktopCategories ?? [])

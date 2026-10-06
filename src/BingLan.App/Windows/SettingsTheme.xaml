@@ -124,10 +124,13 @@
         </Setter>
     </Style>
 
-    <!-- A setting that only matters under the row above it: lined up with that row's title. -->
+    <!-- A setting that only matters under the row above it: an empty icon column keeps the
+         title and the divider lined up with that row's title. -->
     <Style x:Key="NestedSettingsRowStyle" TargetType="local:SettingsRow"
            BasedOn="{StaticResource {x:Type local:SettingsRow}}">
-        <Setter Property="Padding" Value="56,8,14,8"/>
+        <Setter Property="Padding" Value="14,8"/>
+        <Setter Property="Glyph" Value=" "/>
+        <Setter Property="GlyphBrush" Value="Transparent"/>
         <Setter Property="MinHeight" Value="48"/>
     </Style>
 
