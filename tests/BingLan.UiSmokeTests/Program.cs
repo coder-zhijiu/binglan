@@ -1689,8 +1689,9 @@ internal static class Program
         var list = Require<ItemsControl>(window, "FileList");
         ShowAndPump(window);
         var watcher = new FileMappingWatchService(
-            () => window.RemoveGoneMappings(FileMappingService.CollectGoneIds(state.Items)),
-            () => { });
+            () => Task.FromResult(window.RemoveGoneMappings(
+                FileMappingService.CollectGoneIds(state.Items))),
+            () => Task.CompletedTask);
         watcher.UpdateWatchedDirectories(
             FileMappingService.CollectExistingParentDirectories(state.Items.Select(item => item.Path)));
         try
@@ -1755,7 +1756,13 @@ internal static class Program
         Directory.CreateDirectory(importDir);
         Directory.CreateDirectory(otherDir);
         var importRequested = 0;
-        var watcher = new FileMappingWatchService(() => { }, () => importRequested++);
+        var watcher = new FileMappingWatchService(
+            () => Task.CompletedTask,
+            () =>
+            {
+                importRequested++;
+                return Task.CompletedTask;
+            });
         watcher.UpdateWatchedDirectories([importDir, otherDir]);
         watcher.UpdateImportDirectories([importDir]);
         try

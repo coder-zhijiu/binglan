@@ -8,8 +8,8 @@ namespace BingLan.App.Services;
 /// renames request a debounced sweep so mappings whose originals were deleted stop lingering
 /// as “已失效”; creations and in-place renames on the desktops request a debounced import so
 /// new desktop items join their boxes on their own. One service covers every box; each
-/// folder gets a single watcher. Callbacks run on the UI thread and must do filesystem work
-/// off it.
+/// folder gets a single watcher. Callbacks start on the UI thread and must do filesystem
+/// work off it; they return tasks that are discarded, so failures must be caught inside.
 /// </summary>
 public sealed class FileMappingWatchService : IDisposable
 {
@@ -18,13 +18,13 @@ public sealed class FileMappingWatchService : IDisposable
     private readonly Dictionary<string, FileSystemWatcher> _watchers = new(StringComparer.OrdinalIgnoreCase);
     private readonly DispatcherTimer _sweepDebounce;
     private readonly DispatcherTimer _importDebounce;
-    private readonly Action _sweep;
-    private readonly Action _import;
+    private readonly Func<Task> _sweep;
+    private readonly Func<Task> _import;
     // Replaced atomically so watcher threads read a stable snapshot.
     private volatile HashSet<string> _importDirectories = new(StringComparer.OrdinalIgnoreCase);
     private bool _disposed;
 
-    public FileMappingWatchService(Action sweep, Action import)
+    public FileMappingWatchService(Func<Task> sweep, Func<Task> import)
     {
         _sweep = sweep;
         _import = import;
@@ -32,13 +32,13 @@ public sealed class FileMappingWatchService : IDisposable
         _sweepDebounce.Tick += (_, _) =>
         {
             _sweepDebounce.Stop();
-            _sweep();
+            _ = _sweep();
         };
         _importDebounce = new DispatcherTimer { Interval = DebounceDelay };
         _importDebounce.Tick += (_, _) =>
         {
             _importDebounce.Stop();
-            _import();
+            _ = _import();
         };
     }
 

@@ -1687,7 +1687,7 @@ public sealed class WidgetCoordinator : IDisposable
     /// refreshes the watched folders. Runs once at startup and after watcher notices or box
     /// changes; the filesystem checks run off the UI thread.
     /// </summary>
-    private async void SweepGoneFileMappings()
+    private async Task SweepGoneFileMappings()
     {
         if (_isExiting || !_state.FileBoxAutomationEnabled)
         {
@@ -1713,16 +1713,12 @@ public sealed class WidgetCoordinator : IDisposable
                     return;
                 }
 
-                var cleared = 0;
                 foreach (var box in _windows.OfType<FileBoxWindow>())
                 {
-                    cleared += box.RemoveGoneMappings(goneIds);
-                }
-                if (cleared > 0)
-                {
-                    foreach (var box in _windows.OfType<FileBoxWindow>())
+                    var clearedHere = box.RemoveGoneMappings(goneIds);
+                    if (clearedHere > 0)
                     {
-                        box.SetOperationStatus($"已自动移除 {cleared} 项已失效映射");
+                        box.SetOperationStatus($"已自动移除 {clearedHere} 项已失效映射");
                     }
                 }
                 _mappingWatcher.UpdateWatchedDirectories(parents);
@@ -1740,6 +1736,12 @@ public sealed class WidgetCoordinator : IDisposable
         Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
         Environment.GetFolderPath(Environment.SpecialFolder.CommonDesktopDirectory)
     ];
+
+    // 手动整理与自动收纳共用：桌面直接子项里跳过下载中的临时文件，改名完成后才可入盒。
+    private static List<string> CollectImportableDesktopEntries() =>
+        FileMappingService.EnumerateDirectChildren(DesktopDirectories())
+            .Where(path => !FileMappingService.IsPartialDownload(path))
+            .ToList();
 
     /// <summary>
     /// Turns file-box automation on or off and applies it: on starts watching the mapped
@@ -1773,7 +1775,7 @@ public sealed class WidgetCoordinator : IDisposable
     /// created and partial downloads are skipped; they arrive when renamed to the final
     /// name. Runs off the watcher; the scan stays off the UI thread.
     /// </summary>
-    private async void ImportNewDesktopEntries()
+    private async Task ImportNewDesktopEntries()
     {
         if (_isExiting || !_state.FileBoxAutomationEnabled)
         {
@@ -1791,10 +1793,8 @@ public sealed class WidgetCoordinator : IDisposable
             {
                 _importDesktopAgain = false;
                 var boxes = _state.FileBoxes.ToList();
-                var distribution = await Task.Run(() => FileMappingService.Distribute(
-                    FileMappingService.EnumerateDirectChildren(DesktopDirectories())
-                        .Where(path => !FileMappingService.IsPartialDownload(path)),
-                    boxes));
+                var distribution = await Task.Run(() =>
+                    FileMappingService.Distribute(CollectImportableDesktopEntries(), boxes));
                 if (_isExiting)
                 {
                     return;
@@ -1831,7 +1831,6 @@ public sealed class WidgetCoordinator : IDisposable
         _isOrganizingDesktop = true;
         try
         {
-            var desktopDirectories = DesktopDirectories();
             CaptureAll();
             var boxes = _state.FileBoxes.ToList();
             var goneIds = await Task.Run(() =>
@@ -1845,9 +1844,8 @@ public sealed class WidgetCoordinator : IDisposable
                 }
             }
 
-            var distribution = await Task.Run(() => FileMappingService.Distribute(
-                FileMappingService.EnumerateDirectChildren(desktopDirectories),
-                boxes));
+            var distribution = await Task.Run(() =>
+                FileMappingService.Distribute(CollectImportableDesktopEntries(), boxes));
 
             var added = 0;
             var created = 0;
