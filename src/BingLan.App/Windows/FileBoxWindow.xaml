@@ -60,7 +60,7 @@
                             BorderThickness="0"
                             FontSize="18"
                             Content="+"
-                            ToolTip="添加文件、文件夹或桌面项目（仅建立映射）"
+                            ToolTip="添加文件、文件夹或桌面项目"
                             Click="AddButton_Click">
                         <Button.ContextMenu>
                             <ContextMenu>
@@ -271,7 +271,7 @@
                         Background="{DynamicResource WidgetControlBrush}"
                         BorderBrush="{DynamicResource WidgetControlBorderBrush}"
                         FontSize="11"
-                        ToolTip="扫描用户与公共桌面并生成分类盒；只建立映射，不移动文件"
+                        ToolTip="把桌面项目放进分类盒，并清除已失效项"
                         Click="AutoOrganize_Click"/>
             </Grid>
         </Grid>

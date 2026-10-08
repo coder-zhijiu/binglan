@@ -386,7 +386,7 @@ public sealed class WidgetCoordinator : IDisposable
         _trayIcon.ShowBalloonTip(
             4000,
             "冰蓝桌面",
-            "刚才的操作没有完成，其他功能不受影响。",
+            "刚才的操作没有完成。",
             Forms.ToolTipIcon.Warning);
     }
 
@@ -1425,12 +1425,13 @@ public sealed class WidgetCoordinator : IDisposable
     {
         var message = window switch
         {
-            NoteWidgetWindow => "将删除此便签及其中的文字，不会删除任何桌面文件。继续吗？",
+            NoteWidgetWindow => "将删除此便签及其中的文字。继续吗？",
             InformationWidgetWindow { ComponentKind: { } kind } =>
-                $"将从桌面隐藏“{DesktopExperienceRules.GetComponentName(kind)}”，个人天气和称呼设置会保留。继续吗？",
+                $"将从桌面隐藏“{DesktopExperienceRules.GetComponentName(kind)}”。继续吗？",
             InformationWidgetWindow => "将删除此桌面信息组件及其本机设置。继续吗？",
-            TodoWidgetWindow => "将删除此待办及其中的项目，不会删除任何桌面文件。继续吗？",
-            _ => "只删除此组件及其本地映射，不会删除任何原文件。继续吗？"
+            TodoWidgetWindow => "将删除此待办及其中的项目。继续吗？",
+            FileBoxWindow => "将删除此分组盒及其中的映射。继续吗？",
+            _ => "将删除此组件。继续吗？"
         };
         var answer = System.Windows.MessageBox.Show(
             message,
@@ -1768,15 +1769,15 @@ public sealed class WidgetCoordinator : IDisposable
             {
                 box.SetOperationStatus(status);
             }
-            // Organising only adds entries to the boxes; hiding the originals is a separate
-            // setting, so the result says where it is while that setting is off.
+            // Hiding the original icons is a separate setting, so the result says where it is
+            // while that setting is off.
             var hint = _state.CleanDesktopEnabled
-                ? "桌面原文件未改变。"
+                ? string.Empty
                 : "桌面上的原图标仍会显示；在设置的“外观”页开启“清爽桌面”后可只显示分组盒。";
             _trayIcon.ShowBalloonTip(
                 6000,
                 "桌面归类完成",
-                $"新增 {added} 个安全映射，创建 {created} 个分类盒"
+                $"新增 {added} 项，创建 {created} 个分类盒"
                 + (cleared > 0 ? $"，清除 {cleared} 项已失效映射" : string.Empty)
                 + $"。{hint}",
                 Forms.ToolTipIcon.Info);
@@ -1785,12 +1786,12 @@ public sealed class WidgetCoordinator : IDisposable
         {
             foreach (var box in _windows.OfType<FileBoxWindow>())
             {
-                box.SetOperationStatus("整理未完成，桌面原文件未改变");
+                box.SetOperationStatus("整理未完成");
             }
             _trayIcon.ShowBalloonTip(
                 3500,
                 "桌面归类未完成",
-                $"没有改动桌面原文件。{ex.Message}",
+                ex.Message,
                 Forms.ToolTipIcon.Warning);
         }
         finally
@@ -1918,7 +1919,7 @@ public sealed class WidgetCoordinator : IDisposable
     {
         var menu = new Forms.ContextMenuStrip();
         menu.Items.Add(
-            "一键整理桌面（仅建立分类入口）",
+            "一键整理桌面",
             null,
             async (_, _) => await OrganizeDesktopAsync());
         menu.Items.Add(new Forms.ToolStripSeparator());

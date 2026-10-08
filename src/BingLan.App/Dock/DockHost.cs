@@ -63,7 +63,7 @@ internal sealed class DockHost : IDisposable
         {
             System.Diagnostics.Debug.WriteLine($"Dock 打开失败：{exception}");
             Close();
-            _notify("冰蓝 Dock 未能打开，已恢复屏幕工作区。桌面组件不受影响。");
+            _notify("冰蓝 Dock 未能打开，已恢复屏幕工作区。");
         }
     }
 

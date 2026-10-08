@@ -1701,7 +1701,7 @@ public partial class SettingsWindow : Window
             InstallUpdateButton.Visibility = installable ? Visibility.Visible : Visibility.Collapsed;
             InstallUpdateButton.IsEnabled = !updater.IsBusy;
             InstallUpdateNoteText.Text = installable
-                ? "安装时冰蓝桌面会暂时退出，装完自动重新打开；设置和桌面内容保留。"
+                ? "安装时冰蓝桌面会暂时退出，装完自动重新打开。"
                 : "这个版本没有可校验的安装包，请在发布页下载。";
         }
         else

@@ -199,7 +199,7 @@ public partial class FileBoxWindow : WidgetWindowBase
                 () => FileMappingService.EnumerateDirectChildren(desktopDirectories));
             var added = await AddMappingsAsync(paths);
             StatusText.Text = added > 0
-                ? $"已新增 {added} 项，原文件未移动"
+                ? $"已新增 {added} 项"
                 : "没有新的桌面项目可导入";
         }
         finally
@@ -410,7 +410,7 @@ public partial class FileBoxWindow : WidgetWindowBase
 
         var dialog = new TextPromptDialog(
             "修改显示名称",
-            "只改变分组盒里显示的名称，不会重命名原文件。留空则恢复原名称。",
+            "留空则恢复原名称。",
             tile.Name)
         {
             Owner = this
@@ -463,7 +463,7 @@ public partial class FileBoxWindow : WidgetWindowBase
         target._items.Add(new FileTile(tile.Mapping, tile.Icon));
         target.RefreshCount();
         target.NotifyStateChanged();
-        StatusText.Text = $"已转移到“{target.State.Title}”，原文件未移动";
+        StatusText.Text = $"已转移到“{target.State.Title}”";
     }
 
     private void RelinkFile_Click(object sender, RoutedEventArgs e)
@@ -719,7 +719,7 @@ public partial class FileBoxWindow : WidgetWindowBase
         var added = await AddMappingsAsync(list);
         var skipped = invalid > 0 ? $"{invalid} 项路径无效，已跳过" : string.Empty;
         StatusText.Text = added > 0
-            ? skipped.Length > 0 ? $"已新增 {added} 项，原文件未移动；{skipped}" : $"已新增 {added} 项，原文件未移动"
+            ? skipped.Length > 0 ? $"已新增 {added} 项；{skipped}" : $"已新增 {added} 项"
             : skipped.Length > 0 && invalid == list.Count ? skipped : "这些项目已经在分组盒中" + (skipped.Length > 0 ? $"；{skipped}" : string.Empty);
     }
 
@@ -759,7 +759,7 @@ public partial class FileBoxWindow : WidgetWindowBase
 
     private void RefreshCount()
     {
-        CountText.Text = $"{_items.Count} 项 · 仅映射";
+        CountText.Text = $"{_items.Count} 项";
     }
 
     public sealed class FileTile

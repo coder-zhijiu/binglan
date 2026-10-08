@@ -220,7 +220,7 @@
                     <local:SettingsRow Glyph="&#xE7F4;"
                                        GlyphBrush="{DynamicResource SettingsIconTealBrush}"
                                        Header="清爽桌面"
-                                       Description="只隐藏 Windows 桌面图标，文件保持原位；关闭或退出冰蓝桌面时恢复。">
+                                       Description="隐藏 Windows 桌面图标，只显示冰蓝桌面组件">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock x:Name="CleanDesktopStatusText"
                                        MaxWidth="240"
@@ -247,7 +247,7 @@
                     <local:SettingsRow Glyph="&#xE790;"
                                        GlyphBrush="{DynamicResource SettingsIconPurpleBrush}"
                                        Header="材质"
-                                       Description="应用到所有卡片，之后仍可单独调整">
+                                       Description="应用到所有卡片">
                         <Border Style="{StaticResource SegmentHostStyle}">
                             <StackPanel Orientation="Horizontal">
                                 <RadioButton x:Name="GlassLightRadio"
@@ -371,7 +371,7 @@
                     <local:SettingsRow Glyph="&#xE8B5;"
                                        GlyphBrush="{DynamicResource SettingsIconGreenBrush}"
                                        Header="从 Rainmeter 皮肤导入"
-                                       Description="只读取皮肤里的字体和颜色，不运行脚本或插件">
+                                       Description="读取皮肤里的字体和颜色">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock x:Name="RainmeterImportStatusText"
                                        MaxWidth="220"
@@ -390,7 +390,7 @@
                     <Border Style="{StaticResource SettingsPanelStyle}">
                         <StackPanel>
                             <TextBlock Style="{StaticResource CaptionStyle}"
-                                       Text="改变桌面卡片的摆放位置，不影响 Dock 和任务栏。选好后点击“应用布局”。"/>
+                                       Text="改变桌面卡片的摆放位置，选好后点击“应用布局”。"/>
                             <Border Height="250"
                                     Margin="0,12,0,12"
                                     Background="{DynamicResource SettingsPreviewBrush}"
@@ -478,7 +478,7 @@
                     <local:SettingsRow Glyph="&#xE72D;"
                                        GlyphBrush="{DynamicResource SettingsIconPinkBrush}"
                                        Header="导出或导入主题"
-                                       Description="包含颜色、材质、圆角、字号、相对布局和 Dock 应用槽位；不含称呼、城市、待办、便签、文件映射、本机路径、壁纸和字体。">
+                                       Description="包含颜色、材质、圆角、字号、相对布局和 Dock 应用槽位">
                         <StackPanel Orientation="Horizontal">
                             <Button Content="导出主题…" Click="ExportTheme_Click"/>
                             <Button Margin="8,0,0,0" Content="导入主题…" Click="ImportTheme_Click"/>
@@ -585,7 +585,7 @@
                                            FontWeight="SemiBold"/>
                                 <TextBlock Margin="0,2,0,12"
                                            Style="{StaticResource CaptionStyle}"
-                                           Text="未锁定时可直接拖动桌面空白区；锁定后位置和尺寸不会被误改。"/>
+                                           Text="未锁定时可直接拖动桌面空白区。"/>
                                 <local:SettingsGroup>
                                 <local:SettingsRow Glyph="&#xE7B3;" Header="显示此组件">
                                     <CheckBox x:Name="SelectedComponentVisibleCheckBox"
@@ -599,7 +599,7 @@
                                               Checked="ComponentToggle_Changed"
                                               Unchecked="ComponentToggle_Changed"/>
                                 </local:SettingsRow>
-                                <local:SettingsRow Glyph="&#xE7A7;" GlyphBrush="{DynamicResource SettingsIconGrayBrush}" Header="位置" Description="删除内置卡片只是隐藏，设置会保留">
+                                <local:SettingsRow Glyph="&#xE7A7;" GlyphBrush="{DynamicResource SettingsIconGrayBrush}" Header="位置">
                                     <StackPanel Orientation="Horizontal">
                                         <Button Content="恢复默认位置" Click="ResetComponentPlacement_Click"/>
                                         <Button x:Name="DeleteComponentButton"
@@ -716,7 +716,7 @@
                                             <TextBlock Grid.Row="4"
                                                        Margin="0,12,0,0"
                                                        Style="{StaticResource CaptionStyle}"
-                                                       Text="可搜索城市、区县或乡镇。只有点击搜索时才发送关键词；选择后仅把地名和坐标保存在本机。不使用 IP、GPS、Wi-Fi 或设备位置。地名数据 © OpenStreetMap 贡献者，天气数据来自 Open-Meteo。"/>
+                                                       Text="可搜索城市、区县或乡镇。地名数据 © OpenStreetMap 贡献者，天气数据来自 Open-Meteo。"/>
                                         </Grid>
                                     </Border>
                                 </StackPanel>
@@ -949,7 +949,7 @@
                                         <StackPanel>
                                             <TextBlock Margin="0,0,0,10"
                                                        Style="{StaticResource CaptionStyle}"
-                                                       Text="点击分组盒底部的“自动整理”时，桌面上这些类型的项目会放进这个盒子（只建立映射，不移动文件）。几个盒子都勾选同一类型时，放进列表中靠前的盒子。"/>
+                                                       Text="点击分组盒底部的“自动整理”时，桌面上这些类型的项目会放进这个盒子。几个盒子都勾选同一类型时，放进列表中靠前的盒子。"/>
                                             <WrapPanel x:Name="FileBoxCollectTypes"/>
                                             <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
                                                 <TextBlock Width="92" VerticalAlignment="Center" Text="其他扩展名"/>
@@ -978,10 +978,10 @@
                 <StackPanel Margin="0,0,28,28">
                     <TextBlock Style="{StaticResource PageTitleStyle}" Text="冰蓝 Dock"/>
                     <TextBlock Style="{StaticResource PageSubtitleStyle}"
-                               Text="在屏幕底部居中显示固定的应用和正在运行的应用。开始菜单、系统托盘和通知仍由 Windows 任务栏提供。"/>
+                               Text="在屏幕底部居中显示固定的应用和正在运行的应用。"/>
 
                     <local:SettingsGroup Margin="0,14,0,4">
-                        <local:SettingsRow Glyph="&#xE71D;" Header="显示冰蓝 Dock" Description="关闭后，下面的设置会保留，重新打开时继续使用">
+                        <local:SettingsRow Glyph="&#xE71D;" Header="显示冰蓝 Dock">
                             <CheckBox x:Name="DockEnabledCheckBox"
                                       AutomationProperties.Name="显示冰蓝 Dock"
                                       Style="{StaticResource ToggleSwitchStyle}"
@@ -1182,7 +1182,7 @@
                 <StackPanel Margin="0,0,28,28">
                     <TextBlock Style="{StaticResource PageTitleStyle}" Text="Windows 任务栏"/>
                     <TextBlock Style="{StaticResource PageSubtitleStyle}"
-                               Text="只调整任务栏的外观和显示方式；开始菜单、系统托盘、通知和任务栏按钮保持不变。退出冰蓝桌面时恢复系统默认。"/>
+                               Text="调整任务栏的外观和显示方式，退出冰蓝桌面时恢复系统默认。"/>
 
                     <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="任务栏样式"/>
                     <UniformGrid Columns="4">
@@ -1264,7 +1264,7 @@
                         <local:SettingsRow Glyph="&#xEA8F;"
                                            GlyphBrush="{DynamicResource SettingsIconOrangeBrush}"
                                            Header="有新消息时不弹出任务栏"
-                                           Description="关闭 Windows 的任务栏应用闪烁，新消息只在 Dock 图标上显示橙色标记；关掉此项即恢复 Windows 默认">
+                                           Description="关闭 Windows 的任务栏应用闪烁，新消息只在 Dock 图标上显示橙色标记">
                             <CheckBox x:Name="QuietTaskbarFlashCheckBox"
                                       AutomationProperties.Name="有新消息时不弹出 Windows 任务栏"
                                       Style="{StaticResource ToggleSwitchStyle}"
@@ -1285,8 +1285,7 @@
                     <local:SettingsGroup>
                         <local:SettingsRow Glyph="&#xE7E8;"
                                            GlyphBrush="{DynamicResource SettingsIconGreenBrush}"
-                                           Header="登录 Windows 时启动冰蓝桌面"
-                                           Description="只添加一个当前用户的启动项，不需要管理员权限">
+                                           Header="登录 Windows 时启动冰蓝桌面">
                             <CheckBox x:Name="StartupCheckBox"
                                       AutomationProperties.Name="登录 Windows 时启动冰蓝桌面"
                                       Style="{StaticResource ToggleSwitchStyle}"
@@ -1345,7 +1344,7 @@
                         </Grid>
                         <local:SettingsRow Style="{StaticResource NestedSettingsRowStyle}"
                                            Header="每天自动检查更新"
-                                           Description="只向 GitHub 查询最新版本号，不发送个人数据；发现新版本时提示，不会自动下载或安装">
+                                           Description="发现新版本时提示">
                             <CheckBox x:Name="AutoCheckUpdatesCheckBox"
                                       AutomationProperties.Name="每天自动检查更新"
                                       Style="{StaticResource ToggleSwitchStyle}"
@@ -1378,7 +1377,7 @@
                             <TextBlock x:Name="InstallUpdateNoteText"
                                        Margin="0,10,0,0"
                                        Style="{StaticResource CaptionStyle}"
-                                       Text="安装时冰蓝桌面会暂时退出，装完自动重新打开；设置和桌面内容保留。"/>
+                                       Text="安装时冰蓝桌面会暂时退出，装完自动重新打开。"/>
                         </StackPanel>
                     </Border>
                     <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="备份"/>
@@ -1386,7 +1385,7 @@
                         <StackPanel>
                             <TextBlock Margin="0,0,0,10"
                                        Style="{StaticResource CaptionStyle}"
-                                       Text="备份包含全部桌面组件、个人内容和设置，只保存在本机数据目录的 Backups 文件夹。恢复前会先备份当前状态，然后重新启动冰蓝桌面。"/>
+                                       Text="备份包含全部桌面组件、个人内容和设置，保存在数据目录的 Backups 文件夹。恢复后冰蓝桌面会重新启动。"/>
                             <ListBox x:Name="BackupList"
                                      MinHeight="96"
                                      MaxHeight="260"

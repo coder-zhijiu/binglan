@@ -1413,7 +1413,7 @@ internal static class Program
                 "组件右键菜单仍承载桌面内设置或创建入口");
             var buttons = FindVisualChildren<Button>(window).ToList();
             var importButton = buttons.Single(
-                button => Equals(button.ToolTip, "添加文件、文件夹或桌面项目（仅建立映射）"));
+                button => Equals(button.ToolTip, "添加文件、文件夹或桌面项目"));
             Assert(Equals(importButton.Content, "+"), "桌面分组盒缺少可见导入入口");
             importButton.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
             Pump();
@@ -1444,7 +1444,7 @@ internal static class Program
                     .SequenceEqual(["快捷方式.lnk", "映射示例.txt", "资料"]),
                 "名称排序入口未更新映射顺序");
             Assert(
-                Require<TextBlock>(window, "CountText").Text == "3 项 · 仅映射",
+                Require<TextBlock>(window, "CountText").Text == "3 项",
                 "桌面分组盒没有明确提示仅保存映射");
             var presenter = list.ItemContainerGenerator.ContainerFromIndex(0) as ContentPresenter ??
                 throw new InvalidOperationException("文件项容器没有生成");
@@ -1568,7 +1568,7 @@ internal static class Program
 
             var buttons = FindVisualChildren<Button>(window).ToList();
             var addButton = buttons.Single(
-                button => Equals(button.ToolTip, "添加文件、文件夹或桌面项目（仅建立映射）"));
+                button => Equals(button.ToolTip, "添加文件、文件夹或桌面项目"));
             addButton.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
             Pump();
             var systemEntryMenu = addButton.ContextMenu!.Items.OfType<MenuItem>()

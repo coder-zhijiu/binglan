@@ -33,7 +33,7 @@
         <TextBlock Margin="0,6,0,0"
                    TextWrapping="Wrap"
                    Foreground="{DynamicResource IceMutedInkBrush}"
-                   Text="主题包只保存视觉样式和相对布局，可安全分享给其他电脑。"/>
+                   Text="主题包保存视觉样式和相对布局，可分享给其他电脑。"/>
 
         <TextBlock Margin="0,18,0,6" Text="主题名称"/>
         <TextBox x:Name="ThemeNameEditor"
