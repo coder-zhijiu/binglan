@@ -435,6 +435,13 @@ public sealed class LocalStateStore
             // A box may show its mappings as a compact list; existing boxes keep tiles.
             state.SchemaVersion = 23;
         }
+
+        if (state.SchemaVersion < 24)
+        {
+            // File-box automation is new and starts off: organising keeps clearing gone
+            // mappings, and nothing is watched until the user opts in.
+            state.SchemaVersion = 24;
+        }
         state.Updates ??= new UpdateState();
         state.QuickPlaces = QuickPlaceRules.Normalize(state.QuickPlaces);
         state.DismissedDesktopCategories = (state.DismissedDesktopCategories ?? [])
