@@ -13,7 +13,7 @@ public sealed record OnboardingMonitor(string DeviceName, string Label, bool IsP
 
 public sealed class OnboardingActions
 {
-    public CitySearchService CitySearch { get; init; } = new();
+    public CityLookupService CitySearch { get; init; } = new();
     /// <summary>Connected displays, primary first; the chosen one hosts the dock.</summary>
     public IReadOnlyList<OnboardingMonitor> Monitors { get; init; } = [];
     public Action<string> ApplyMonitor { get; init; } = _ => { };

@@ -41,6 +41,12 @@ internal static class Program
         Run("城市搜索失败安静回退", CitySearchTests.FailuresAreQuiet, failures);
         Run("城市搜索超时安静回退", CitySearchTests.TimeoutIsQuiet, failures);
 
+        Run("内嵌城市库加载", CityLibraryTests.EmbeddedLibraryLoads, failures);
+        Run("城市库搜索排序与同名消歧", CityLibraryTests.SearchRanksAndDisambiguates, failures);
+        Run("城市库数量上限与非法输入", CityLibraryTests.SearchLimitsAndRejects, failures);
+        Run("城市查找本地优先不联网", CityLibraryTests.LookupPrefersLocalLibrary, failures);
+        Run("城市查找本地无匹配转在线", CityLibraryTests.LookupFallsBackOnline, failures);
+
         Run("性能采样启动、降频、停止与释放", SamplingServiceTests.StartSampleThrottleStopDispose, failures);
 
         Run("信息组件性能数值常显无需悬停", WidgetWindowTests.MetricsAlwaysVisibleWithoutHover, failures);

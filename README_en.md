@@ -20,7 +20,7 @@ BingLan Desktop (冰蓝桌面) is a Windows 11 desktop companion built with .NET
 
 - **Desktop info**: time and date, greeting, weather, and CPU / RAM / network are separate cards, each with its own font, size, colour, and position. A thin line that fades at both ends can be shown under the time.
 - **To-dos and notes**: a to-do card starts with three empty items; ticking, adding, and deleting are separate actions. Notes hold plain multi-line text.
-- **File groups**: map desktop files, folders, and apps into boxes, sort them by type automatically (which also clears entries whose original file was deleted), and fold a box down to its title bar. Boxes record paths only; original files stay where they are.
+- **File groups**: map desktop files, folders, and apps into boxes, sort them by type automatically (which also clears entries whose original file was deleted), fold a box down to its title bar, and show items as large icons or a compact list. Boxes record paths only; original files stay where they are.
 - **Multiple monitors**: cards remember a position for each monitor setup. Unplug a laptop's external monitor and plug it back in, and the cards return to where they were on two screens.
 - **Quick launch**: a row of line icons for This PC, Desktop, Documents, Downloads, Pictures, and the Recycle Bin by default. Icons, names, and targets are customizable; a target can be a folder, program, or file.
 - **Dock**: pinned and running apps in separate sections, with a badge on apps that need attention. Drag a program or shortcut onto the dock to pin it; colour, opacity, and icon size are adjustable. Floating bars and small tools you don't want on the dock can be hidden from its right-click menu.
@@ -46,7 +46,7 @@ Requires Windows 11 x64. Windows 10 version 2004 or later also works, without th
 ## Privacy
 
 - No telemetry. To-dos, notes, file paths, app lists, and window titles stay on this computer under `%LOCALAPPDATA%\BingLanWidgets`.
-- The weather city is chosen by searching by hand. Requests send only the search text and the chosen city's coordinates; IP address and device location are not used.
+- The weather city is chosen by searching by hand. Chinese provinces, cities, and districts are found in a bundled offline list without any network access; other places fall back to OpenStreetMap Nominatim, and requests send only the search text and the chosen city's coordinates. IP address and device location are never used.
 - Once a day the app asks GitHub for the latest version number (can be turned off under Settings → 通用). A new version is only announced; you decide whether to download and install it.
 - Adding, sorting, or removing items in a file group changes only the mapping. Original files are never moved, renamed, or deleted.
 
@@ -57,7 +57,7 @@ Requires the .NET 10 SDK and PowerShell 7. Building the installer also needs Inn
 ```powershell
 dotnet build .\BingLan.slnx -c Release
 dotnet run --project .\tests\BingLan.SmokeTests\BingLan.SmokeTests.csproj -c Release
-pwsh -NoProfile -File .\installer\build.ps1 -Version 0.2.8
+pwsh -NoProfile -File .\installer\build.ps1 -Version 0.2.9
 ```
 
 Full test commands, the technical design, and the current implementation are in the [development notes (Chinese)](docs/DEVELOPMENT.md); installer details are in [docs/INSTALLER.md](docs/INSTALLER.md).

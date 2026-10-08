@@ -716,7 +716,7 @@
                                             <TextBlock Grid.Row="4"
                                                        Margin="0,12,0,0"
                                                        Style="{StaticResource CaptionStyle}"
-                                                       Text="可搜索城市、区县或乡镇。地名数据 © OpenStreetMap 贡献者，天气数据来自 Open-Meteo。"/>
+                                                       Text="国内省市区县来自内置离线城市库；境外地名联网使用 OpenStreetMap（© OpenStreetMap 贡献者）。天气数据来自 Open-Meteo。"/>
                                         </Grid>
                                     </Border>
                                 </StackPanel>
@@ -943,6 +943,28 @@
                                     </StackPanel>
                                 </local:SettingsRow>
                                 </local:SettingsGroup>
+                                <StackPanel x:Name="FileBoxViewModePanel" Visibility="Collapsed">
+                                    <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="内容显示"/>
+                                    <Border Style="{StaticResource SettingsPanelStyle}">
+                                        <StackPanel>
+                                            <TextBlock Margin="0,0,0,10"
+                                                       Style="{StaticResource CaptionStyle}"
+                                                       Text="列表每行一个项目，占用空间更小；图标用大图便于辨认。切换只改变显示方式，不影响映射内容。"/>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Width="92" VerticalAlignment="Center" Text="显示为"/>
+                                                <RadioButton x:Name="FileBoxTilesRadio"
+                                                             Margin="0,0,18,0"
+                                                             AutomationProperties.Name="图标视图"
+                                                             Checked="FileBoxViewMode_Changed"
+                                                             Content="图标"/>
+                                                <RadioButton x:Name="FileBoxListRadio"
+                                                              AutomationProperties.Name="列表视图"
+                                                              Checked="FileBoxViewMode_Changed"
+                                                              Content="列表"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
                                 <StackPanel x:Name="FileBoxCollectPanel" Visibility="Collapsed">
                                     <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="自动整理时收纳"/>
                                     <Border Style="{StaticResource SettingsPanelStyle}">

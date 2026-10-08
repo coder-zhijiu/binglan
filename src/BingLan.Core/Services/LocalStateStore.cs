@@ -429,6 +429,12 @@ public sealed class LocalStateStore
             // and fills on the arrangement in use.
             state.SchemaVersion = 22;
         }
+
+        if (state.SchemaVersion < 23)
+        {
+            // A box may show its mappings as a compact list; existing boxes keep tiles.
+            state.SchemaVersion = 23;
+        }
         state.Updates ??= new UpdateState();
         state.QuickPlaces = QuickPlaceRules.Normalize(state.QuickPlaces);
         state.DismissedDesktopCategories = (state.DismissedDesktopCategories ?? [])

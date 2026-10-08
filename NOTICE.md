@@ -13,6 +13,15 @@
 | Quicksand | Copyright 2011 The Quicksand Project Authors | SIL Open Font License 1.1 |
 | Abril Fatface | Copyright (c) 2011 TypeTogether | SIL Open Font License 1.1 |
 
+## 内置城市数据
+
+`src/BingLan.Core/Assets/city-library.cn.json` 内置国内省、市、区县名称与坐标，用于天气城市离线搜索，作为程序资源加载。来源、生成脚本与已知边界见 [docs/CITY-DATA.md](docs/CITY-DATA.md)。
+
+| 内容 | 来源 | 许可证 |
+| --- | --- | --- |
+| 省市区县名称与层级 | [mumuy/data_location](https://github.com/mumuy/data_location) | MIT |
+| 地名经纬度 | [pyecharts](https://github.com/pyecharts/pyecharts) `city_coordinates.json` | MIT |
+
 ## 构建工具
 
 | 名称 | 用途 | 许可证 |

@@ -14,7 +14,8 @@ public sealed class WeatherService
     public static readonly TimeSpan BaseRetryDelay = TimeSpan.FromMinutes(1);
     public static readonly TimeSpan MaxRetryDelay = TimeSpan.FromMinutes(30);
 
-    private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(10);
+    // 15 秒覆盖直连（约 1–2 秒）和较慢的代理路径（实测可到 7 秒以上）。
+    private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(15);
 
     private readonly HttpClient _httpClient;
     private readonly TimeProvider _time;

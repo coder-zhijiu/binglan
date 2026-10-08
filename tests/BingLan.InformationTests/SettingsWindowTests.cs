@@ -42,7 +42,7 @@ internal static class SettingsWindowTests
         bool? savedClock = null;
         CitySearchResult? savedCity = null;
         var window = new SettingsWindow(
-            new CitySearchService(stub),
+            new CityLookupService(new CitySearchService(stub), CityLibrary.Empty),
             state,
             (greeting, use24Hour) =>
             {
@@ -98,7 +98,7 @@ internal static class SettingsWindowTests
         var todoWindow = new TodoWidgetWindow(new TodoWidgetState { Title = "今日待办" });
         ShowAndPump(todoWindow);
         var window = new SettingsWindow(
-            new CitySearchService(new StubHttpMessageHandler()),
+            new CityLookupService(new CitySearchService(new StubHttpMessageHandler()), CityLibrary.Empty),
             new InformationWidgetState(),
             experience,
             (_, _) => { },
@@ -212,7 +212,7 @@ internal static class SettingsWindowTests
         var updater = new BingLan.App.Services.AppUpdater(
             updateState, new Version(0, 2, 2), () => saves++, () => { }, canAutoCheck: false, stub);
         var window = new SettingsWindow(
-            new CitySearchService(new StubHttpMessageHandler()),
+            new CityLookupService(new CitySearchService(new StubHttpMessageHandler()), CityLibrary.Empty),
             new InformationWidgetState(),
             DesktopExperienceRules.CreateDefault(),
             (_, _) => { },

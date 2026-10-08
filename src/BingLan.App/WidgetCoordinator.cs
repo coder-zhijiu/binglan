@@ -33,7 +33,7 @@ public sealed class WidgetCoordinator : IDisposable
     private readonly Forms.NotifyIcon _trayIcon;
     private readonly WindowsPerformanceSamplingService _performanceSampler;
     private readonly WeatherService _weatherService;
-    private readonly CitySearchService _citySearchService;
+    private readonly CityLookupService _citySearchService;
     private readonly DockHost _dock;
     private readonly TaskbarAdapter _taskbar;
     private readonly CleanDesktopAdapter _cleanDesktop;
@@ -75,7 +75,7 @@ public sealed class WidgetCoordinator : IDisposable
         _state = _store.Load();
         _performanceSampler = new WindowsPerformanceSamplingService();
         _weatherService = new WeatherService();
-        _citySearchService = new CitySearchService();
+        _citySearchService = new CityLookupService();
         _saveTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(350) };
         _saveTimer.Tick += (_, _) =>
         {

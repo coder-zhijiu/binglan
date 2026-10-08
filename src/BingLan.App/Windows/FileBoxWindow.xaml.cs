@@ -32,6 +32,7 @@ public partial class FileBoxWindow : WidgetWindowBase
         DataContext = state;
         ApplyAppearance(state.Appearance);
         FileList.ItemsSource = _items;
+        ApplyViewMode();
         ApplyPlacement(state.Placement, state.IsLocked);
         WidgetCornerRadius = state.CornerRadius;
         RefreshCount();
@@ -49,6 +50,27 @@ public partial class FileBoxWindow : WidgetWindowBase
         State.CollectExtensions = FileMappingService.NormalizeExtensions(extensions);
         State.CollectFolders = folders;
         NotifyStateChanged();
+    }
+
+    /// <summary>Switches the box between the tile view and the compact list view.</summary>
+    internal void SetViewMode(FileBoxViewMode mode)
+    {
+        if (State.ViewMode == mode)
+        {
+            return;
+        }
+        State.ViewMode = mode;
+        ApplyViewMode();
+        NotifyStateChanged();
+    }
+
+    /// <summary>Applies the item template and panel that match the box's view mode.</summary>
+    private void ApplyViewMode()
+    {
+        var list = State.ViewMode == FileBoxViewMode.List;
+        FileList.ItemTemplate = (DataTemplate)FindResource(list ? "FileRowTemplate" : "FileTileTemplate");
+        FileList.ItemsPanel = (System.Windows.Controls.ItemsPanelTemplate)FindResource(
+            list ? "FileListPanelTemplate" : "FileTilePanelTemplate");
     }
 
     internal void AssignDesktopCategory(DesktopGroupCategory category, string title)

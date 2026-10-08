@@ -26,7 +26,7 @@ public partial class SettingsWindow : Window
         DesktopComponentKind.QuickLaunch
     ];
 
-    private readonly CitySearchService _citySearchService;
+    private readonly CityLookupService _citySearchService;
     private readonly Action<string, bool> _applyDisplaySettings;
     private readonly Action<CitySearchResult> _applyCity;
     private readonly Action<DesktopExperienceState> _applyDesktopExperience;
@@ -57,7 +57,7 @@ public partial class SettingsWindow : Window
     private bool _loadingStyle;
 
     public SettingsWindow(
-        CitySearchService citySearchService,
+        CityLookupService citySearchService,
         InformationWidgetState state,
         Action<string, bool> applyDisplaySettings,
         Action<CitySearchResult> applyCity)
@@ -72,7 +72,7 @@ public partial class SettingsWindow : Window
     }
 
     public SettingsWindow(
-        CitySearchService citySearchService,
+        CityLookupService citySearchService,
         InformationWidgetState state,
         DesktopExperienceState desktopExperience,
         Action<string, bool> applyDisplaySettings,
@@ -248,6 +248,7 @@ public partial class SettingsWindow : Window
 
         var panel = new WidgetAppearancePanel { SharedStyle = _maintenance.Style };
         panel.Attach(entry.Window);
+        LoadFileBoxViewMode(entry.Window as FileBoxWindow);
         LoadFileBoxCollect(entry.Window as FileBoxWindow);
         SelectedWidgetAppearanceHost.Content = panel;
         SelectedWidgetHeadingText.Text = entry.Name;
@@ -739,6 +740,40 @@ public partial class SettingsWindow : Window
     }
 
     private bool _loadingCollect;
+
+    private bool _loadingViewMode;
+
+    private void LoadFileBoxViewMode(FileBoxWindow? box)
+    {
+        FileBoxViewModePanel.Visibility = box is null ? Visibility.Collapsed : Visibility.Visible;
+        if (box is null)
+        {
+            return;
+        }
+
+        _loadingViewMode = true;
+        try
+        {
+            var list = box.State.ViewMode == FileBoxViewMode.List;
+            FileBoxTilesRadio.IsChecked = !list;
+            FileBoxListRadio.IsChecked = list;
+        }
+        finally
+        {
+            _loadingViewMode = false;
+        }
+    }
+
+    private void FileBoxViewMode_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_loadingViewMode || _selectedComponentEntry?.Window is not FileBoxWindow box)
+        {
+            return;
+        }
+
+        box.SetViewMode(FileBoxListRadio.IsChecked == true ? FileBoxViewMode.List : FileBoxViewMode.Tiles);
+        ComponentSettingsStatusText.Text = $"已保存“{box.State.Title}”的显示方式";
+    }
 
     private void LoadFileBoxCollect(FileBoxWindow? box)
     {

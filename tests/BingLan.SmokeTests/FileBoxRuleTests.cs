@@ -19,6 +19,36 @@ internal static class FileBoxRuleTests
         TestRenameChangesOnlyTheDisplayName();
         TestTransferMovesMappingBetweenBoxes();
         TestDistributeHonoursCustomBoxes();
+        TestViewModePersistenceAndMigration();
+    }
+
+    // 分组盒图标/列表视图只改变显示，不触碰映射；旧状态文件升级后保持图标视图。
+    private static void TestViewModePersistenceAndMigration()
+    {
+        var temp = Path.Combine(Path.GetTempPath(), $"BingLan-viewmode-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(temp);
+        try
+        {
+            var store = new LocalStateStore(temp);
+            File.WriteAllText(
+                store.StatePath,
+                """{ "SchemaVersion": 22, "FileBoxes": [ { "Title": "旧盒" } ] }""");
+            var upgraded = store.Load();
+            Assert(
+                upgraded.SchemaVersion == AppState.CurrentSchemaVersion
+                    && upgraded.FileBoxes.Single().ViewMode == FileBoxViewMode.Tiles,
+                "Schema v22 状态升级后分组盒默认图标视图");
+
+            var box = new FileBoxState { ViewMode = FileBoxViewMode.List };
+            store.Save(new AppState { FileBoxes = [box] });
+            Assert(
+                store.Load().FileBoxes.Single().ViewMode == FileBoxViewMode.List,
+                "列表视图经保存重载后保持");
+        }
+        finally
+        {
+            Directory.Delete(temp, recursive: true);
+        }
     }
 
     private static void TestDistributeHonoursCustomBoxes()

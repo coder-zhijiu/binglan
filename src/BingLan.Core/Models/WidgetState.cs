@@ -11,6 +11,13 @@ public enum DesktopGroupCategory
     Files
 }
 
+/// <summary>How a box shows its mappings: tiles with big icons, or a compact one-line list.</summary>
+public enum FileBoxViewMode
+{
+    Tiles,
+    List
+}
+
 public sealed class WindowPlacement
 {
     public double Left { get; set; } = 92;
@@ -163,6 +170,9 @@ public sealed class FileBoxState
 
     /// <summary>Whether the box is folded up to its title bar.</summary>
     public bool IsCollapsed { get; set; }
+
+    /// <summary>Whether mappings show as tiles or as a compact list; tiles by default.</summary>
+    public FileBoxViewMode ViewMode { get; set; }
 
     /// <summary>The height to unfold to, in DIPs; 0 while it has never been folded.</summary>
     public double ExpandedHeight { get; set; }

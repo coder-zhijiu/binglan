@@ -13,7 +13,7 @@ public sealed class CitySearchService
 
     public static readonly TimeSpan MinimumRequestInterval = TimeSpan.FromSeconds(1);
 
-    private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(15);
     private readonly HttpClient _httpClient;
     private readonly SemaphoreSlim _requestGate = new(1, 1);
     private DateTimeOffset _lastRequestAt = DateTimeOffset.MinValue;
@@ -65,7 +65,7 @@ public sealed class CitySearchService
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            return new CitySearchOutcome(false, [], "搜索超时，请稍后重试");
+            return new CitySearchOutcome(false, [], "在线搜索超时，请检查网络或代理后重试");
         }
         catch (HttpRequestException)
         {

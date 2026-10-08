@@ -158,7 +158,7 @@
                 <TextBlock x:Name="CitySearchStatusText" Margin="0,6,0,0" Style="{StaticResource NoteStyle}"/>
                 <TextBlock Margin="0,8,0,0"
                            Style="{StaticResource NoteStyle}"
-                           Text="天气需要联网，可搜索城市、区县或乡镇。地名数据 © OpenStreetMap 贡献者。可以跳过，之后在设置中心填写。"/>
+                           Text="可搜索国内省市区县或境外城市：国内地名来自内置城市库，境外地名联网使用 OpenStreetMap（© OpenStreetMap 贡献者）。天气数据需联网获取。可以跳过，之后在设置中心填写。"/>
             </StackPanel>
         </ScrollViewer>
 

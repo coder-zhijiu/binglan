@@ -107,6 +107,7 @@ internal static class Program
         Run("桌面分组盒导入入口、排序和图标网格", TestFileBoxWindow, failures);
         Run("桌面分组盒失效状态与系统入口菜单", TestFileBoxInvalidStateAndSystemEntries, failures);
         Run("桌面分组盒显示名称与盒间转移", TestFileBoxRenameAndTransfer, failures);
+        Run("桌面分组盒图标与列表视图切换", TestFileBoxViewModeSwitch, failures);
         Run("屏幕阅读器名称、Tab 顺序与实际 DPI 边界", TestAccessibilityAndKeyboardNavigation, failures);
         Run("高对比度系统色切换与冰蓝材质恢复", TestHighContrastThemeSwitch, failures);
         Run("单实例门禁占用与释放", TestSingleInstanceGate, failures);
@@ -484,7 +485,7 @@ internal static class Program
             new WeatherService());
         var fileBox = new FileBoxWindow(new FileBoxState());
         var settings = new SettingsWindow(
-            new CitySearchService(),
+            new CityLookupService(),
             new InformationWidgetState(),
             DesktopExperienceRules.CreateDefault(),
             (_, _) => { },
@@ -661,7 +662,7 @@ internal static class Program
     private static void TestSettingsAccessibility()
     {
         var window = new SettingsWindow(
-            new CitySearchService(),
+            new CityLookupService(),
             new InformationWidgetState(),
             DesktopExperienceRules.CreateDefault(),
             (_, _) => { },
@@ -1367,6 +1368,60 @@ internal static class Program
                 interactiveQa is not null,
                 "交互测试模式未取得独立门禁");
             (interactiveQa ?? throw new InvalidOperationException("交互测试门禁为空")).Dispose();
+        }
+    }
+
+    // 图标与列表是同一份映射的两种显示：切换只换模板，不增删映射、不触碰原文件。
+    private static void TestFileBoxViewModeSwitch()
+    {
+        var temp = Path.Combine(Path.GetTempPath(), $"BingLan-view-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(temp);
+        var fileA = Path.Combine(temp, "文档甲.txt");
+        var fileB = Path.Combine(temp, "文档乙.txt");
+        File.WriteAllText(fileA, "a");
+        File.WriteAllText(fileB, "b");
+        var state = new FileBoxState();
+        FileMappingService.AddExisting(state, [fileA, fileB]);
+        var window = new FileBoxWindow(state);
+        var list = Require<ItemsControl>(window, "FileList");
+        Assert(
+            Equals(list.ItemTemplate, window.TryFindResource("FileTileTemplate")),
+            "新分组盒默认使用图标视图");
+        ShowAndPump(window);
+        try
+        {
+            window.SetViewMode(FileBoxViewMode.List);
+            Pump();
+            Assert(
+                Equals(list.ItemTemplate, window.TryFindResource("FileRowTemplate")),
+                "切换后使用列表模板");
+            Assert(list.Items.Count == 2, "列表视图仍显示全部映射");
+            var rows = FindVisualChildren<Button>(window)
+                .Where(button => button.DataContext is FileBoxWindow.FileTile)
+                .ToList();
+            Assert(rows.Count == 2, "列表视图为每个映射渲染一行");
+            Assert(
+                rows.All(row => row.ActualHeight is > 0d and <= 40d),
+                "列表行是紧凑的单行高度");
+            Assert(
+                rows.All(row => Equals(System.Windows.Automation.AutomationProperties.GetName(row), "文档甲.txt")
+                    || Equals(System.Windows.Automation.AutomationProperties.GetName(row), "文档乙.txt")),
+                "列表行保留无障碍名称");
+            Assert(state.ViewMode == FileBoxViewMode.List, "视图模式写入分组盒状态");
+            Assert(File.Exists(fileA) && File.Exists(fileB), "切换视图不触碰原文件");
+
+            window.SetViewMode(FileBoxViewMode.Tiles);
+            Pump();
+            Assert(
+                Equals(list.ItemTemplate, window.TryFindResource("FileTileTemplate")),
+                "可以切回图标视图");
+            Assert(list.Items.Count == 2, "切回图标后映射不丢失");
+        }
+        finally
+        {
+            window.CanClose = true;
+            window.Close();
+            Directory.Delete(temp, recursive: true);
         }
     }
 
@@ -2102,7 +2157,7 @@ internal static class Program
     {
         (WidgetWindowBase? Window, DesktopComponentKind? Kind)? requested = null;
         var window = new SettingsWindow(
-            new CitySearchService(),
+            new CityLookupService(),
             new InformationWidgetState(),
             DesktopExperienceRules.CreateDefault(),
             (_, _) => { },
@@ -2139,7 +2194,7 @@ internal static class Program
     private static void TestSettingsRowDividersAlignWithTitles()
     {
         var window = new SettingsWindow(
-            new CitySearchService(),
+            new CityLookupService(),
             new InformationWidgetState(),
             DesktopExperienceRules.CreateDefault(),
             (_, _) => { },
@@ -2176,7 +2231,7 @@ internal static class Program
         var enabled = false;
         var requests = new List<bool>();
         var window = new SettingsWindow(
-            new CitySearchService(),
+            new CityLookupService(),
             new InformationWidgetState(),
             DesktopExperienceRules.CreateDefault(),
             (_, _) => { },
@@ -2258,7 +2313,7 @@ internal static class Program
         var retried = 0;
         var notice = "上次隐藏的桌面图标未能自动恢复。";
         var window = new SettingsWindow(
-            new CitySearchService(),
+            new CityLookupService(),
             new InformationWidgetState(),
             DesktopExperienceRules.CreateDefault(),
             (_, _) => { },
@@ -2365,7 +2420,7 @@ internal static class Program
         var dockApplied = 0;
         var taskbarApplied = 0;
         var window = new SettingsWindow(
-            new CitySearchService(),
+            new CityLookupService(),
             new InformationWidgetState(),
             DesktopExperienceRules.CreateDefault(),
             (_, _) => { },
