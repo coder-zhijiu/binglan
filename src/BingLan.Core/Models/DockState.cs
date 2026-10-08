@@ -41,12 +41,6 @@ public sealed class DockState
     /// <summary>Icon edge length in DIPs; the dock grows with it.</summary>
     public double IconSize { get; set; } = DefaultIconSize;
 
-    /// <summary>
-    /// Whether the apps pinned to the Windows taskbar were offered to the dock already, so
-    /// they are added once when the dock first opens empty and never again after that.
-    /// </summary>
-    public bool TaskbarPinsImported { get; set; }
-
     /// <summary>Whether the dock takes its colours from the card material.</summary>
     public bool FollowCardLook { get; set; } = true;
 

@@ -37,16 +37,6 @@ internal sealed class DockHost : IDisposable
             return;
         }
 
-        if (!_state.TaskbarPinsImported)
-        {
-            _state.TaskbarPinsImported = true;
-            if (_state.PinnedApps.Count == 0)
-            {
-                ImportTaskbarPins();
-            }
-            _stateChanged();
-        }
-
         try
         {
             if (_window is null)
