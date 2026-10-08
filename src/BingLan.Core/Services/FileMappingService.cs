@@ -95,6 +95,40 @@ public static class FileMappingService
     public static bool IsMissing(string path) =>
         !IsShellEntry(path) && !File.Exists(path) && !Directory.Exists(path);
 
+    /// <summary>
+    /// A missing path whose drive or network share is reachable, so the original was
+    /// really deleted or moved. Paths on an unplugged drive or an offline share are not
+    /// gone and keep their mapping.
+    /// </summary>
+    public static bool IsGone(string path)
+    {
+        if (!IsMissing(path))
+        {
+            return false;
+        }
+
+        try
+        {
+            var root = Path.GetPathRoot(path);
+            return !string.IsNullOrEmpty(root) && Directory.Exists(root);
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>Drops mappings whose originals are gone; only the records are removed.</summary>
+    public static int RemoveGone(FileBoxState box, IReadOnlySet<Guid> goneIds)
+    {
+        var removed = box.Items.RemoveAll(x => goneIds.Contains(x.Id));
+        if (removed > 0)
+        {
+            Normalize(box);
+        }
+        return removed;
+    }
+
     public static IReadOnlyList<string> EnumerateDirectChildren(IEnumerable<string> directories)
     {
         var comparer = StringComparer.OrdinalIgnoreCase;

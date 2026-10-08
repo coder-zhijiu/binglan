@@ -161,6 +161,31 @@ internal static class FileBoxRuleTests
 
             var mapping = new FileMappingState { Path = missing };
             Assert(FileMappingService.IsMissing(mapping), "映射重载应与路径判定一致");
+
+            Assert(FileMappingService.IsGone(missing), "所在磁盘可访问但路径不存在应判定为已删除");
+            Assert(!FileMappingService.IsGone(file), "存在的文件不应判定为已删除");
+            Assert(!FileMappingService.IsGone("shell:RecycleBinFolder"), "系统入口不应判定为已删除");
+            var offlineRoot = Enumerable.Range('D', 23)
+                .Select(letter => $"{(char)letter}:\\")
+                .FirstOrDefault(root => !Directory.Exists(root));
+            if (offlineRoot is not null)
+            {
+                Assert(
+                    !FileMappingService.IsGone(Path.Combine(offlineRoot, "资料", "报告.docx")),
+                    "未连接磁盘上的路径应保留映射");
+            }
+            Assert(
+                !FileMappingService.IsGone(@"\\binglan-offline-host.invalid\share\报告.docx"),
+                "离线网络共享上的路径应保留映射");
+
+            var box = new FileBoxState();
+            FileMappingService.AddExisting(box, [file]);
+            var kept = box.Items[0];
+            var gone = new FileMappingState { Path = missing, Order = 1 };
+            box.Items.Add(gone);
+            Assert(FileMappingService.RemoveGone(box, new HashSet<Guid> { gone.Id }) == 1, "应清除一项已删除映射");
+            Assert(box.Items.Count == 1 && box.Items[0].Id == kept.Id, "清除后应只保留有效映射");
+            Assert(File.Exists(file), "清除映射不应影响原文件");
         }
         finally
         {

@@ -20,7 +20,7 @@ BingLan Desktop (冰蓝桌面) is a Windows 11 desktop companion built with .NET
 
 - **Desktop info**: time and date, greeting, weather, and CPU / RAM / network are separate cards, each with its own font, size, colour, and position. A thin line that fades at both ends can be shown under the time.
 - **To-dos and notes**: a to-do card starts with three empty items; ticking, adding, and deleting are separate actions. Notes hold plain multi-line text.
-- **File groups**: map desktop files, folders, and apps into boxes, sort them by type automatically, and fold a box down to its title bar. Boxes record paths only; original files stay where they are.
+- **File groups**: map desktop files, folders, and apps into boxes, sort them by type automatically (which also clears entries whose original file was deleted), and fold a box down to its title bar. Boxes record paths only; original files stay where they are.
 - **Multiple monitors**: cards remember a position for each monitor setup. Unplug a laptop's external monitor and plug it back in, and the cards return to where they were on two screens.
 - **Quick launch**: a row of line icons for This PC, Desktop, Documents, Downloads, Pictures, and the Recycle Bin by default. Icons, names, and targets are customizable; a target can be a folder, program, or file.
 - **Dock**: pinned and running apps in separate sections, with a badge on apps that need attention. Drag a program or shortcut onto the dock to pin it; colour, opacity, and icon size are adjustable. Floating bars and small tools you don't want on the dock can be hidden from its right-click menu.
@@ -57,7 +57,7 @@ Requires the .NET 10 SDK and PowerShell 7. Building the installer also needs Inn
 ```powershell
 dotnet build .\BingLan.slnx -c Release
 dotnet run --project .\tests\BingLan.SmokeTests\BingLan.SmokeTests.csproj -c Release
-pwsh -NoProfile -File .\installer\build.ps1 -Version 0.2.6
+pwsh -NoProfile -File .\installer\build.ps1 -Version 0.2.7
 ```
 
 Full test commands, the technical design, and the current implementation are in the [development notes (Chinese)](docs/DEVELOPMENT.md); installer details are in [docs/INSTALLER.md](docs/INSTALLER.md).

@@ -1679,6 +1679,22 @@ public sealed class WidgetCoordinator : IDisposable
             };
             CaptureAll();
             var boxes = _state.FileBoxes.ToList();
+            var mappings = boxes.SelectMany(box => box.Items)
+                .Select(item => (item.Id, item.Path))
+                .ToList();
+            var goneIds = await Task.Run(() => mappings
+                .Where(item => FileMappingService.IsGone(item.Path))
+                .Select(item => item.Id)
+                .ToHashSet());
+            var cleared = 0;
+            if (goneIds.Count > 0)
+            {
+                foreach (var box in _windows.OfType<FileBoxWindow>())
+                {
+                    cleared += box.RemoveGoneMappings(goneIds);
+                }
+            }
+
             var distribution = await Task.Run(() => FileMappingService.Distribute(
                 FileMappingService.EnumerateDirectChildren(desktopDirectories),
                 boxes));
@@ -1739,6 +1755,10 @@ public sealed class WidgetCoordinator : IDisposable
             MoveSystemPlacesToFolderBox();
             SaveNow();
             var status = $"整理完成：新增 {added} 项，创建 {created} 个分类盒";
+            if (cleared > 0)
+            {
+                status += $"；清除 {cleared} 项已失效映射";
+            }
             if (left > 0)
             {
                 // Deleted category boxes stay deleted; a box with a collect rule takes them.
@@ -1756,7 +1776,9 @@ public sealed class WidgetCoordinator : IDisposable
             _trayIcon.ShowBalloonTip(
                 6000,
                 "桌面归类完成",
-                $"新增 {added} 个安全映射，创建 {created} 个分类盒。{hint}",
+                $"新增 {added} 个安全映射，创建 {created} 个分类盒"
+                + (cleared > 0 ? $"，清除 {cleared} 项已失效映射" : string.Empty)
+                + $"。{hint}",
                 Forms.ToolTipIcon.Info);
         }
         catch (Exception ex)

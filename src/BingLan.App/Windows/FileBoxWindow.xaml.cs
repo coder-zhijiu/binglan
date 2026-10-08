@@ -697,6 +697,18 @@ public partial class FileBoxWindow : WidgetWindowBase
         return added;
     }
 
+    internal int RemoveGoneMappings(IReadOnlySet<Guid> goneIds)
+    {
+        CaptureState();
+        var removed = FileMappingService.RemoveGone(State, goneIds);
+        if (removed > 0)
+        {
+            ReloadItems();
+            NotifyStateChanged();
+        }
+        return removed;
+    }
+
     internal void SetOperationStatus(string message) => StatusText.Text = message;
 
     private async Task AddMappingsWithStatusAsync(IEnumerable<string> paths)
