@@ -252,6 +252,10 @@ internal static class DockNativeMethods
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool IsZoomed(nint hwnd);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool ShowWindowAsync(nint hwnd, int command);
 
     [DllImport("user32.dll")]

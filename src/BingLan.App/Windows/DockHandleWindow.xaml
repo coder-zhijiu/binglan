@@ -1,0 +1,39 @@
+<Window x:Class="BingLan.App.Windows.DockHandleWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="冰蓝 Dock 把手"
+        Width="44"
+        Height="44"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        ShowActivated="False"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        FontFamily="{StaticResource UiFont}"
+        MouseLeftButtonUp="OnHandleMouseLeftButtonUp"
+        MouseMove="OnHandleMouseMove"
+        LostMouseCapture="OnHandleLostMouseCapture">
+    <!-- 拖动处理器挂在 Window 上：鼠标捕获后，指针离开窗口时事件只发到捕获目标本身。 -->
+    <Border x:Name="HandleSurface"
+            Background="{DynamicResource DockHandleBrush}"
+            BorderBrush="{DynamicResource DockSurfaceBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            MouseLeftButtonDown="OnHandleMouseLeftButtonDown"
+            MouseEnter="OnHandleMouseEnter"
+            MouseLeave="OnHandleMouseLeave">
+        <Viewbox Width="20" Height="20" Stretch="Uniform">
+            <TextBlock x:Name="HandleGlyph"
+                       Text="&#xE8A9;"
+                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                       Foreground="{DynamicResource DockRunningDotBrush}"
+                       RenderTransformOrigin="0.5, 0.5">
+                <TextBlock.RenderTransform>
+                    <ScaleTransform x:Name="HandleGlyphScale" ScaleX="1" ScaleY="1"/>
+                </TextBlock.RenderTransform>
+            </TextBlock>
+        </Viewbox>
+    </Border>
+</Window>

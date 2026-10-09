@@ -1,0 +1,218 @@
+using System.Windows;
+using System.Windows.Input;
+using System.Windows.Interop;
+using System.Windows.Media.Animation;
+using BingLan.App.Interop;
+using BingLan.Core.Dock;
+using BingLan.Core.Models;
+using MouseEventArgs = System.Windows.Input.MouseEventArgs;
+
+namespace BingLan.App.Windows;
+
+/// <summary>
+/// The small floating handle shown while the dock is smart-hidden: hovering it expands
+/// the dock beside it, dragging moves the handle. It never takes focus or the taskbar,
+/// and its surface follows the dock's colours through the shared dynamic brushes.
+/// </summary>
+public partial class DockHandleWindow : Window
+{
+    private const int WmMouseActivate = 0x0021;
+    private const int MaNoActivate = 3;
+    private const int DragStartPixels = 3;
+
+    private nint _handle;
+    private bool _dragging;
+    private bool _dragStarted;
+    private PixelPoint _pressStartCursor;
+    private PixelRect _pressStartRect;
+
+    internal DockHandleWindow()
+    {
+        InitializeComponent();
+        SourceInitialized += OnSourceInitialized;
+    }
+
+    /// <summary>Raised once the pointer moves past the press threshold: the owner stops hovering expansions.</summary>
+    internal event Action? DragStarted;
+
+    /// <summary>Raised on release after a real drag: the owner clamps and persists the position.</summary>
+    internal event Action? DragEnded;
+
+    internal PixelRect CurrentRect
+    {
+        get
+        {
+            if (_handle == 0)
+            {
+                return new PixelRect(0, 0, 0, 0);
+            }
+
+            DockNativeMethods.GetWindowRect(_handle, out var rectangle);
+            return new PixelRect(rectangle.Left, rectangle.Top, rectangle.Right, rectangle.Bottom);
+        }
+    }
+
+    internal bool IsDragActive => _dragging;
+
+    internal void MoveTo(PixelRect rect)
+    {
+        if (_handle == 0 || rect.Width <= 0 || rect.Height <= 0)
+        {
+            return;
+        }
+
+        DockNativeMethods.MoveWindow(_handle, rect.Left, rect.Top, rect.Width, rect.Height, true);
+    }
+
+    internal void SetVisible(bool visible)
+    {
+        if (visible && !IsVisible)
+        {
+            Show();
+        }
+        else if (!visible && IsVisible)
+        {
+            Hide();
+        }
+    }
+
+    // The three-step drag keeps the window on the pointer itself, so the move feels the
+    // same whatever the system's "show window contents while dragging" setting is.
+    internal void BeginDrag(int cursorX, int cursorY)
+    {
+        if (_dragging)
+        {
+            return;
+        }
+
+        _dragging = true;
+        _dragStarted = false;
+        _pressStartCursor = new PixelPoint(cursorX, cursorY);
+        _pressStartRect = CurrentRect;
+    }
+
+    internal void DragTo(int cursorX, int cursorY)
+    {
+        if (!_dragging)
+        {
+            return;
+        }
+
+        var deltaX = cursorX - _pressStartCursor.X;
+        var deltaY = cursorY - _pressStartCursor.Y;
+        if (!_dragStarted && Math.Abs(deltaX) + Math.Abs(deltaY) < DragStartPixels)
+        {
+            return;
+        }
+
+        if (!_dragStarted)
+        {
+            _dragStarted = true;
+            DragStarted?.Invoke();
+        }
+
+        MoveTo(new PixelRect(
+            _pressStartRect.Left + deltaX,
+            _pressStartRect.Top + deltaY,
+            _pressStartRect.Left + deltaX + _pressStartRect.Width,
+            _pressStartRect.Top + deltaY + _pressStartRect.Height));
+    }
+
+    internal void EndDrag()
+    {
+        if (!_dragging)
+        {
+            return;
+        }
+
+        _dragging = false;
+        var started = _dragStarted;
+        _dragStarted = false;
+        if (started)
+        {
+            DragEnded?.Invoke();
+        }
+    }
+
+    private void OnSourceInitialized(object? sender, EventArgs e)
+    {
+        _handle = new WindowInteropHelper(this).Handle;
+        var style = (long)NativeMethods.GetWindowLongPtr(_handle, NativeMethods.GwlExStyle);
+        NativeMethods.SetWindowLongPtr(
+            _handle,
+            NativeMethods.GwlExStyle,
+            (nint)(style | NativeMethods.WsExToolWindow | DockNativeMethods.WsExNoActivate));
+        var cornerPreference = NativeMethods.DwmWindowCornerDoNotRound;
+        NativeMethods.DwmSetWindowAttribute(
+            _handle,
+            NativeMethods.DwmwaWindowCornerPreference,
+            ref cornerPreference,
+            sizeof(int));
+        HwndSource.FromHwnd(_handle)?.AddHook(PreventActivation);
+    }
+
+    private static nint PreventActivation(nint hwnd, int message, nint wParam, nint lParam, ref bool handled)
+    {
+        if (message == WmMouseActivate)
+        {
+            handled = true;
+            return MaNoActivate;
+        }
+
+        return 0;
+    }
+
+    private void OnHandleMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        DockNativeMethods.GetCursorPos(out var cursor);
+        BeginDrag(cursor.X, cursor.Y);
+        // Without the capture, a release outside the window would never arrive and the
+        // drag would hang; abort immediately instead of getting stuck.
+        if (!CaptureMouse())
+        {
+            EndDrag();
+        }
+    }
+
+    private void OnHandleMouseMove(object sender, MouseEventArgs e)
+    {
+        if (!_dragging || e.LeftButton != MouseButtonState.Pressed)
+        {
+            return;
+        }
+
+        DockNativeMethods.GetCursorPos(out var cursor);
+        DragTo(cursor.X, cursor.Y);
+    }
+
+    private void OnHandleMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        EndDrag();
+    }
+
+    private void OnHandleLostMouseCapture(object sender, MouseEventArgs e)
+    {
+        EndDrag();
+    }
+
+    private void OnHandleMouseEnter(object sender, MouseEventArgs e)
+    {
+        ZoomGlyph(DesktopStyleRules.HoverZoom(
+            IceBlueDockWindow.Motion,
+            SystemParameters.ClientAreaAnimation));
+    }
+
+    private void OnHandleMouseLeave(object sender, MouseEventArgs e)
+    {
+        ZoomGlyph(1d);
+    }
+
+    private void ZoomGlyph(double scale)
+    {
+        var animation = new DoubleAnimation(scale, DesktopStyleRules.HoverZoomDuration(IceBlueDockWindow.Motion));
+        HandleGlyphScale.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleXProperty, animation);
+        HandleGlyphScale.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleYProperty, animation);
+    }
+
+    private readonly record struct PixelPoint(int X, int Y);
+}

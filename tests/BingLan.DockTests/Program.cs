@@ -15,11 +15,14 @@ Run("运行应用按首次出现顺序保持稳定", TestFirstSeenOrder);
 Run("Dock 点击动作决策", TestWindowActionPolicy);
 Run("Dock 内容尺寸边界", TestContentLengthBounds);
 Run("Dock 图标大小决定按钮与高度并被钳制", TestDockIconSize);
+Run("Dock 距底部高度默认等于原固定间距并被钳制", TestDockBottomGap);
+Run("Dock 隐藏把手几何：默认角位、钳制与左右展开锚定", TestDockHandleGeometry);
 Run("应用闪烁提醒在激活或关闭窗口后清除", TestDockAttention);
 Run("底部与顶部水平居中几何", TestHorizontalCentering);
 Run("左右垂直几何", TestVerticalGeometry);
 Run("固定/运行/活动/分组状态映射", TestDockItemStateMapping);
 Run("AppBar 预留、释放与重建路径", TestAppBarReservation);
+Run("最大化让出预留空间的判定规则", TestDockVacateRules);
 Run("固定应用身份键规则", TestDockPinIdentityKey);
 Run("固定应用与运行分组匹配规则", TestDockPinMatches);
 Run("可执行文件固定项优先匹配普通窗口分组", TestExecutablePinPrefersPlainGroup);
@@ -38,6 +41,8 @@ Run("前台全屏应立即隐藏", TestDockAutoHideFullScreenHidesImmediately);
 Run("全屏优先于进行中的交互", TestDockAutoHideFullScreenOverridesInteraction);
 Run("资源管理器桌面、任务栏与账户提示窗口不算全屏应用", TestShellSurfaceWindows);
 Run("v12 状态迁移到 v13 应补齐 Dock 默认值", TestDockStateV12Migration);
+Run("v24 状态迁移后应补 Dock 新设置默认值", TestDockStateV24Migration);
+Run("v25 状态迁移后把手位置保持默认角位", TestDockStateV25Migration);
 Run("Dock 状态保存与加载往返保留顺序与取值", TestDockStateRoundTrip);
 Run("重复固定项保存后应去重", TestDockStateDuplicatePinsDeduped);
 Run("隐藏的应用不出现在 Dock 且可恢复", TestDockHiddenApps);
@@ -137,6 +142,116 @@ static void TestDockIconSize()
     state.IconSize = double.NaN;
     DockPinRules.Normalize(state);
     AssertEqual(DockState.DefaultIconSize, state.IconSize, "无效图标大小应回到默认值");
+}
+
+static void TestDockBottomGap()
+{
+    AssertEqual(DockLayoutMetrics.EdgeGapDip, DockState.DefaultBottomGapDip, "默认距底高度应等于原固定间距");
+
+    var state = new DockState { BottomGapDip = 200 };
+    DockPinRules.Normalize(state);
+    AssertEqual(DockState.MaximumBottomGapDip, state.BottomGapDip, "过大的距底高度应钳制");
+    state.BottomGapDip = -12;
+    DockPinRules.Normalize(state);
+    AssertEqual(DockState.MinimumBottomGapDip, state.BottomGapDip, "负的距底高度应钳制");
+    state.BottomGapDip = double.NaN;
+    DockPinRules.Normalize(state);
+    AssertEqual(DockState.DefaultBottomGapDip, state.BottomGapDip, "无效距底高度应回到默认值");
+}
+
+static void TestDockVacateRules()
+{
+    Assert(
+        DockVacateRules.ShouldReleaseForMaximized(DockVisibilityMode.ReserveWorkArea, true, true),
+        "保留模式且开启开关且前台在该显示器最大化时应让出");
+    Assert(
+        !DockVacateRules.ShouldReleaseForMaximized(DockVisibilityMode.ReserveWorkArea, true, false),
+        "前台未最大化时不应让出");
+    Assert(
+        !DockVacateRules.ShouldReleaseForMaximized(DockVisibilityMode.ReserveWorkArea, false, true),
+        "开关关闭时不应让出");
+    Assert(
+        !DockVacateRules.ShouldReleaseForMaximized(DockVisibilityMode.SmartHide, true, true),
+        "智能隐藏模式无需让出规则");
+    Assert(
+        DockVacateRules.IsTrueFullScreen(true, false),
+        "几何铺满且未最大化应视为真全屏");
+    Assert(
+        !DockVacateRules.IsTrueFullScreen(true, true),
+        "最大化铺满（如任务栏自动隐藏时）不应视为真全屏");
+    Assert(
+        !DockVacateRules.IsTrueFullScreen(false, true),
+        "未铺满显示器不是全屏");
+}
+
+static void TestDockHandleGeometry()
+{
+    var workArea = new PixelRect(0, 0, 1920, 1032);
+
+    // 默认角位：工作区右端、与 Dock 同带（距底等于 Dock 的边距）。
+    AssertEqual(
+        new PixelRect(1860, 960, 1904, 1004),
+        DockHandleGeometry.Default(workArea, 44, 16, 28),
+        "默认把手角位错误");
+
+    AssertEqual(
+        new PixelRect(0, 0, 44, 44),
+        DockHandleGeometry.Default(new PixelRect(0, 0, 0, 0), 44, 16, 28),
+        "退化工作区应回退原点");
+
+    // 拖出工作区被钳制回来并保持尺寸；工作区内不动。
+    AssertEqual(
+        new PixelRect(0, 0, 44, 44),
+        DockHandleGeometry.ClampToWorkArea(new PixelRect(-50, -50, -6, -6), workArea),
+        "拖出左上应钳制回工作区");
+    AssertEqual(
+        new PixelRect(1876, 988, 1920, 1032),
+        DockHandleGeometry.ClampToWorkArea(new PixelRect(2000, 1100, 2044, 1144), workArea),
+        "拖出右下应钳制回工作区");
+    Assert(
+        DockHandleGeometry.ClampToWorkArea(new PixelRect(600, 500, 644, 544), workArea)
+            == new PixelRect(600, 500, 644, 544),
+        "工作区内的把手不应被移动");
+
+    // 右半屏把手：Dock 行在其左侧、底部对齐。
+    AssertEqual(
+        new PixelRect(1352, 928, 1852, 1004),
+        DockHandleGeometry.ExpandedDock(new PixelRect(1860, 960, 1904, 1004), workArea, 76, 500, 8),
+        "右半屏展开锚定错误");
+
+    // 左半屏把手：Dock 行在其右侧。
+    AssertEqual(
+        new PixelRect(72, 928, 572, 1004),
+        DockHandleGeometry.ExpandedDock(new PixelRect(20, 960, 64, 1004), workArea, 76, 500, 8),
+        "左半屏展开锚定错误");
+
+    // 展开行宽受 Dock 常规位置的 65% 上限钳制。
+    var capped = DockHandleGeometry.ExpandedDock(new PixelRect(1860, 960, 1904, 1004), workArea, 76, 3000, 8);
+    AssertEqual(1248, capped.Width, "展开行宽应受上限钳制");
+    Assert(
+        capped.Left >= workArea.Left && capped.Right <= workArea.Right,
+        "展开行应留在工作区内");
+}
+
+static void TestDockHandleState()
+{
+    var state = new DockState { HiddenHandleLeftDip = 200, HiddenHandleTopDip = 300 };
+    DockPinRules.Normalize(state);
+    Assert(
+        state.HiddenHandleLeftDip == 200 && state.HiddenHandleTopDip == 300,
+        "有效把手位置应保留");
+
+    state.HiddenHandleLeftDip = double.PositiveInfinity;
+    DockPinRules.Normalize(state);
+    Assert(
+        state.HiddenHandleLeftDip is null && state.HiddenHandleTopDip is null,
+        "非有限位置应回到默认角位");
+
+    state.HiddenHandleLeftDip = 100;
+    DockPinRules.Normalize(state);
+    Assert(
+        state.HiddenHandleLeftDip is null && state.HiddenHandleTopDip is null,
+        "只有一侧的位置应整体作废");
 }
 
 static void TestKeepOutOfReservedEdges()
@@ -870,6 +985,83 @@ static void TestDockStateV12Migration()
     }
 }
 
+static void TestDockStateV24Migration()
+{
+    var temp = Path.Combine(Path.GetTempPath(), $"BingLan-dock-v24-{Guid.NewGuid():N}");
+    Directory.CreateDirectory(temp);
+    try
+    {
+        var store = new LocalStateStore(temp);
+        File.WriteAllText(
+            store.StatePath,
+            """
+            {
+              "SchemaVersion": 24,
+              "TodoWidgets": [],
+              "NoteWidgets": [],
+              "InformationWidgets": [],
+              "FileBoxes": [],
+              "Dock": {
+                "IsEnabled": true,
+                "VisibilityMode": 1,
+                "IconSize": 48
+              }
+            }
+            """);
+
+        var migrated = store.Load();
+        var dock = migrated.Dock;
+        AssertEqual(AppState.CurrentSchemaVersion, migrated.SchemaVersion, "v24 状态未迁移到当前 Schema");
+        Assert(dock.IsEnabled, "迁移后 Dock 启用状态未保留");
+        AssertEqual(DockVisibilityMode.SmartHide, dock.VisibilityMode, "迁移后可见性模式未保留");
+        AssertEqual(48d, dock.IconSize, "迁移后图标大小未保留");
+        AssertEqual(DockState.DefaultBottomGapDip, dock.BottomGapDip, "迁移后距底高度应为默认值");
+        Assert(!dock.ReleaseWhenMaximized, "迁移后最大化让出应为关闭");
+    }
+    finally
+    {
+        Directory.Delete(temp, true);
+    }
+}
+
+static void TestDockStateV25Migration()
+{
+    var temp = Path.Combine(Path.GetTempPath(), $"BingLan-dock-v25-{Guid.NewGuid():N}");
+    Directory.CreateDirectory(temp);
+    try
+    {
+        var store = new LocalStateStore(temp);
+        File.WriteAllText(
+            store.StatePath,
+            """
+            {
+              "SchemaVersion": 25,
+              "TodoWidgets": [],
+              "NoteWidgets": [],
+              "InformationWidgets": [],
+              "FileBoxes": [],
+              "Dock": {
+                "IsEnabled": true,
+                "BottomGapDip": 44
+              }
+            }
+            """);
+
+        var migrated = store.Load();
+        var dock = migrated.Dock;
+        AssertEqual(AppState.CurrentSchemaVersion, migrated.SchemaVersion, "v25 状态未迁移到当前 Schema");
+        Assert(dock.IsEnabled, "迁移后 Dock 启用状态未保留");
+        AssertEqual(44d, dock.BottomGapDip, "迁移后距底高度未保留");
+        Assert(
+            dock.HiddenHandleLeftDip is null && dock.HiddenHandleTopDip is null,
+            "v25 状态没有把手位置，迁移后应保持默认角位");
+    }
+    finally
+    {
+        Directory.Delete(temp, true);
+    }
+}
+
 static void TestDockStateRoundTrip()
 {
     var temp = Path.Combine(Path.GetTempPath(), $"BingLan-dock-roundtrip-{Guid.NewGuid():N}");
@@ -880,6 +1072,10 @@ static void TestDockStateRoundTrip()
         state.Dock.IsEnabled = true;
         state.Dock.MonitorDeviceName = @"\\.\DISPLAY1";
         state.Dock.VisibilityMode = DockVisibilityMode.SmartHide;
+        state.Dock.BottomGapDip = 52;
+        state.Dock.ReleaseWhenMaximized = true;
+        state.Dock.HiddenHandleLeftDip = 120;
+        state.Dock.HiddenHandleTopDip = 88;
         state.Dock.PinnedApps.Add(new DockPinnedApp
         {
             DisplayName = "Edge",
@@ -903,6 +1099,10 @@ static void TestDockStateRoundTrip()
         Assert(loaded.Dock.IsEnabled, "Dock 启用状态未保留");
         AssertEqual(@"\\.\DISPLAY1", loaded.Dock.MonitorDeviceName, "显示器名称未保留");
         AssertEqual(DockVisibilityMode.SmartHide, loaded.Dock.VisibilityMode, "可见性模式未保留");
+        AssertEqual(52d, loaded.Dock.BottomGapDip, "距底高度未保留");
+        Assert(loaded.Dock.ReleaseWhenMaximized, "最大化让出开关未保留");
+        AssertEqual(120d, loaded.Dock.HiddenHandleLeftDip, "把手横坐标未保留");
+        AssertEqual(88d, loaded.Dock.HiddenHandleTopDip, "把手纵坐标未保留");
         AssertEqual(2, loaded.Dock.PinnedApps.Count, "固定项数量未保留");
         AssertEqual("Edge", loaded.Dock.PinnedApps[0].DisplayName, "第一个固定项顺序或名称未保留");
         AssertEqual("Microsoft.Edge.Stable", loaded.Dock.PinnedApps[0].AppUserModelId, "AUMID 固定项未保留");

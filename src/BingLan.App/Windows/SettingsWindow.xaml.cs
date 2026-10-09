@@ -1467,6 +1467,9 @@ public partial class SettingsWindow : Window
             QuietTaskbarFlashCheckBox.IsChecked = !BingLan.App.Services.TaskbarFlashingSetting.IsEnabled();
             LoadDockLook();
             DockIconSizeText.Text = $"{_dockState.IconSize:0}";
+            DockMaximizeReleaseCheckBox.IsChecked = _dockState.ReleaseWhenMaximized;
+            DockBottomGapSlider.Value = _dockState.BottomGapDip;
+            DockBottomGapText.Text = $"{_dockState.BottomGapDip:0} DIP";
 
             DockMonitorComboBox.Items.Clear();
             foreach (var monitor in MonitorCatalog.GetAll())
@@ -1538,6 +1541,7 @@ public partial class SettingsWindow : Window
         _dockState.VisibilityMode = DockSmartHideRadio.IsChecked == true
             ? DockVisibilityMode.SmartHide
             : DockVisibilityMode.ReserveWorkArea;
+        _dockState.ReleaseWhenMaximized = DockMaximizeReleaseCheckBox.IsChecked == true;
         if (DockMonitorComboBox.SelectedItem is ComboBoxItem { Tag: string deviceName })
         {
             _dockState.MonitorDeviceName = deviceName;
@@ -1672,6 +1676,18 @@ public partial class SettingsWindow : Window
         _dockState.IconSize = e.NewValue;
         DockIconSizeText.Text = $"{e.NewValue:0}";
         ApplyDockChange("已调整图标大小");
+    }
+
+    private void DockBottomGap_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_loadingDock || DockBottomGapText is null)
+        {
+            return;
+        }
+
+        _dockState.BottomGapDip = e.NewValue;
+        DockBottomGapText.Text = $"{e.NewValue:0} DIP";
+        ApplyDockChange("已调整距底部高度");
     }
 
     private void ImportTaskbarPins_Click(object sender, RoutedEventArgs e)

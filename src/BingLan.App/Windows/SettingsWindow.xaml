@@ -1048,6 +1048,27 @@
                                              AutomationProperties.Name="智能隐藏"
                                              Checked="DockSetting_Changed"/>
                             </local:SettingsRow>
+                            <local:SettingsRow Style="{StaticResource NestedSettingsRowStyle}"
+                                               Header="最大化窗口时让出底部空间"
+                                               Description="开启后最大化的窗口可以占满整个工作区高度，Dock 暂时隐藏；鼠标移到屏幕底边可临时唤出。仅影响“始终显示，并保留屏幕底部空间”">
+                                <CheckBox x:Name="DockMaximizeReleaseCheckBox"
+                                          AutomationProperties.Name="最大化窗口时让出底部空间"
+                                          Checked="DockSetting_Changed"
+                                          Unchecked="DockSetting_Changed"/>
+                            </local:SettingsRow>
+                            <local:SettingsRow Glyph="&#xE70D;" GlyphBrush="{DynamicResource SettingsIconTealBrush}" Header="距底部高度" Description="Dock 底边与任务栏上沿之间的距离">
+                                <StackPanel Orientation="Horizontal">
+                                    <Slider x:Name="DockBottomGapSlider"
+                                            Width="220"
+                                            Minimum="0"
+                                            Maximum="64"
+                                            TickFrequency="4"
+                                            IsSnapToTickEnabled="True"
+                                            AutomationProperties.Name="Dock 距底部高度"
+                                            ValueChanged="DockBottomGap_Changed"/>
+                                    <TextBlock x:Name="DockBottomGapText" Style="{StaticResource ValueTextStyle}"/>
+                                </StackPanel>
+                            </local:SettingsRow>
                             <local:SettingsRow Glyph="&#xE740;" GlyphBrush="{DynamicResource SettingsIconOrangeBrush}" Header="图标大小">
                                 <StackPanel Orientation="Horizontal">
                                     <Slider x:Name="DockIconSizeSlider"
