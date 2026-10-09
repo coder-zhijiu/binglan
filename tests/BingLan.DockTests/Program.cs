@@ -17,6 +17,7 @@ Run("Dock 内容尺寸边界", TestContentLengthBounds);
 Run("Dock 图标大小决定按钮与高度并被钳制", TestDockIconSize);
 Run("Dock 距底部高度默认等于原固定间距并被钳制", TestDockBottomGap);
 Run("Dock 隐藏把手几何：默认角位、钳制与左右展开锚定", TestDockHandleGeometry);
+Run("Dock 隐藏把手位置状态规范化", TestDockHandleState);
 Run("应用闪烁提醒在激活或关闭窗口后清除", TestDockAttention);
 Run("底部与顶部水平居中几何", TestHorizontalCentering);
 Run("左右垂直几何", TestVerticalGeometry);
