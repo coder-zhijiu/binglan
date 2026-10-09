@@ -5,6 +5,7 @@ using BingLan.Core.Dock;
 namespace BingLan.App.Dock;
 
 internal sealed record MonitorSnapshot(
+    nint MonitorHandle,
     string DeviceName,
     PixelRect Bounds,
     PixelRect WorkingArea,
@@ -45,6 +46,7 @@ internal static class MonitorCatalog
             }
 
             monitors.Add(new MonitorSnapshot(
+                monitor,
                 info.DeviceName,
                 ToPixelRect(info.Monitor),
                 ToPixelRect(info.WorkArea),

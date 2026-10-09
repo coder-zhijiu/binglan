@@ -117,6 +117,7 @@ internal static class Program
         Run("托盘双击打开并恢复设置窗口", TestTrayDoubleClick, failures);
         Run("缺失本机标题字体安全回退", TestUnavailableTitleFontFallback, failures);
         Run("桌面模式同时设置 Dock 与任务栏", TestDesktopModeSelection, failures);
+        Run("Dock 距底高度与最大化让出设置即时生效", TestDockPlacementSettings, failures);
         Run("待办按 Enter 提交后文字写入状态", TestTodoEnterCommitsText, failures);
         Run("待办勾选后各行仍可被辅助技术访问", TestTodoRowsStayAccessible, failures);
         Run("托盘隐藏与显示桌面组件", TestTrayToggleDesktop, failures);
@@ -128,6 +129,7 @@ internal static class Program
         Run("首次使用引导逐步应用设置", TestOnboardingWizard, failures);
         Run("卡片拖动吸附到相邻卡片且不会被系统吸附成半屏", () => SnapMoveTests.Run(ShowAndPump, Pump), failures);
         Run("显示器排列切换后卡片回到该排列下的位置", () => DisplayLayoutWindowTests.Run(ShowAndPump, Pump), failures);
+        Run("Dock 隐藏把手的窗口样式、拖动与显隐", () => DockHandleTests.Run(ShowAndPump, Pump), failures);
         Run("主题导入对话框显示名称与预览图", TestThemeImportDialogShowsNameAndPreview, failures);
 
         if (failures.Count > 0)
@@ -2588,6 +2590,53 @@ internal static class Program
             {
                 Assert(Near(swatch.ActualWidth, swatch.ActualHeight), $"配色色块应为正圆，实际 {swatch.ActualWidth}×{swatch.ActualHeight}");
             }
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    private static void TestDockPlacementSettings()
+    {
+        var dock = new DockState { IsEnabled = true };
+        var dockApplied = 0;
+        var window = new SettingsWindow(
+            new CityLookupService(),
+            new InformationWidgetState(),
+            DesktopExperienceRules.CreateDefault(),
+            (_, _) => { },
+            _ => { },
+            _ => { },
+            dockState: dock,
+            applyDock: () => dockApplied++,
+            taskbarState: new TaskbarState(),
+            applyTaskbar: () => { },
+            taskbarStatus: () => (TaskbarMode.SystemDefault, string.Empty));
+        ShowAndPump(window);
+        try
+        {
+            window.ShowSettingsPage("Dock");
+            Pump();
+            Assert(
+                Near(Require<Slider>(window, "DockBottomGapSlider").Value, DockState.DefaultBottomGapDip),
+                "距底高度默认应为原固定间距");
+            Assert(
+                Require<CheckBox>(window, "DockMaximizeReleaseCheckBox").IsChecked != true,
+                "最大化让出底部空间默认应关闭");
+
+            Require<Slider>(window, "DockBottomGapSlider").Value = 44;
+            Pump();
+            Assert(Near(dock.BottomGapDip, 44d), "调整滑块应写入 Dock 状态");
+            Assert(
+                Require<TextBlock>(window, "DockBottomGapText").Text.Contains("44", StringComparison.Ordinal),
+                "距底高度文本应回显新值");
+            Assert(dockApplied == 1, "调整距底高度应触发一次应用");
+
+            Require<CheckBox>(window, "DockMaximizeReleaseCheckBox").IsChecked = true;
+            Pump();
+            Assert(dock.ReleaseWhenMaximized, "勾选后应开启最大化让出");
+            Assert(dockApplied == 2, "切换最大化让出应再触发一次应用");
         }
         finally
         {

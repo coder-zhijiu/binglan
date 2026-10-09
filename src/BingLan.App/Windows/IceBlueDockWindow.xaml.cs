@@ -60,6 +60,11 @@ public partial class IceBlueDockWindow : Window
     private bool _hiddenBySmartHide;
     private bool _refreshPending;
     private bool _reservationFailureReported;
+    private bool _vacatedForMaximized;
+    private DockHandleWindow? _handleWindow;
+    private bool _handleExpanded;
+    private PixelRect _expandedRect;
+    private bool _trueFullScreenForeground;
     private ContextMenu? _openMenu;
     private DateTimeOffset _lastReservationAttempt;
     private readonly DockAttention _attention = new();
@@ -120,15 +125,17 @@ public partial class IceBlueDockWindow : Window
             return;
         }
 
-        var reserveWorkArea = _state.VisibilityMode == DockVisibilityMode.ReserveWorkArea;
+        // A window maximized on the dock's monitor may take over the reserved strip;
+        // while it does, the dock follows smart-hide rules instead of holding the space.
+        var reserveWorkArea = _state.VisibilityMode == DockVisibilityMode.ReserveWorkArea
+            && !_vacatedForMaximized;
         _lastReservationAttempt = DateTimeOffset.UtcNow;
-        var hasDivider = _items.Any(item => item.IsPinned) && _items.Any(item => !item.IsPinned);
         _appBar.Apply(
             monitor,
             reserveWorkArea,
-            DockLayoutMetrics.ContentLengthForItems(_items.Count, _state.IconSize)
-                + (hasDivider ? DockLayoutMetrics.DividerDip : 0),
-            DockLayoutMetrics.Thickness(_state.IconSize));
+            ContentLengthDip(),
+            DockLayoutMetrics.Thickness(_state.IconSize),
+            _state.BottomGapDip);
         if (!reserveWorkArea || _appBar.IsReserved)
         {
             _reservationFailureReported = false;
@@ -141,11 +148,28 @@ public partial class IceBlueDockWindow : Window
         if (!UsesSmartHide)
         {
             _autoHide = new DockAutoHideState();
+            if (_handleExpanded)
+            {
+                CollapseHandleExpansion();
+            }
             ShowDock();
         }
         _foregroundTimer.Interval = UsesSmartHide ? SmartHideCheckInterval : FullScreenCheckInterval;
         _foregroundTimer.Start();
+        UpdateHandleBounds();
+        if (_handleExpanded && _appBar.Monitor is not null
+            && _handleWindow is { IsDragActive: false } handle)
+        {
+            // Items or the monitor changed while expanded; keep the row beside the handle.
+            ApplyHandleExpansion(_appBar.Monitor, handle.CurrentRect);
+        }
     }
+
+    private double ContentLengthDip() =>
+        DockLayoutMetrics.ContentLengthForItems(_items.Count, _state.IconSize)
+            + (_items.Any(item => item.IsPinned) && _items.Any(item => !item.IsPinned)
+                ? DockLayoutMetrics.DividerDip
+                : 0);
 
     // A reserved dock whose AppBar registration failed would float over windows, so it
     // falls back to smart hide until the reservation succeeds.
@@ -206,6 +230,7 @@ public partial class IceBlueDockWindow : Window
             ApplyState();
             RefreshWindows();
         };
+        CreateHandleWindow();
         _watcher.Start();
         ApplyState();
         RefreshWindows();
@@ -259,6 +284,8 @@ public partial class IceBlueDockWindow : Window
         _watcher.Dispose();
         _appBar?.Dispose();
         _appBar = null;
+        _handleWindow?.Close();
+        _handleWindow = null;
     }
 
     private async Task RefreshWindowsLoopAsync()
@@ -839,12 +866,35 @@ public partial class IceBlueDockWindow : Window
         }
 
         var bounds = _appBar.Bounds;
-        var foreground = ForegroundWindowRect(out var foregroundBounds);
+        var foreground = ForegroundWindowRect(out var foregroundBounds, out var foregroundWindow);
         var fullScreen = foreground
             && foregroundBounds.Left <= monitor.Bounds.Left
             && foregroundBounds.Top <= monitor.Bounds.Top
             && foregroundBounds.Right >= monitor.Bounds.Right
             && foregroundBounds.Bottom >= monitor.Bounds.Bottom;
+        var foregroundZoomed = foreground && foregroundWindow != 0 && DockNativeMethods.IsZoomed(foregroundWindow);
+        // A maximized window filling the monitor (for example while the taskbar auto-hides)
+        // is still working space the handle may reveal the dock over.
+        var trueFullScreen = DockVacateRules.IsTrueFullScreen(fullScreen, foregroundZoomed);
+        _trueFullScreenForeground = trueFullScreen;
+        var shouldVacate = DockVacateRules.ShouldReleaseForMaximized(
+            _state.VisibilityMode,
+            _state.ReleaseWhenMaximized,
+            foregroundZoomed
+                && DockNativeMethods.MonitorFromWindow(
+                    foregroundWindow,
+                    DockNativeMethods.MonitorDefaultToNearest) == monitor.MonitorHandle);
+        if (shouldVacate != _vacatedForMaximized)
+        {
+            _vacatedForMaximized = shouldVacate;
+            ApplyState();
+            if (!UsesSmartHide)
+            {
+                // The strip is reserved again and ApplyState has shown the dock.
+                return;
+            }
+        }
+
         if (!UsesSmartHide)
         {
             _appBar.SetFullScreenDetected(fullScreen);
@@ -852,6 +902,7 @@ public partial class IceBlueDockWindow : Window
         }
 
         if (_state.VisibilityMode == DockVisibilityMode.ReserveWorkArea
+            && !_vacatedForMaximized
             && DateTimeOffset.UtcNow - _lastReservationAttempt >= ReservationRetryInterval)
         {
             ApplyState();
@@ -861,21 +912,29 @@ public partial class IceBlueDockWindow : Window
             }
         }
 
-        // Nothing can reveal the dock over a full-screen app, so check less often.
-        _foregroundTimer.Interval = fullScreen ? FullScreenCheckInterval : SmartHideCheckInterval;
+        // Nothing can reveal the dock over a truly full-screen app, so check less often.
+        _foregroundTimer.Interval = trueFullScreen ? FullScreenCheckInterval : SmartHideCheckInterval;
 
         DockNativeMethods.GetCursorPos(out var cursor);
         var revealDepth = Math.Max(2, (int)Math.Round(2 * monitor.Dpi / 96d));
+        var handleRect = _handleWindow is null ? default : _handleWindow.CurrentRect;
+        var pointerOverHandle = _handleWindow is { IsVisible: true, IsDragActive: false } handle
+            && cursor.X >= handleRect.Left && cursor.X < handleRect.Right
+            && cursor.Y >= handleRect.Top && cursor.Y < handleRect.Bottom;
+        var effectiveBounds = _handleExpanded ? _expandedRect : bounds;
+        var overlaps = foreground && foregroundBounds.Intersects(effectiveBounds);
+        var pointerOverDock = (IsVisible
+                && cursor.X >= effectiveBounds.Left && cursor.X < effectiveBounds.Right
+                && cursor.Y >= effectiveBounds.Top && cursor.Y < effectiveBounds.Bottom)
+            || pointerOverHandle;
         var input = new DockAutoHideInput(
-            WindowOverlapsDock: foreground && foregroundBounds.Intersects(bounds),
-            ForegroundIsFullScreen: fullScreen,
+            WindowOverlapsDock: overlaps,
+            ForegroundIsFullScreen: trueFullScreen,
             PointerInRevealZone: cursor.Y >= monitor.Bounds.Bottom - revealDepth
                 && cursor.Y < monitor.Bounds.Bottom
                 && cursor.X >= bounds.Left
                 && cursor.X < bounds.Right,
-            PointerOverDock: IsVisible
-                && cursor.X >= bounds.Left && cursor.X < bounds.Right
-                && cursor.Y >= bounds.Top && cursor.Y < bounds.Bottom,
+            PointerOverDock: pointerOverDock,
             InteractionActive: _menuOpen || _dragging || DateTimeOffset.UtcNow < _attentionRevealUntil);
         if (_autoHide.Update(input, DateTimeOffset.UtcNow))
         {
@@ -893,6 +952,25 @@ public partial class IceBlueDockWindow : Window
                 Hide();
             }
         }
+
+        if (_autoHide.IsShown && pointerOverHandle)
+        {
+            ApplyHandleExpansion(monitor, handleRect);
+        }
+        else
+        {
+            // Restore the strip position only once the dock is hidden, or when it stays
+            // shown with nothing overlapping and the pointer gone: moving a visible
+            // dock back to the bottom mid-hide would read as it flashing there first.
+            var pointerLeftDock = !pointerOverHandle
+                && !(cursor.X >= _expandedRect.Left && cursor.X < _expandedRect.Right
+                    && cursor.Y >= _expandedRect.Top && cursor.Y < _expandedRect.Bottom);
+            if (_handleExpanded && (!_autoHide.IsShown || (pointerLeftDock && !overlaps)))
+            {
+                CollapseHandleExpansion();
+            }
+        }
+        SyncHandle();
     }
 
     private void ShowDock()
@@ -912,12 +990,134 @@ public partial class IceBlueDockWindow : Window
             _refreshPending = false;
             RefreshWindows();
         }
+        SyncHandle();
     }
 
-    private bool ForegroundWindowRect(out PixelRect bounds)
+    // The handle stands in for the dock while it is smart-hidden: it appears then and
+    // disappears with the dock — including while nothing may show over a true
+    // full-screen app. While the dock is expanded beside it the handle stays visible
+    // as the row's end cap, so the pointer has somewhere to rest, and a drag in
+    // progress can never lose the window to a visibility change.
+    private void SyncHandle()
+    {
+        if (_handleWindow is null || _closing)
+        {
+            return;
+        }
+
+        _handleWindow.SetVisible(
+            !_trueFullScreenForeground
+            && (_hiddenBySmartHide || _handleExpanded || _handleWindow.IsDragActive));
+    }
+
+    private void CreateHandleWindow()
+    {
+        _handleWindow = new DockHandleWindow();
+        _handleWindow.DragStarted += () =>
+        {
+            if (_handleExpanded)
+            {
+                CollapseHandleExpansion();
+            }
+        };
+        _handleWindow.DragEnded += () =>
+        {
+            if (_appBar?.Monitor is not { } monitor)
+            {
+                return;
+            }
+
+            // The drag may end anywhere; keep the handle inside the work area and
+            // remember the spot in monitor-relative DIPs so it survives restarts.
+            var workArea = DockAppBarController.GetLiveWorkingArea(monitor);
+            var rect = DockHandleGeometry.ClampToWorkArea(_handleWindow.CurrentRect, workArea);
+            _handleWindow.MoveTo(rect);
+            var scale = monitor.Dpi / 96d;
+            _state.HiddenHandleLeftDip = (rect.Left - monitor.Bounds.Left) / scale;
+            _state.HiddenHandleTopDip = (rect.Top - monitor.Bounds.Top) / scale;
+            DockStateChanged?.Invoke();
+        };
+        // Create the HWND now so the handle is already positioned when it first shows.
+        _ = new WindowInteropHelper(_handleWindow).EnsureHandle();
+    }
+
+    private void UpdateHandleBounds()
+    {
+        if (_handleWindow is null || _appBar?.Monitor is not { } monitor)
+        {
+            return;
+        }
+
+        var scale = monitor.Dpi / 96d;
+        var size = DockHandleGeometry.HandleSizePixels(scale);
+        var workArea = DockAppBarController.GetLiveWorkingArea(monitor);
+        var edgeGapPixels = Math.Max(0, (int)Math.Round(_state.BottomGapDip * scale));
+        PixelRect handleRect;
+        if (_state.HiddenHandleLeftDip is { } left && _state.HiddenHandleTopDip is { } top)
+        {
+            handleRect = DockHandleGeometry.ClampToWorkArea(
+                new PixelRect(
+                    monitor.Bounds.Left + (int)Math.Round(left * scale),
+                    monitor.Bounds.Top + (int)Math.Round(top * scale),
+                    monitor.Bounds.Left + (int)Math.Round(left * scale) + size,
+                    monitor.Bounds.Top + (int)Math.Round(top * scale) + size),
+                workArea);
+        }
+        else
+        {
+            handleRect = DockHandleGeometry.Default(
+                workArea,
+                size,
+                DockHandleGeometry.HandleMarginPixels(scale),
+                edgeGapPixels);
+        }
+
+        if (!_handleWindow.IsDragActive)
+        {
+            _handleWindow.MoveTo(handleRect);
+        }
+    }
+
+    private void ApplyHandleExpansion(MonitorSnapshot monitor, PixelRect handleRect)
+    {
+        if (_appBar is null || !handleRect.HasArea)
+        {
+            return;
+        }
+
+        var scale = monitor.Dpi / 96d;
+        var workArea = DockAppBarController.GetLiveWorkingArea(monitor);
+        var thicknessPixels = Math.Max(1, (int)Math.Round(DockLayoutMetrics.Thickness(_state.IconSize) * scale));
+        var contentLengthPixels = Math.Max(1, (int)Math.Round(ContentLengthDip() * scale));
+        var expanded = DockHandleGeometry.ExpandedDock(
+            handleRect,
+            workArea,
+            thicknessPixels,
+            contentLengthPixels,
+            DockHandleGeometry.ExpansionGapPixels(scale));
+        if (_handleExpanded && _expandedRect == expanded)
+        {
+            return;
+        }
+
+        _expandedRect = expanded;
+        _handleExpanded = true;
+        // The override routes every repositioning path through the expanded rect, so
+        // AppBar notifications cannot pull the dock back to the strip mid-hover.
+        _appBar.SetFloatingOverride(expanded);
+    }
+
+    private void CollapseHandleExpansion()
+    {
+        _handleExpanded = false;
+        _expandedRect = default;
+        _appBar?.SetFloatingOverride(null);
+    }
+
+    private bool ForegroundWindowRect(out PixelRect bounds, out nint window)
     {
         bounds = default;
-        var window = DockNativeMethods.GetForegroundWindow();
+        window = DockNativeMethods.GetForegroundWindow();
         if (window == 0 || window == _handle || DockNativeMethods.IsIconic(window))
         {
             return false;

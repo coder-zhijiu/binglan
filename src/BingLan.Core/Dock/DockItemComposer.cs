@@ -271,6 +271,18 @@ public static class DockPinRules
             ? Math.Clamp(state.IconSize, DockState.MinimumIconSize, DockState.MaximumIconSize)
             : DockState.DefaultIconSize;
 
+        state.BottomGapDip = double.IsFinite(state.BottomGapDip)
+            ? Math.Clamp(state.BottomGapDip, DockState.MinimumBottomGapDip, DockState.MaximumBottomGapDip)
+            : DockState.DefaultBottomGapDip;
+
+        if ((state.HiddenHandleLeftDip is { } handleLeft && !double.IsFinite(handleLeft))
+            || (state.HiddenHandleTopDip is { } handleTop && !double.IsFinite(handleTop))
+            || (state.HiddenHandleLeftDip is null) != (state.HiddenHandleTopDip is null))
+        {
+            state.HiddenHandleLeftDip = null;
+            state.HiddenHandleTopDip = null;
+        }
+
         state.SurfaceColor = WidgetAppearanceRules.CoerceColorOrDefault(state.SurfaceColor, DockState.DefaultSurfaceColor);
         state.SurfaceOpacity = double.IsFinite(state.SurfaceOpacity)
             ? Math.Clamp(state.SurfaceOpacity, 0d, 1d)

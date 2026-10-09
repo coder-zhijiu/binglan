@@ -442,6 +442,21 @@ public sealed class LocalStateStore
             // mappings, and nothing is watched until the user opts in.
             state.SchemaVersion = 24;
         }
+
+        if (state.SchemaVersion < 25)
+        {
+            // The dock's bottom gap becomes adjustable and a maximized window may be
+            // allowed to take the reserved strip; both defaults keep the previous look
+            // and behaviour.
+            state.SchemaVersion = 25;
+        }
+
+        if (state.SchemaVersion < 26)
+        {
+            // The handle shown while the dock is hidden starts in the default corner
+            // and only moves when the user drags it.
+            state.SchemaVersion = 26;
+        }
         state.Updates ??= new UpdateState();
         state.QuickPlaces = QuickPlaceRules.Normalize(state.QuickPlaces);
         state.DismissedDesktopCategories = (state.DismissedDesktopCategories ?? [])

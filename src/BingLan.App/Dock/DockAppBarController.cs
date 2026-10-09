@@ -27,6 +27,8 @@ internal sealed class DockAppBarController : IDisposable
     private bool _reserveWorkArea;
     private double _contentLengthDip = DockLayoutMetrics.EmptyLengthDip;
     private double _thicknessDip = DockLayoutMetrics.DockThicknessDip;
+    private double _edgeGapDip = DockLayoutMetrics.EdgeGapDip;
+    private PixelRect? _floatingOverride;
     private bool _fullScreenDetected;
     private bool _positioning;
     private bool _disposed;
@@ -55,6 +57,23 @@ internal sealed class DockAppBarController : IDisposable
     internal MonitorSnapshot? Monitor => _monitor;
 
     /// <summary>
+    /// While the dock is expanded beside its handle, this overrides where Position
+    /// places the window, so every repositioning path (AppBar notifications, monitor
+    /// changes, Explorer restarts) keeps the dock beside the handle instead of pulling
+    /// it back to the strip. Null restores the normal strip placement.
+    /// </summary>
+    internal void SetFloatingOverride(PixelRect? rect)
+    {
+        if (_disposed || _floatingOverride == rect)
+        {
+            return;
+        }
+
+        _floatingOverride = rect;
+        Position();
+    }
+
+    /// <summary>
     /// The AppBar full-screen callback only covers topmost windows and does not say
     /// which monitor they are on, so the dock layer follows its own check of the
     /// foreground window on the dock's monitor.
@@ -70,13 +89,19 @@ internal sealed class DockAppBarController : IDisposable
         UpdateWindowLayer();
     }
 
-    internal void Apply(MonitorSnapshot monitor, bool reserveWorkArea, double contentLengthDip, double thicknessDip)
+    internal void Apply(
+        MonitorSnapshot monitor,
+        bool reserveWorkArea,
+        double contentLengthDip,
+        double thicknessDip,
+        double edgeGapDip)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         _monitor = monitor;
         _reserveWorkArea = reserveWorkArea;
         _contentLengthDip = Math.Max(DockLayoutMetrics.EmptyLengthDip, contentLengthDip);
         _thicknessDip = thicknessDip;
+        _edgeGapDip = edgeGapDip;
 
         Dispatch(_reservation.Apply(reserveWorkArea));
         Position();
@@ -126,7 +151,7 @@ internal sealed class DockAppBarController : IDisposable
         {
             var scale = _monitor.Dpi / 96d;
             var thicknessPixels = Math.Max(1, (int)Math.Round(_thicknessDip * scale));
-            var edgeGapPixels = Math.Max(0, (int)Math.Round(DockLayoutMetrics.EdgeGapDip * scale));
+            var edgeGapPixels = Math.Max(0, (int)Math.Round(_edgeGapDip * scale));
             var stripThickness = thicknessPixels + edgeGapPixels;
 
             PixelRect strip;
@@ -170,12 +195,13 @@ internal sealed class DockAppBarController : IDisposable
                 thicknessPixels,
                 edgeGapPixels);
 
+            var placement = _floatingOverride ?? Bounds;
             DockNativeMethods.MoveWindow(
                 _handle,
-                Bounds.Left,
-                Bounds.Top,
-                Bounds.Width,
-                Bounds.Height,
+                placement.Left,
+                placement.Top,
+                placement.Width,
+                placement.Height,
                 true);
             UpdateWindowLayer();
         }
@@ -270,7 +296,7 @@ internal sealed class DockAppBarController : IDisposable
         ExplorerRestarted?.Invoke();
     }
 
-    private static PixelRect GetLiveWorkingArea(MonitorSnapshot monitor) =>
+    internal static PixelRect GetLiveWorkingArea(MonitorSnapshot monitor) =>
         MonitorCatalog.GetAll()
             .FirstOrDefault(candidate => string.Equals(
                 candidate.DeviceName,

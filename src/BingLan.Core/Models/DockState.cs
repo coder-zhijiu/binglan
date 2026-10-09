@@ -1,3 +1,5 @@
+using BingLan.Core.Dock;
+
 namespace BingLan.Core.Models;
 
 public enum DockVisibilityMode
@@ -24,6 +26,9 @@ public sealed class DockState
     public const double MinimumIconSize = 32d;
     public const double MaximumIconSize = 64d;
     public const double DefaultIconSize = 40d;
+    public const double MinimumBottomGapDip = 0d;
+    public const double MaximumBottomGapDip = 64d;
+    public const double DefaultBottomGapDip = DockLayoutMetrics.EdgeGapDip;
     public const string DefaultSurfaceColor = "#EAF5FC";
     public const double DefaultSurfaceOpacity = 0.84d;
 
@@ -40,6 +45,23 @@ public sealed class DockState
 
     /// <summary>Icon edge length in DIPs; the dock grows with it.</summary>
     public double IconSize { get; set; } = DefaultIconSize;
+
+    /// <summary>Gap between the dock's bottom edge and the work-area bottom, in DIPs.</summary>
+    public double BottomGapDip { get; set; } = DefaultBottomGapDip;
+
+    /// <summary>
+    /// Whether a reserved dock releases its work-area strip while a window is
+    /// maximized on the dock's monitor, letting the window use the full height.
+    /// </summary>
+    public bool ReleaseWhenMaximized { get; set; }
+
+    /// <summary>
+    /// Top-left of the hidden-dock handle in DIPs relative to the dock monitor, or
+    /// null to keep the default corner until the user drags it.
+    /// </summary>
+    public double? HiddenHandleLeftDip { get; set; }
+
+    public double? HiddenHandleTopDip { get; set; }
 
     /// <summary>Whether the dock takes its colours from the card material.</summary>
     public bool FollowCardLook { get; set; } = true;
