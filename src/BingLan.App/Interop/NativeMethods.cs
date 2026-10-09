@@ -41,6 +41,7 @@ internal static class NativeMethods
     internal const uint SwpHideWindow = 0x0080;
 
     internal const int DwmwaNcRenderingPolicy = 2;
+    internal const int DwmwaCloaked = 14;
     internal const int DwmwaWindowCornerPreference = 33;
     internal const int DwmwaBorderColor = 34;
     internal const int DwmwaSystemBackdropType = 38;
@@ -144,4 +145,20 @@ internal static class NativeMethods
         int attribute,
         ref int value,
         int valueSize);
+
+    [DllImport("dwmapi.dll")]
+    internal static extern int DwmGetWindowAttribute(
+        nint window,
+        int attribute,
+        out int value,
+        int valueSize);
+
+    /// <summary>
+    /// Whether DWM cloaks the window (suspended UWP hosts and similar stay
+    /// IsWindowVisible while being fully off screen), or false when the attribute
+    /// is unavailable on the current Windows build.
+    /// </summary>
+    internal static bool IsWindowCloaked(nint window) =>
+        DwmGetWindowAttribute(window, DwmwaCloaked, out int cloaked, sizeof(int)) == 0
+        && cloaked != 0;
 }

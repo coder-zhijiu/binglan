@@ -100,7 +100,8 @@ internal sealed class DesktopSurfaceWatcher : IDisposable
     /// <summary>
     /// Reads whether the desktop surface covers the cards: Progman has been raised
     /// and no visible, un-minimised window of another program is left above it.
-    /// Topmost windows (taskbar, dock), Explorer's own shell windows and the cards
+    /// Topmost windows (taskbar, dock), Explorer's own shell windows, DWM-cloaked
+    /// windows (suspended UWP hosts report visible while off screen) and the cards
     /// themselves do not count.
     /// </summary>
     private void Evaluate()
@@ -127,6 +128,10 @@ internal sealed class DesktopSurfaceWatcher : IDisposable
                     return true;
                 }
                 if (((IReadOnlyList<nint>)cards).Contains(window))
+                {
+                    return true;
+                }
+                if (NativeMethods.IsWindowCloaked(window))
                 {
                     return true;
                 }
