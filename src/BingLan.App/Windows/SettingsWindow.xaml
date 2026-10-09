@@ -1404,6 +1404,13 @@
                                       Checked="AutoCheckUpdates_Changed"
                                       Unchecked="AutoCheckUpdates_Changed"/>
                         </local:SettingsRow>
+                        <local:SettingsRow Style="{StaticResource NestedSettingsRowStyle}"
+                                           Header="作者 keros68"
+                                           Description="github.com/keros68/binglan，欢迎提交 PR">
+                            <Button Content="打开仓库"
+                                    AutomationProperties.Name="打开项目仓库页面"
+                                    Click="OpenRepository_Click"/>
+                        </local:SettingsRow>
                     </local:SettingsGroup>
                     <Border x:Name="UpdateAvailableCard"
                             Margin="0,4,0,4"

@@ -55,10 +55,14 @@
 ```powershell
 dotnet build .\BingLan.slnx -c Release
 dotnet run --project .\tests\BingLan.SmokeTests\BingLan.SmokeTests.csproj -c Release
-pwsh -NoProfile -File .\installer\build.ps1 -Version 0.2.10
+pwsh -NoProfile -File .\installer\build.ps1 -Version 0.2.11
 ```
 
 完整测试命令、技术方案和当前实现见[开发说明](docs/DEVELOPMENT.md)，安装包细节见[安装包](docs/INSTALLER.md)。
+
+## 作者与参与
+
+作者 keros68，仓库地址 <https://github.com/keros68/binglan>，欢迎提交 PR。设置中心“通用”页“更新”区域的“打开仓库”可直接打开该页面。
 
 ## 许可证
 

@@ -1814,6 +1814,10 @@ public partial class SettingsWindow : Window
     private void OpenReleasePage_Click(object sender, RoutedEventArgs e) =>
         _maintenance.Updater?.OpenReleasePage();
 
+    private void OpenRepository_Click(object sender, RoutedEventArgs e) =>
+        System.Diagnostics.Process.Start(
+            new System.Diagnostics.ProcessStartInfo("https://github.com/keros68/binglan") { UseShellExecute = true })?.Dispose();
+
     private void ApplyDockChange(string status)
     {
         _applyDock();
