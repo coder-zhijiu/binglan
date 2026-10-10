@@ -294,11 +294,27 @@ internal static class TopBarWindowTests
         show(bar);
         try
         {
-            Invoke(ButtonByName(bar, "时间日期模块"));
-            if (environment.SystemClockRequested != 1)
+            var clock = ButtonByName(bar, "时间日期模块");
+            Invoke(clock);
+            pump();
+            var calendar = bar.ClockFlyout;
+            if (calendar?.IsOpen != true)
             {
-                throw new InvalidOperationException("点击时钟模块应唤起系统日历时间面板");
+                throw new InvalidOperationException("点击时钟模块应弹出日历信息栏");
             }
+            var calendarTexts = DescendantTextBlocks(calendar.Child)
+                .Select(text => text.Text)
+                .ToList();
+            var today = DateTime.Now;
+            Assert(calendarTexts.Any(text =>
+                    text.Contains(today.Year + "年") && text.Contains(today.Month + "月")
+                    && text.Contains(today.Day + "日")),
+                "日历信息栏应显示今天的日期");
+            Assert(calendarTexts.Contains("一") && calendarTexts.Contains("日"),
+                "日历信息栏应显示星期表头");
+            Invoke(clock);
+            pump();
+            Assert(bar.ClockFlyout is null, "再次点击时钟模块应收起日历信息栏");
             Invoke(ButtonByName(bar, "音量模块"));
             if (environment.QuickSettingsRequested != 1)
             {
@@ -387,7 +403,6 @@ internal static class TopBarWindowTests
         internal int Toggles { get; private set; }
         internal int QuickSettingsRequested { get; private set; }
         internal int TaskManagerRequested { get; private set; }
-        internal int SystemClockRequested { get; private set; }
         internal DesktopComponentKind? ComponentRequested { get; private set; }
         internal int TopBarPageRequested { get; private set; }
 
@@ -410,8 +425,6 @@ internal static class TopBarWindowTests
         public void OpenQuickSettings() => QuickSettingsRequested++;
 
         public void OpenTaskManagerPerformance() => TaskManagerRequested++;
-
-        public void OpenSystemClock() => SystemClockRequested++;
 
         public void OpenComponentSettings(DesktopComponentKind kind) => ComponentRequested = kind;
 

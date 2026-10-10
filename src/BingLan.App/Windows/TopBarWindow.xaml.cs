@@ -52,9 +52,6 @@ internal interface ITopBarEnvironment
     /// <summary>Opens the system quick-settings flyout (the taskbar tray's panel).</summary>
     void OpenQuickSettings();
 
-    /// <summary>Opens the system clock and calendar flyout (the taskbar clock's panel).</summary>
-    void OpenSystemClock();
-
     /// <summary>Opens Task Manager and lands on its performance page.</summary>
     void OpenTaskManagerPerformance();
 
@@ -102,6 +99,8 @@ public sealed partial class TopBarWindow : Window
     private PerformanceSnapshot? _lastSnapshot;
     private TopBarSystemFacts? _facts;
     private Popup? _todoFlyout;
+    private Popup? _clockFlyout;
+    private DateTime _clockMonth;
     private MonitorSnapshot? _monitor;
     private nint _handle;
     private uint _shellHookMessage;
@@ -258,6 +257,7 @@ public sealed partial class TopBarWindow : Window
     {
         _closing = true;
         CloseTodoFlyout();
+        CloseClockFlyout();
         _foregroundTimer.Stop();
         _sampler.Sampled -= OnSampled;
         System.Net.NetworkInformation.NetworkChange.NetworkAddressChanged -= OnNetworkAddressChanged;
@@ -350,6 +350,7 @@ public sealed partial class TopBarWindow : Window
         RightModules.Children.Clear();
         _modules.Clear();
         CloseTodoFlyout();
+        CloseClockFlyout();
 
         // The to-do module shows its own flyout instead of opening settings.
         AddTodoModule(LeftModules);
@@ -371,8 +372,7 @@ public sealed partial class TopBarWindow : Window
         {
             RightModules.Children.Add(_attentionPanel);
         }
-        AddModule(TopBarModuleKind.Clock, RightModules, "时间日期",
-            _environment.OpenSystemClock);
+        AddClockModule(RightModules);
         RefreshAttention();
     }
 
@@ -471,6 +471,250 @@ public sealed partial class TopBarWindow : Window
         _modules[TopBarModuleKind.TodoSummary] = button;
         panel.Children.Add(button);
     }
+
+    private void AddClockModule(StackPanel panel)
+    {
+        if (!TopBarRules.IsModuleOn(_state.Modules, TopBarModuleKind.Clock))
+        {
+            return;
+        }
+
+        var text = new TextBlock
+        {
+            Foreground = Brushes.White,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            Effect = CreateTextShadow()
+        };
+        var button = new Button
+        {
+            Style = (Style)Resources["ModuleButton"],
+            Content = text,
+            Focusable = true
+        };
+        System.Windows.Automation.AutomationProperties.SetName(button, "时间日期模块");
+        button.Click += (_, _) => ToggleClockFlyout(button);
+        _modules[TopBarModuleKind.Clock] = button;
+        panel.Children.Add(button);
+    }
+
+    // ---------------------------------------------------------------- 日历信息栏
+
+    /// <summary>
+    /// The calendar flyout under the clock module: the current time, today's date and a
+    /// read-only month view. The system's calendar panel only anchors to the taskbar, so
+    /// the bar shows its own month the same way it shows the to-do list.
+    /// </summary>
+    private void ToggleClockFlyout(Button button)
+    {
+        if (_clockFlyout?.IsOpen == true)
+        {
+            _clockFlyout.IsOpen = false;
+            return;
+        }
+
+        _clockMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+        var glass = DesktopStyleRules.TopBar(_style, _state);
+        var card = new Border
+        {
+            Background = FrozenBrush(glass.Surface),
+            BorderBrush = FrozenBrush(glass.Border),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(10),
+            Padding = new Thickness(16, 12, 16, 14),
+            Child = BuildClockCard()
+        };
+        var flyout = new Popup
+        {
+            PlacementTarget = button,
+            Placement = PlacementMode.Bottom,
+            HorizontalOffset = -140,
+            VerticalOffset = 2,
+            StaysOpen = true,
+            AllowsTransparency = true,
+            Child = card
+        };
+        flyout.Closed += (_, _) =>
+        {
+            if (ReferenceEquals(_clockFlyout, flyout))
+            {
+                _clockFlyout = null;
+            }
+        };
+        RightModules.Children.Add(flyout);
+        _clockFlyout = flyout;
+        flyout.IsOpen = true;
+        // Like the to-do flyout: the opening click must not read as an outside click.
+        TopBarNativeMethods.ConsumeMouseButtonDown(TopBarNativeMethods.LeftMouseButton);
+    }
+
+    private FrameworkElement BuildClockCard()
+    {
+        var panel = new StackPanel { Width = 252 };
+        var now = DateTime.Now;
+        panel.Children.Add(new TextBlock
+        {
+            Text = now.ToString(_environment.Use24HourClock ? "HH:mm" : "hh:mm tt"),
+            Foreground = Brushes.White,
+            FontSize = 30,
+            Effect = CreateTextShadow()
+        });
+        panel.Children.Add(new TextBlock
+        {
+            Text = now.Year + "年" + now.Month + "月" + now.Day + "日 " + "日一二三四五六"[(int)now.DayOfWeek],
+            Foreground = Brushes.White,
+            Opacity = 0.8,
+            Margin = new Thickness(0, 2, 0, 10),
+            Effect = CreateTextShadow()
+        });
+        panel.Children.Add(BuildMonthView());
+        return panel;
+    }
+
+    private FrameworkElement BuildMonthView()
+    {
+        var panel = new StackPanel();
+
+        // Month title row with previous/next navigation.
+        var title = new TextBlock
+        {
+            Text = MonthTitle(_clockMonth),
+            Foreground = Brushes.White,
+            FontSize = 13,
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+            Effect = CreateTextShadow()
+        };
+        var previous = CreateMonthNavButton("‹", "上一月", -1);
+        var next = CreateMonthNavButton("›", "下一月", 1);
+        var header = new DockPanel { Margin = new Thickness(0, 0, 0, 6) };
+        DockPanel.SetDock(previous, System.Windows.Controls.Dock.Left);
+        DockPanel.SetDock(next, System.Windows.Controls.Dock.Right);
+        header.Children.Add(previous);
+        header.Children.Add(next);
+        header.Children.Add(title);
+        panel.Children.Add(header);
+
+        var grid = new Grid();
+        for (var column = 0; column < 7; column++)
+        {
+            grid.ColumnDefinitions.Add(new ColumnDefinition());
+        }
+        for (var row = 0; row < 7; row++)
+        {
+            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(26) });
+        }
+
+        // Monday-first weeks, the calendar convention in Chinese layouts.
+        var weekdayNames = new[] { "一", "二", "三", "四", "五", "六", "日" };
+        for (var column = 0; column < 7; column++)
+        {
+            var headerCell = new TextBlock
+            {
+                Text = weekdayNames[column],
+                Foreground = Brushes.White,
+                Opacity = 0.6,
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                Effect = CreateTextShadow()
+            };
+            Grid.SetRow(headerCell, 0);
+            Grid.SetColumn(headerCell, column);
+            grid.Children.Add(headerCell);
+        }
+
+        var daysInMonth = DateTime.DaysInMonth(_clockMonth.Year, _clockMonth.Month);
+        var leading = ((int)_clockMonth.DayOfWeek + 6) % 7; // Monday-based offset
+        for (var day = 1; day <= daysInMonth; day++)
+        {
+            var index = leading + day - 1;
+            var row = index / 7 + 1;
+            var column = index % 7;
+            var date = new DateTime(_clockMonth.Year, _clockMonth.Month, day);
+            FrameworkElement cell;
+            if (date == DateTime.Today)
+            {
+                cell = new Border
+                {
+                    Background = TodayBrush,
+                    CornerRadius = new CornerRadius(8),
+                    Margin = new Thickness(1),
+                    Child = new TextBlock
+                    {
+                        Text = day.ToString(),
+                        Foreground = Brushes.White,
+                        HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                        VerticalAlignment = VerticalAlignment.Center,
+                        Effect = CreateTextShadow()
+                    }
+                };
+            }
+            else
+            {
+                cell = new TextBlock
+                {
+                    Text = day.ToString(),
+                    Foreground = Brushes.White,
+                    Opacity = 0.85,
+                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Effect = CreateTextShadow()
+                };
+            }
+            Grid.SetRow(cell, row);
+            Grid.SetColumn(cell, column);
+            grid.Children.Add(cell);
+        }
+        panel.Children.Add(grid);
+        return panel;
+    }
+
+    private static readonly SolidColorBrush TodayBrush = CreateTodayBrush();
+
+    private static SolidColorBrush CreateTodayBrush()
+    {
+        var brush = new SolidColorBrush(Color.FromArgb(140, 122, 180, 237));
+        brush.Freeze();
+        return brush;
+    }
+
+    private Button CreateMonthNavButton(string glyph, string automationName, int months)
+    {
+        var button = new Button
+        {
+            Content = new TextBlock
+            {
+                Text = glyph,
+                Foreground = Brushes.White,
+                FontSize = 16,
+                Effect = CreateTextShadow()
+            },
+            Style = (Style)Resources["ModuleButton"],
+            MinWidth = 28,
+            Padding = new Thickness(4, 0, 4, 0)
+        };
+        System.Windows.Automation.AutomationProperties.SetName(button, automationName);
+        button.Click += (_, _) => ShiftMonth(months);
+        return button;
+    }
+
+    private void ShiftMonth(int months)
+    {
+        _clockMonth = _clockMonth.AddMonths(months);
+        if (_clockFlyout?.Child is Border card)
+        {
+            card.Child = BuildClockCard();
+        }
+    }
+
+    private static string MonthTitle(DateTime month) =>
+        month.Year + "年" + month.Month + "月";
+
+    private void CloseClockFlyout()
+    {
+        _clockFlyout?.SetCurrentValue(Popup.IsOpenProperty, false);
+        _clockFlyout = null;
+    }
+
+    /// <summary>The open calendar flyout, for tests; popups sit outside the visual tree.</summary>
+    internal Popup? ClockFlyout => _clockFlyout;
 
     // ---------------------------------------------------------------- 待办信息栏
 
@@ -656,14 +900,21 @@ public sealed partial class TopBarWindow : Window
     /// system drops the capture instead of telling the popup. While the flyout is open
     /// the bar polls the button state and closes it when a click lands outside it.
     /// </summary>
-    private void CloseTodoFlyoutOnOutsideClick()
+    private void CloseFlyoutOnOutsideClick()
     {
-        if (_todoFlyout is not { IsOpen: true } flyout || flyout.Child is not FrameworkElement child)
+        if (!TopBarNativeMethods.IsMouseButtonDown(TopBarNativeMethods.LeftMouseButton))
         {
             return;
         }
 
-        if (!TopBarNativeMethods.IsMouseButtonDown(TopBarNativeMethods.LeftMouseButton))
+        DockNativeMethods.GetCursorPos(out var cursor);
+        TryCloseOnOutsideClick(_todoFlyout, cursor);
+        TryCloseOnOutsideClick(_clockFlyout, cursor);
+    }
+
+    private void TryCloseOnOutsideClick(Popup? flyout, DockNativeMethods.NativePoint cursor)
+    {
+        if (flyout is not { IsOpen: true } || flyout.Child is not FrameworkElement child)
         {
             return;
         }
@@ -672,16 +923,19 @@ public sealed partial class TopBarWindow : Window
         {
             return;
         }
-        DockNativeMethods.GetCursorPos(out var cursor);
         DockNativeMethods.GetWindowRect(source.Handle, out var rect);
         if (cursor.X >= rect.Left && cursor.X < rect.Right && cursor.Y >= rect.Top && cursor.Y < rect.Bottom)
         {
             return;
         }
 
-        // A click on the to-do module itself toggles the flyout; letting the poll
+        // A click on a module that owns an open flyout toggles it; letting the poll
         // close it here would only make the same click re-open it.
-        if (_modules.TryGetValue(TopBarModuleKind.TodoSummary, out var element)
+        TopBarModuleKind? owner = flyout == _todoFlyout
+            ? TopBarModuleKind.TodoSummary
+            : flyout == _clockFlyout ? TopBarModuleKind.Clock : null;
+        if (owner is { } kind
+            && _modules.TryGetValue(kind, out var element)
             && element is Button button)
         {
             var topLeft = button.PointToScreen(new System.Windows.Point(0, 0));
@@ -945,7 +1199,7 @@ public sealed partial class TopBarWindow : Window
 
     private void UpdateForForeground()
     {
-        CloseTodoFlyoutOnOutsideClick();
+        CloseFlyoutOnOutsideClick();
         if (_appBar?.Monitor is not { } monitor || _closing)
         {
             return;
@@ -998,7 +1252,7 @@ public sealed partial class TopBarWindow : Window
                 monitor.Bounds,
                 revealDepth),
             PointerOverDock: pointerOverBar,
-            InteractionActive: _menuOpen || _todoFlyout?.IsOpen == true);
+            InteractionActive: _menuOpen || _todoFlyout?.IsOpen == true || _clockFlyout?.IsOpen == true);
         if (_autoHide.Update(input, DateTimeOffset.UtcNow))
         {
             if (_autoHide.IsShown)
@@ -1010,6 +1264,7 @@ public sealed partial class TopBarWindow : Window
             else
             {
                 CloseTodoFlyout();
+                CloseClockFlyout();
                 Hide();
             }
         }

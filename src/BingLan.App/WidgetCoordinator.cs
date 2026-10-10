@@ -2323,8 +2323,6 @@ public sealed class WidgetCoordinator : IDisposable
         public void OpenQuickSettings() =>
             InvokeTrayButton("音量", "网络", "电源", "电池");
 
-        public void OpenSystemClock() => InvokeTrayButton("时钟");
-
         /// <summary>
         /// Invokes the taskbar tray button whose name starts with one of the prefixes,
         /// opening exactly what that tray icon opens. The taskbar rebuilds itself now and
