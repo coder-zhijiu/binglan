@@ -33,4 +33,17 @@ public static class TopBarReserveRules
 {
     public static bool IsTopEdgeFree(PixelRect monitorBounds, PixelRect workingArea) =>
         workingArea.Top <= monitorBounds.Top;
+
+    /// <summary>
+    /// Whether the bar should hold a reservation now. The bar's own reservation pushes
+    /// the working area down, so re-running the occupied check while registered would
+    /// read itself as a foreign taskbar and let go on every settings change; a
+    /// registered bar keeps its edge instead.
+    /// </summary>
+    public static bool ShouldReserve(
+        bool requested,
+        bool currentlyReserved,
+        PixelRect monitorBounds,
+        PixelRect workingArea) =>
+        requested && (currentlyReserved || IsTopEdgeFree(monitorBounds, workingArea));
 }

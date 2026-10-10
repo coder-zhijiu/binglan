@@ -252,6 +252,23 @@ public static class TopBarTests
         Assert(
             !TopBarReserveRules.IsTopEdgeFree(monitor, new PixelRect(0, 48, 1920, 1032)),
             "工作区下移（顶部任务栏）不可预留");
+
+        // The bar's own reservation pushes the work area down; re-evaluating while
+        // registered must not read that as a foreign taskbar and let go.
+        var ownGap = new PixelRect(0, 32, 1920, 1000);
+        Assert(
+            TopBarReserveRules.ShouldReserve(true, true, monitor, ownGap),
+            "已预留时重评估应保持预留（自身预留不是外来占用）");
+        Assert(
+            !TopBarReserveRules.ShouldReserve(false, true, monitor, ownGap),
+            "切到智能隐藏仍应释放");
+        Assert(
+            !TopBarReserveRules.ShouldReserve(true, false, monitor, new PixelRect(0, 48, 1920, 1032)),
+            "未注册且顶边被任务栏占用时不预留");
+        Assert(
+            TopBarReserveRules.ShouldReserve(true, false, monitor, new PixelRect(0, 0, 1920, 1040)),
+            "未注册且顶边空闲时预留");
+
         // DockGeometry 的顶边条已是满宽，顶栏直接复用。
         var strip = DockGeometry.Calculate(monitor, DockEdge.Top, 40);
         Assert(strip is { Left: 0, Top: 0, Right: 1920, Bottom: 40 }, "顶边条满宽贴顶");

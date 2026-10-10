@@ -139,12 +139,14 @@ public sealed partial class TopBarWindow : Window
         BuildModules();
         ApplySurface();
         _autoHide = new DockAutoHideState();
-        var reserve = _state.VisibilityMode == TopBarVisibilityMode.ReserveTopEdge
-            && TopBarReserveRules.IsTopEdgeFree(
-                _monitor.Bounds,
-                BingLan.App.Dock.DockAppBarController.GetLiveWorkingArea(_monitor));
         // The top edge is taken (a taskbar moved to the top on Windows 10): behave as
-        // smart-hide instead of fighting over the space.
+        // smart-hide instead of fighting over the space. A bar that already holds the
+        // edge keeps it — its own reservation is not a foreign occupier.
+        var reserve = TopBarReserveRules.ShouldReserve(
+            _state.VisibilityMode == TopBarVisibilityMode.ReserveTopEdge,
+            _appBar?.IsReserved == true,
+            _monitor.Bounds,
+            BingLan.App.Dock.DockAppBarController.GetLiveWorkingArea(_monitor));
         _appBar?.Apply(_monitor, reserve, TopBarState.HeightDip);
         _foregroundTimer.Interval = reserve ? FullScreenCheckInterval : SmartHideCheckInterval;
         _foregroundTimer.Start();
