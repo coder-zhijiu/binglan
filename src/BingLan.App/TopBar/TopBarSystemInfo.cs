@@ -54,11 +54,13 @@ internal static class TopBarSystemInfo
     }
 
     /// <summary>
-    /// The taskbar-style badge of the foreground window's input method plus the layout's
-    /// full display name for the hover tooltip. The badge re-reads cheaply enough for the
-    /// 150 ms focus cadence: the IME mode is one bounded cross-process call.
+    /// The taskbar-style badge of the foreground window's input method plus the layout
+    /// handle (change detector for the slower name reads), the layout's full display
+    /// name and whether the IME answered the mode question. The badge re-reads cheaply
+    /// enough for the 150 ms focus cadence: the IME mode is one bounded cross-process
+    /// call, and a busy IME (the user is typing) can miss the timeout.
     /// </summary>
-    internal static (string Label, string FullName) ReadInputMethod()
+    internal static (nint Layout, string Label, string FullName, bool ModeKnown) ReadInputMethod()
     {
         // No classic foreground window (a console host, for example) falls back to this
         // thread's own layout, which is the same list Windows would show.
@@ -73,8 +75,19 @@ internal static class TopBarSystemInfo
         }
 
         var conversionMode = ReadConversionMode(foreground);
-        return (TopBarModuleRules.DescribeInputMethod(layout, conversionMode), LayoutName(layout));
+        return (layout,
+            TopBarModuleRules.DescribeInputMethod(layout, conversionMode),
+            LayoutName(layout),
+            conversionMode is not null);
     }
+
+    /// <summary>
+    /// The active input processor's own name ("微软拼音", "微信输入法"), or null when a
+    /// plain keyboard layout is active. TSF answers only on an STA thread, so this rides
+    /// the UI-thread cadence, not the background system-info read.
+    /// </summary>
+    internal static string? ReadInputMethodName() =>
+        TsfInputProcessorInterop.ReadActiveInputProcessorName();
 
     private static int? ReadConversionMode(nint foreground)
     {

@@ -108,6 +108,12 @@ public sealed partial class TopBarWindow : Window
     private bool _closing;
     private bool _menuOpen;
     private int _tick;
+    private TextBlock? _inputMethodBadgeText;
+    private TextBlock? _inputMethodNameText;
+    private nint _lastInputLayout;
+    private string? _inputMethodName;
+    private string _inputMethodToolTip = string.Empty;
+    private string _inputMethodLabel = string.Empty;
 
     private const int HshellWindowDestroyed = 2;
     private const int HshellWindowActivated = 4;
@@ -300,8 +306,7 @@ public sealed partial class TopBarWindow : Window
     private static TopBarSystemFacts ReadSystemFacts() => new(
         TopBarSystemInfo.ReadBattery(),
         TopBarSystemInfo.ReadVolumePercent(),
-        TopBarSystemInfo.ReadNetwork(),
-        TopBarSystemInfo.ReadInputMethod());
+        TopBarSystemInfo.ReadNetwork());
 
     private void RefreshSystemFacts()
     {
@@ -335,11 +340,12 @@ public sealed partial class TopBarWindow : Window
         });
     }
 
+    // The input method leaves the background facts cadence: its TSF name read needs the
+    // UI thread (STA), so the whole module rides the fast focus tick.
     private sealed record TopBarSystemFacts(
         (int Percent, TopBarBatteryStatus Status) Battery,
         int? VolumePercent,
-        (bool Connected, string Label) Network,
-        (string Label, string FullName) InputMethod);
+        (bool Connected, string Label) Network);
 
     // ---------------------------------------------------------------- modules
 
@@ -429,14 +435,14 @@ public sealed partial class TopBarWindow : Window
     }
 
     /// <summary>
-    /// The input method module wears the taskbar indicator's shape: one character in a
-    /// rounded tile. The full layout name moves to the hover tooltip, so the short badge
-    /// never needs trimming.
+    /// The input method module wears the taskbar indicator's shape: the mode badge in a
+    /// rounded tile, followed by the input method's own name ("微信输入法"). The name
+    /// collapses for plain keyboard layouts; the full layout name lives on the tooltip.
     /// </summary>
     private void StyleInputMethodModule()
     {
         if (!_modules.TryGetValue(TopBarModuleKind.InputMethod, out var module)
-            || module is not Button { Content: TextBlock text } button)
+            || module is not Button { Content: TextBlock badgeText } button)
         {
             return;
         }
@@ -445,16 +451,78 @@ public sealed partial class TopBarWindow : Window
         // Re-parenting demands detaching first: the initializer would otherwise adopt a
         // TextBlock that still belongs to the button's content.
         button.Content = null;
-        button.Content = new Border
+        var nameText = new TextBlock
         {
-            CornerRadius = new CornerRadius(5),
-            Background = FrozenBrush("#33FFFFFF"),
-            Padding = new Thickness(6, 1, 6, 1),
-            Child = text
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            MaxWidth = 120,
+            Margin = new Thickness(4, 0, 6, 0),
+            Effect = CreateTextShadow()
         };
+        button.Content = new StackPanel
+        {
+            Orientation = System.Windows.Controls.Orientation.Horizontal,
+            Children =
+            {
+                new Border
+                {
+                    CornerRadius = new CornerRadius(5),
+                    Background = FrozenBrush("#33FFFFFF"),
+                    Padding = new Thickness(6, 1, 6, 1),
+                    Child = badgeText
+                },
+                nameText
+            }
+        };
+        _inputMethodBadgeText = badgeText;
+        _inputMethodNameText = nameText;
         var toolTip = CreateGlassToolTip();
         AttachHoverToolTip(button, toolTip);
         button.ToolTip = toolTip;
+    }
+
+    /// <summary>
+    /// Re-reads the input method on the fast focus tick: the badge every call, the TSF
+    /// name only when the layout handle changed, because switching input methods changes
+    /// the layout while an in-method mode toggle does not.
+    /// </summary>
+    private void UpdateInputMethod()
+    {
+        var (layout, label, fullName, modeKnown) = TopBarSystemInfo.ReadInputMethod();
+        if (layout != _lastInputLayout)
+        {
+            _lastInputLayout = layout;
+            _inputMethodName = TopBarSystemInfo.ReadInputMethodName();
+            _inputMethodToolTip = _inputMethodName ?? fullName;
+            _inputMethodLabel = label;
+        }
+        else if (modeKnown)
+        {
+            // A typing user keeps the IME window busy, so the mode call can miss its
+            // timeout. Within one layout that means "no news": keep the last badge
+            // instead of flashing the language-code fallback.
+            _inputMethodLabel = label;
+        }
+        if (_inputMethodBadgeText is { } badge)
+        {
+            badge.Text = _inputMethodLabel;
+        }
+        if (_inputMethodNameText is { } name)
+        {
+            name.Text = _inputMethodName ?? string.Empty;
+            name.Visibility = _inputMethodName is null
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+        }
+        if (_modules.TryGetValue(TopBarModuleKind.InputMethod, out var module)
+            && module.ToolTip is ToolTip toolTip
+            && (toolTip.Content as TextBlock)?.Text != _inputMethodToolTip)
+        {
+            toolTip.Content = new TextBlock
+            {
+                Text = _inputMethodToolTip,
+                Effect = CreateTextShadow()
+            };
+        }
     }
 
     private ToolTip CreateGlassToolTip()
@@ -475,9 +543,7 @@ public sealed partial class TopBarWindow : Window
         _modules.TryGetValue(kind, out var module)
             ? module switch
             {
-                Button button => button.Content is Border { Child: TextBlock badge }
-                    ? badge
-                    : button.Content as TextBlock,
+                Button button => button.Content as TextBlock,
                 Border border => border.Child as TextBlock,
                 _ => null
             }
@@ -1069,25 +1135,6 @@ public sealed partial class TopBarWindow : Window
         {
             network.Text = facts.Network.Label;
         }
-        RenderInputMethod(facts.InputMethod);
-    }
-
-    private void RenderInputMethod((string Label, string FullName) inputMethod)
-    {
-        if (ModuleText(TopBarModuleKind.InputMethod) is { } text)
-        {
-            text.Text = inputMethod.Label;
-        }
-        if (_modules.TryGetValue(TopBarModuleKind.InputMethod, out var module)
-            && module.ToolTip is ToolTip toolTip
-            && (toolTip.Content as TextBlock)?.Text != inputMethod.FullName)
-        {
-            toolTip.Content = new TextBlock
-            {
-                Text = inputMethod.FullName,
-                Effect = CreateTextShadow()
-            };
-        }
     }
 
     private void RenderWeather(TextBlock text)
@@ -1263,7 +1310,7 @@ public sealed partial class TopBarWindow : Window
         // every fast tick instead of waiting for the slower system-info cadence.
         if (foregroundWindow != 0 && IsVisible)
         {
-            RenderInputMethod(TopBarSystemInfo.ReadInputMethod());
+            UpdateInputMethod();
         }
 
         var fullScreen = foreground

@@ -248,11 +248,18 @@ internal static class TopBarWindowTests
             {
                 throw new InvalidOperationException("输入法模块应读到真实输入法状态而非回退文案（注册表或 IME 路径失效）");
             }
-            // The module shows the taskbar indicator's shape: one character in a rounded
-            // tile, with the full layout name on the hover tooltip.
-            if (ButtonByName(bar, "输入法模块").Content is not Border { } tile || tile.CornerRadius == default)
+            // The module shows the taskbar indicator's shape: the mode badge in a
+            // rounded tile with the input method's own name beside it, and the full
+            // layout name on the hover tooltip.
+            if (ButtonByName(bar, "输入法模块").Content is not StackPanel imePanel
+                || imePanel.Children.OfType<Border>().FirstOrDefault() is not { } imeTile
+                || imeTile.CornerRadius == default)
             {
                 throw new InvalidOperationException("输入法模块应以圆角徽标显示任务栏式中/英文状态");
+            }
+            if (imePanel.Children.OfType<TextBlock>().FirstOrDefault() is null)
+            {
+                throw new InvalidOperationException("输入法模块应在徽标旁显示当前输入法名");
             }
             if (ButtonByName(bar, "输入法模块").ToolTip is not ToolTip)
             {
@@ -387,9 +394,18 @@ internal static class TopBarWindowTests
 
     private static string TextOf(FrameworkElement module) => module switch
     {
-        Button button => button.Content is Border { Child: TextBlock badge }
-            ? TextOfTextBlock(badge)
-            : TextOfTextBlock(button.Content as TextBlock),
+        Button button => ButtonContentText(button.Content),
+        Border border => TextOfTextBlock(border.Child as TextBlock),
+        _ => string.Empty
+    };
+
+    // The input method button packs a rounded badge tile plus the input method's name
+    // into a horizontal panel; the badge's character is the module's spoken text.
+    private static string ButtonContentText(object? content) => content switch
+    {
+        TextBlock text => text.Text,
+        StackPanel panel => TextOfTextBlock(
+            panel.Children.OfType<Border>().FirstOrDefault()?.Child as TextBlock),
         Border border => TextOfTextBlock(border.Child as TextBlock),
         _ => string.Empty
     };
