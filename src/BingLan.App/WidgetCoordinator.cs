@@ -2313,9 +2313,10 @@ public sealed class WidgetCoordinator : IDisposable
                     todo.Title,
                     todo.Items
                         .Where(item => !string.IsNullOrWhiteSpace(item.Text))
-                        .Select(item => new TopBarTodoItem(item.Text, item.IsCompleted))
                         .ToList())
                 : null;
+
+        public void TodoItemToggled() => owner.ScheduleSave();
 
         public void OpenTopBarSettings() => owner.OpenSettings("TopBar");
 

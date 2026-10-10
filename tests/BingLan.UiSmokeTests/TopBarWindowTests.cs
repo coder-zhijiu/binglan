@@ -299,6 +299,7 @@ internal static class TopBarWindowTests
         internal int Todos { get; set; }
         internal WeatherSnapshot? Weather { get; set; }
         internal TopBarTodoList? TodoList { get; set; }
+        internal int Toggles { get; private set; }
         internal DesktopComponentKind? ComponentRequested { get; private set; }
         internal int TopBarPageRequested { get; private set; }
 
@@ -313,6 +314,8 @@ internal static class TopBarWindowTests
         public int CountIncompleteTodos() => Todos;
 
         public TopBarTodoList? ReadTodoList() => TodoList;
+
+        public void TodoItemToggled() => Toggles++;
 
         public void OpenTopBarSettings() => TopBarPageRequested++;
 
@@ -330,14 +333,12 @@ internal static class TopBarWindowTests
         var state = BarState();
         state.VisibilityMode = TopBarVisibilityMode.SmartHide;
         using var sampler = new WindowsPerformanceSamplingService();
+        var first = new TodoItemState { Text = "测试顶端信息条" };
+        var second = new TodoItemState { Text = "已完成的一条", IsCompleted = true };
         var environment = new FakeEnvironment
         {
             Todos = 2,
-            TodoList = new TopBarTodoList("今日待办",
-            [
-                new TopBarTodoItem("测试顶端信息条", false),
-                new TopBarTodoItem("已完成的一条", true)
-            ])
+            TodoList = new TopBarTodoList("今日待办", [first, second])
         };
         var bar = new TopBarWindow(state, new DesktopStyleState(), environment, sampler);
         show(bar);
@@ -356,10 +357,29 @@ internal static class TopBarWindowTests
             Assert(texts.Contains("测试顶端信息条"), "待办信息栏应显示未完成项");
             Assert(texts.Contains("已完成的一条"), "待办信息栏应显示已完成项");
             Assert(environment.ComponentRequested is null,
-                "点击待办模块不应再跳转待办组件设置");
+                "点击待办模块不应跳转待办组件设置");
 
-            // Clicking the module again toggles the flyout closed; clicking elsewhere
-            // is the framework's own StaysOpen=false behaviour, covered by real clicks.
+            // A row click toggles that item, like the card's checkbox, and the flyout
+            // follows the live state.
+            DescendantElements(flyout.Child)
+                .OfType<StackPanel>()
+                .First(panel => panel.DataContext == first)
+                .RaiseEvent(new System.Windows.Input.MouseButtonEventArgs(
+                    System.Windows.Input.Mouse.PrimaryDevice,
+                    0,
+                    System.Windows.Input.MouseButton.Left)
+                {
+                    RoutedEvent = UIElement.MouseLeftButtonUpEvent
+                });
+            pump();
+            Assert(first.IsCompleted, "点击信息栏条目应切换完成状态");
+            Assert(environment.Toggles == 1, "切换后应通知宿主保存");
+            var glyphs = DescendantTextBlocks(flyout.Child)
+                .Where(text => text.Text is "✓" or "○")
+                .ToList();
+            Assert(glyphs.Count == 2 && glyphs.Count(glyph => glyph.Text == "✓") == 2,
+                "两条待办都应显示为已完成");
+
             Invoke(todo);
             pump();
             Assert(bar.TodoFlyout is null, "再次点击待办模块应收起信息栏");

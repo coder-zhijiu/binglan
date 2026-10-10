@@ -41,8 +41,11 @@ internal interface ITopBarEnvironment
 
     int CountIncompleteTodos();
 
-    /// <summary>The first to-do card's items, for the bar's read-only flyout.</summary>
+    /// <summary>The first to-do card's live items, for the to-do flyout.</summary>
     TopBarTodoList? ReadTodoList();
+
+    /// <summary>An item was toggled in the flyout; persist at the host's pace.</summary>
+    void TodoItemToggled();
 
     void OpenTopBarSettings();
 
@@ -54,11 +57,12 @@ internal interface ITopBarEnvironment
     void ExitApp();
 }
 
-/// <summary>One row of the to-do flyout.</summary>
-internal sealed record TopBarTodoItem(string Text, bool IsCompleted);
-
-/// <summary>The list the to-do flyout shows: the first card's title and its written items.</summary>
-internal sealed record TopBarTodoList(string Title, IReadOnlyList<TopBarTodoItem> Items);
+/// <summary>
+/// The list the to-do flyout shows: the first card's title and its live items. The
+/// items are the card's own state objects, so toggling one in the flyout reaches the
+/// card and the persistence through the same objects.
+/// </summary>
+internal sealed record TopBarTodoList(string Title, IReadOnlyList<TodoItemState> Items);
 
 /// <summary>
 /// The full-width strip at the top edge of one monitor. It only shows the app's own data
@@ -159,7 +163,11 @@ public sealed partial class TopBarWindow : Window
             _monitor.Bounds,
             BingLan.App.Dock.DockAppBarController.GetLiveWorkingArea(_monitor));
         _appBar?.Apply(_monitor, reserve, TopBarState.HeightDip);
-        _foregroundTimer.Interval = reserve ? FullScreenCheckInterval : SmartHideCheckInterval;
+        // While the flyout is open the fast interval keeps its outside-click watch
+        // prompt even in reserve mode.
+        _foregroundTimer.Interval = reserve && _todoFlyout is null
+            ? FullScreenCheckInterval
+            : SmartHideCheckInterval;
         _foregroundTimer.Start();
         RenderModules();
         RefreshSystemFacts();
@@ -414,8 +422,9 @@ public sealed partial class TopBarWindow : Window
     // ---------------------------------------------------------------- 待办信息栏
 
     /// <summary>
-    /// Shows the first to-do card's items in a read-only flyout under the module, in the
-    /// same glass as the bar. Clicking elsewhere closes it, like a tooltip.
+    /// Shows the first to-do card's items under the module. A row click toggles that
+    /// item's completion, exactly like the card's checkbox, and the card follows along
+    /// because both share the same state object; clicking elsewhere closes the flyout.
     /// </summary>
     private void ToggleTodoFlyout(Button button)
     {
@@ -448,32 +457,12 @@ public sealed partial class TopBarWindow : Window
                 Effect = CreateTextShadow()
             });
         }
-        foreach (var item in items)
+        else
         {
-            var row = new StackPanel
+            foreach (var item in items)
             {
-                Orientation = System.Windows.Controls.Orientation.Horizontal,
-                Margin = new Thickness(0, 2, 0, 2)
-            };
-            row.Children.Add(new TextBlock
-            {
-                Text = item.IsCompleted ? "✓" : "○",
-                Foreground = Brushes.White,
-                Opacity = item.IsCompleted ? 0.9 : 0.7,
-                Width = 18,
-                Effect = CreateTextShadow()
-            });
-            row.Children.Add(new TextBlock
-            {
-                Text = item.Text,
-                Foreground = Brushes.White,
-                Opacity = item.IsCompleted ? 0.55 : 1,
-                TextWrapping = TextWrapping.Wrap,
-                MaxWidth = 270,
-                TextDecorations = item.IsCompleted ? TextDecorations.Strikethrough : null,
-                Effect = CreateTextShadow()
-            });
-            panel.Children.Add(row);
+                panel.Children.Add(CreateTodoRow(item));
+            }
         }
 
         var card = new Border
@@ -502,14 +491,107 @@ public sealed partial class TopBarWindow : Window
                 _todoFlyout = null;
             }
         };
+        // A popup outside the visual tree never hears outside clicks at all, so it
+        // lives in the module panel; it takes no layout space while closed.
+        LeftModules.Children.Add(flyout);
         _todoFlyout = flyout;
         flyout.IsOpen = true;
+    }
+
+    private FrameworkElement CreateTodoRow(TodoItemState item)
+    {
+        var glyph = new TextBlock
+        {
+            Width = 18,
+            Foreground = Brushes.White,
+            Opacity = 0.7,
+            Effect = CreateTextShadow()
+        };
+        var glyphStyle = new Style(typeof(TextBlock));
+        glyphStyle.Triggers.Add(TodoCompletedTrigger(
+            new Setter(TextBlock.TextProperty, "✓"),
+            new Setter(TextBlock.OpacityProperty, 0.9)));
+        glyph.Style = glyphStyle;
+
+        var text = new TextBlock
+        {
+            TextWrapping = TextWrapping.Wrap,
+            MaxWidth = 270,
+            Foreground = Brushes.White,
+            Effect = CreateTextShadow()
+        };
+        text.SetBinding(TextBlock.TextProperty, new System.Windows.Data.Binding(nameof(TodoItemState.Text)));
+        var textStyle = new Style(typeof(TextBlock));
+        textStyle.Triggers.Add(TodoCompletedTrigger(
+            new Setter(TextBlock.TextDecorationsProperty, TextDecorations.Strikethrough),
+            new Setter(TextBlock.OpacityProperty, 0.55)));
+        text.Style = textStyle;
+
+        var row = new StackPanel
+        {
+            Orientation = System.Windows.Controls.Orientation.Horizontal,
+            Margin = new Thickness(0, 3, 0, 3),
+            Cursor = System.Windows.Input.Cursors.Hand,
+            DataContext = item
+        };
+        row.Children.Add(glyph);
+        row.Children.Add(text);
+        row.MouseLeftButtonUp += (_, _) =>
+        {
+            // One behaviour, like the card's checkbox: the row toggles completion.
+            item.IsCompleted = !item.IsCompleted;
+            _environment.TodoItemToggled();
+        };
+        return row;
+    }
+
+    private static DataTrigger TodoCompletedTrigger(params Setter[] setters)
+    {
+        var trigger = new DataTrigger
+        {
+            Binding = new System.Windows.Data.Binding(nameof(TodoItemState.IsCompleted)),
+            Value = true
+        };
+        foreach (var setter in setters)
+        {
+            trigger.Setters.Add(setter);
+        }
+        return trigger;
     }
 
     private void CloseTodoFlyout()
     {
         _todoFlyout?.SetCurrentValue(Popup.IsOpenProperty, false);
         _todoFlyout = null;
+    }
+
+    /// <summary>
+    /// A StaysOpen=false popup never hears clicks that land in other processes: the
+    /// system drops the capture instead of telling the popup. While the flyout is open
+    /// the bar polls the button state and closes it when a click lands outside it.
+    /// </summary>
+    private void CloseTodoFlyoutOnOutsideClick()
+    {
+        if (_todoFlyout is not { IsOpen: true } flyout || flyout.Child is not FrameworkElement child)
+        {
+            return;
+        }
+
+        if (!TopBarNativeMethods.IsMouseButtonDown(TopBarNativeMethods.LeftMouseButton))
+        {
+            return;
+        }
+
+        if (System.Windows.PresentationSource.FromVisual(child) is not HwndSource source || source.Handle == 0)
+        {
+            return;
+        }
+        DockNativeMethods.GetCursorPos(out var cursor);
+        DockNativeMethods.GetWindowRect(source.Handle, out var rect);
+        if (cursor.X < rect.Left || cursor.X >= rect.Right || cursor.Y < rect.Top || cursor.Y >= rect.Bottom)
+        {
+            flyout.IsOpen = false;
+        }
     }
 
     /// <summary>The open to-do flyout, for tests; popups sit outside the visual tree.</summary>
@@ -761,6 +843,7 @@ public sealed partial class TopBarWindow : Window
 
     private void UpdateForForeground()
     {
+        CloseTodoFlyoutOnOutsideClick();
         if (_appBar?.Monitor is not { } monitor || _closing)
         {
             return;
