@@ -2307,6 +2307,16 @@ public sealed class WidgetCoordinator : IDisposable
         public int CountIncompleteTodos() =>
             TopBarModuleRules.CountIncompleteTodos(owner._state.TodoWidgets);
 
+        public TopBarTodoList? ReadTodoList() =>
+            owner._state.TodoWidgets.FirstOrDefault() is { } todo
+                ? new TopBarTodoList(
+                    todo.Title,
+                    todo.Items
+                        .Where(item => !string.IsNullOrWhiteSpace(item.Text))
+                        .Select(item => new TopBarTodoItem(item.Text, item.IsCompleted))
+                        .ToList())
+                : null;
+
         public void OpenTopBarSettings() => owner.OpenSettings("TopBar");
 
         public void OpenComponentSettings(DesktopComponentKind kind) => owner.OpenSettings(kind);

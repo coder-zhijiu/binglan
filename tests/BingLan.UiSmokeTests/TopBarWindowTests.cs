@@ -51,6 +51,7 @@ internal static class TopBarWindowTests
         ModuleSwitchesRemoveButtons(show, pump);
         ClicksOpenSettings(show, pump);
         SurfacePaintsGlass(show, pump);
+        TodoFlyoutShowsItemsAndCloses(show, pump);
     }
 
     private static void SurfacePaintsGlass(Action<Window> show, Action pump)
@@ -297,6 +298,7 @@ internal static class TopBarWindowTests
     {
         internal int Todos { get; set; }
         internal WeatherSnapshot? Weather { get; set; }
+        internal TopBarTodoList? TodoList { get; set; }
         internal DesktopComponentKind? ComponentRequested { get; private set; }
         internal int TopBarPageRequested { get; private set; }
 
@@ -310,6 +312,8 @@ internal static class TopBarWindowTests
 
         public int CountIncompleteTodos() => Todos;
 
+        public TopBarTodoList? ReadTodoList() => TodoList;
+
         public void OpenTopBarSettings() => TopBarPageRequested++;
 
         public void OpenComponentSettings(DesktopComponentKind kind) => ComponentRequested = kind;
@@ -318,6 +322,69 @@ internal static class TopBarWindowTests
 
         public void ExitApp()
         {
+        }
+    }
+
+    private static void TodoFlyoutShowsItemsAndCloses(Action<Window> show, Action pump)
+    {
+        var state = BarState();
+        state.VisibilityMode = TopBarVisibilityMode.SmartHide;
+        using var sampler = new WindowsPerformanceSamplingService();
+        var environment = new FakeEnvironment
+        {
+            Todos = 2,
+            TodoList = new TopBarTodoList("今日待办",
+            [
+                new TopBarTodoItem("测试顶端信息条", false),
+                new TopBarTodoItem("已完成的一条", true)
+            ])
+        };
+        var bar = new TopBarWindow(state, new DesktopStyleState(), environment, sampler);
+        show(bar);
+        try
+        {
+            var todo = ButtonByName(bar, "待办模块");
+            Invoke(todo);
+            pump();
+            var flyout = bar.TodoFlyout
+                ?? throw new InvalidOperationException("点击待办模块应弹出待办信息栏");
+            Assert(flyout.IsOpen, "待办信息栏应处于打开状态");
+            var texts = DescendantTextBlocks(flyout.Child)
+                .Select(text => text.Text)
+                .ToList();
+            Assert(texts.Contains("今日待办"), "待办信息栏应显示列表标题");
+            Assert(texts.Contains("测试顶端信息条"), "待办信息栏应显示未完成项");
+            Assert(texts.Contains("已完成的一条"), "待办信息栏应显示已完成项");
+            Assert(environment.ComponentRequested is null,
+                "点击待办模块不应再跳转待办组件设置");
+
+            // Clicking the module again toggles the flyout closed; clicking elsewhere
+            // is the framework's own StaysOpen=false behaviour, covered by real clicks.
+            Invoke(todo);
+            pump();
+            Assert(bar.TodoFlyout is null, "再次点击待办模块应收起信息栏");
+        }
+        finally
+        {
+            bar.Close();
+            pump();
+        }
+    }
+
+    private static IEnumerable<TextBlock> DescendantTextBlocks(DependencyObject root) =>
+        DescendantElements(root).OfType<TextBlock>();
+
+    private static IEnumerable<DependencyObject> DescendantElements(DependencyObject root)
+    {
+        var count = VisualTreeHelper.GetChildrenCount(root);
+        for (var index = 0; index < count; index++)
+        {
+            var child = VisualTreeHelper.GetChild(root, index);
+            yield return child;
+            foreach (var descendant in DescendantElements(child))
+            {
+                yield return descendant;
+            }
         }
     }
 }

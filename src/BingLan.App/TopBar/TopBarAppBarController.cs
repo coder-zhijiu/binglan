@@ -122,6 +122,10 @@ internal sealed class TopBarAppBarController : IDisposable
         {
             var scale = _monitor.Dpi / 96d;
             var thicknessPixels = Math.Max(1, (int)Math.Round(_heightDip * scale));
+            // The reservation is one pixel shorter than the bar: a maximized window
+            // tucks its top edge under the bar's last row, so the two meet without a
+            // visible seam.
+            var reservePixels = Math.Max(1, thicknessPixels - 1);
 
             PixelRect strip;
             if (_reservation.IsRegistered)
@@ -129,7 +133,7 @@ internal sealed class TopBarAppBarController : IDisposable
                 var requested = DockGeometry.Calculate(
                     _monitor.Bounds,
                     Edge,
-                    Math.Min(thicknessPixels, _monitor.Bounds.Height));
+                    Math.Min(reservePixels, _monitor.Bounds.Height));
                 var data = CreateData();
                 data.Edge = (uint)Edge;
                 data.Rectangle = ToNative(requested);
@@ -138,7 +142,7 @@ internal sealed class TopBarAppBarController : IDisposable
                 // the same edge push it down rather than off the monitor.
                 var adjusted = ToPixel(data.Rectangle) with
                 {
-                    Bottom = data.Rectangle.Top + Math.Min(thicknessPixels, _monitor.Bounds.Height)
+                    Bottom = data.Rectangle.Top + Math.Min(reservePixels, _monitor.Bounds.Height)
                 };
                 data.Rectangle = ToNative(adjusted);
                 DockNativeMethods.SHAppBarMessage(DockNativeMethods.AbmSetPos, ref data);
@@ -150,16 +154,20 @@ internal sealed class TopBarAppBarController : IDisposable
                 strip = DockGeometry.Calculate(
                     workArea,
                     Edge,
-                    Math.Min(thicknessPixels, workArea.Height));
+                    Math.Min(reservePixels, workArea.Height));
             }
 
             Bounds = strip;
+            var windowRect = strip with
+            {
+                Bottom = Math.Min(strip.Top + thicknessPixels, _monitor.Bounds.Bottom)
+            };
             DockNativeMethods.MoveWindow(
                 _handle,
-                strip.Left,
-                strip.Top,
-                strip.Width,
-                strip.Height,
+                windowRect.Left,
+                windowRect.Top,
+                windowRect.Width,
+                windowRect.Height,
                 true);
             UpdateWindowLayer();
         }

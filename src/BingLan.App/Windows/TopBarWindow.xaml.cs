@@ -3,6 +3,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
@@ -40,6 +41,9 @@ internal interface ITopBarEnvironment
 
     int CountIncompleteTodos();
 
+    /// <summary>The first to-do card's items, for the bar's read-only flyout.</summary>
+    TopBarTodoList? ReadTodoList();
+
     void OpenTopBarSettings();
 
     void OpenComponentSettings(DesktopComponentKind kind);
@@ -49,6 +53,12 @@ internal interface ITopBarEnvironment
 
     void ExitApp();
 }
+
+/// <summary>One row of the to-do flyout.</summary>
+internal sealed record TopBarTodoItem(string Text, bool IsCompleted);
+
+/// <summary>The list the to-do flyout shows: the first card's title and its written items.</summary>
+internal sealed record TopBarTodoList(string Title, IReadOnlyList<TopBarTodoItem> Items);
 
 /// <summary>
 /// The full-width strip at the top edge of one monitor. It only shows the app's own data
@@ -78,6 +88,7 @@ public sealed partial class TopBarWindow : Window
     private TopBarAppBarController? _appBar;
     private PerformanceSnapshot? _lastSnapshot;
     private TopBarSystemFacts? _facts;
+    private Popup? _todoFlyout;
     private MonitorSnapshot? _monitor;
     private nint _handle;
     private uint _shellHookMessage;
@@ -229,6 +240,7 @@ public sealed partial class TopBarWindow : Window
     private void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
         _closing = true;
+        CloseTodoFlyout();
         _foregroundTimer.Stop();
         _sampler.Sampled -= OnSampled;
         System.Net.NetworkInformation.NetworkChange.NetworkAddressChanged -= OnNetworkAddressChanged;
@@ -320,9 +332,10 @@ public sealed partial class TopBarWindow : Window
         LeftModules.Children.Clear();
         RightModules.Children.Clear();
         _moduleButtons.Clear();
+        CloseTodoFlyout();
 
-        AddModule(TopBarModuleKind.TodoSummary, LeftModules, "待办",
-            () => _environment.OpenComponentSettings(DesktopComponentKind.Todo));
+        // The to-do module shows its own flyout instead of opening settings.
+        AddTodoModule(LeftModules);
         AddModule(TopBarModuleKind.Weather, LeftModules, "天气",
             () => _environment.OpenComponentSettings(DesktopComponentKind.Weather));
         AddModule(TopBarModuleKind.Performance, LeftModules, "性能",
@@ -371,6 +384,142 @@ public sealed partial class TopBarWindow : Window
         }
         _moduleButtons[kind] = button;
         panel.Children.Add(button);
+    }
+
+    private void AddTodoModule(StackPanel panel)
+    {
+        if (!TopBarRules.IsModuleOn(_state.Modules, TopBarModuleKind.TodoSummary))
+        {
+            return;
+        }
+
+        var text = new TextBlock
+        {
+            Foreground = Brushes.White,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            Effect = CreateTextShadow()
+        };
+        var button = new Button
+        {
+            Style = (Style)Resources["ModuleButton"],
+            Content = text,
+            Focusable = true
+        };
+        System.Windows.Automation.AutomationProperties.SetName(button, "待办模块");
+        button.Click += (_, _) => ToggleTodoFlyout(button);
+        _moduleButtons[TopBarModuleKind.TodoSummary] = button;
+        panel.Children.Add(button);
+    }
+
+    // ---------------------------------------------------------------- 待办信息栏
+
+    /// <summary>
+    /// Shows the first to-do card's items in a read-only flyout under the module, in the
+    /// same glass as the bar. Clicking elsewhere closes it, like a tooltip.
+    /// </summary>
+    private void ToggleTodoFlyout(Button button)
+    {
+        if (_todoFlyout?.IsOpen == true)
+        {
+            _todoFlyout.IsOpen = false;
+            return;
+        }
+
+        var glass = DesktopStyleRules.TopBar(_style, _state);
+        var list = _environment.ReadTodoList();
+        var items = list?.Items ?? [];
+        var panel = new StackPanel { MaxWidth = 300 };
+
+        panel.Children.Add(new TextBlock
+        {
+            Text = string.IsNullOrWhiteSpace(list?.Title) ? "待办" : list!.Title,
+            Foreground = Brushes.White,
+            FontSize = 13,
+            Margin = new Thickness(0, 0, 0, 6),
+            Effect = CreateTextShadow()
+        });
+        if (items.Count == 0)
+        {
+            panel.Children.Add(new TextBlock
+            {
+                Text = "暂无待办",
+                Foreground = Brushes.White,
+                Opacity = 0.7,
+                Effect = CreateTextShadow()
+            });
+        }
+        foreach (var item in items)
+        {
+            var row = new StackPanel
+            {
+                Orientation = System.Windows.Controls.Orientation.Horizontal,
+                Margin = new Thickness(0, 2, 0, 2)
+            };
+            row.Children.Add(new TextBlock
+            {
+                Text = item.IsCompleted ? "✓" : "○",
+                Foreground = Brushes.White,
+                Opacity = item.IsCompleted ? 0.9 : 0.7,
+                Width = 18,
+                Effect = CreateTextShadow()
+            });
+            row.Children.Add(new TextBlock
+            {
+                Text = item.Text,
+                Foreground = Brushes.White,
+                Opacity = item.IsCompleted ? 0.55 : 1,
+                TextWrapping = TextWrapping.Wrap,
+                MaxWidth = 270,
+                TextDecorations = item.IsCompleted ? TextDecorations.Strikethrough : null,
+                Effect = CreateTextShadow()
+            });
+            panel.Children.Add(row);
+        }
+
+        var card = new Border
+        {
+            Background = FrozenBrush(glass.Surface),
+            BorderBrush = FrozenBrush(glass.Border),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(10),
+            Padding = new Thickness(14, 10, 14, 12),
+            Child = panel
+        };
+        var flyout = new Popup
+        {
+            PlacementTarget = button,
+            Placement = PlacementMode.Bottom,
+            HorizontalOffset = -6,
+            VerticalOffset = 2,
+            StaysOpen = false,
+            AllowsTransparency = true,
+            Child = card
+        };
+        flyout.Closed += (_, _) =>
+        {
+            if (ReferenceEquals(_todoFlyout, flyout))
+            {
+                _todoFlyout = null;
+            }
+        };
+        _todoFlyout = flyout;
+        flyout.IsOpen = true;
+    }
+
+    private void CloseTodoFlyout()
+    {
+        _todoFlyout?.SetCurrentValue(Popup.IsOpenProperty, false);
+        _todoFlyout = null;
+    }
+
+    /// <summary>The open to-do flyout, for tests; popups sit outside the visual tree.</summary>
+    internal Popup? TodoFlyout => _todoFlyout;
+
+    private static System.Windows.Media.SolidColorBrush FrozenBrush(string color)
+    {
+        var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(color));
+        brush.Freeze();
+        return brush;
     }
 
     private static DropShadowEffect CreateTextShadow() => new()
@@ -665,7 +814,7 @@ public sealed partial class TopBarWindow : Window
                 monitor.Bounds,
                 revealDepth),
             PointerOverDock: pointerOverBar,
-            InteractionActive: _menuOpen);
+            InteractionActive: _menuOpen || _todoFlyout?.IsOpen == true);
         if (_autoHide.Update(input, DateTimeOffset.UtcNow))
         {
             if (_autoHide.IsShown)
