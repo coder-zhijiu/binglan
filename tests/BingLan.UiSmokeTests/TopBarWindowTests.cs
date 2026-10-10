@@ -26,11 +26,83 @@ internal static class TopBarWindowTests
     [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
     private static extern nint GetWindowLongPtr(nint window, int index);
 
+    [DllImport("user32.dll", EntryPoint = "GetWindowRect")]
+    private static extern bool GetWindowRect(nint window, out NativeRect rect);
+
+    private struct NativeRect
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    private static void Assert(bool condition, string message)
+    {
+        if (!condition)
+        {
+            throw new InvalidOperationException(message);
+        }
+    }
+
     internal static void Run(Action<Window> show, Action pump)
     {
         ShowModulesAndStyles(show, pump);
         ModuleSwitchesRemoveButtons(show, pump);
         ClicksOpenSettings(show, pump);
+        SurfacePaintsGlass(show, pump);
+    }
+
+    private static void SurfacePaintsGlass(Action<Window> show, Action pump)
+    {
+        var state = BarState();
+        state.VisibilityMode = TopBarVisibilityMode.SmartHide;
+        state.FollowCardLook = false;
+        state.SurfaceColor = "#523861";
+        state.SurfaceOpacity = 0.84d;
+        using var sampler = new WindowsPerformanceSamplingService();
+        var bar = new TopBarWindow(state, new DesktopStyleState(), new FakeEnvironment(), sampler);
+        show(bar);
+        try
+        {
+            var background = bar.Surface.Background as SolidColorBrush
+                ?? throw new InvalidOperationException("Surface.Background 应为 SolidColorBrush");
+            var color = background.Color;
+            Assert(color.A > 200 && color.R == 0x52 && color.G == 0x38 && color.B == 0x61,
+                $"玻璃底画刷应为紫色 84%，实际 A={color.A} #{color.R:X2}{color.G:X2}{color.B:X2}");
+
+            // What actually reaches the screen: render the surface and sample the middle.
+            var render = new System.Windows.Media.Imaging.RenderTargetBitmap(
+                200, 32, 96, 96, System.Windows.Media.PixelFormats.Pbgra32);
+            render.Render(bar.Surface);
+            render.Freeze();
+            var pixels = new byte[200 * 32 * 4];
+            render.CopyPixels(pixels, 200 * 4, 0);
+            var sample = pixels.AsSpan((160 * 4) + (16 * 200 * 4), 4);
+            Assert(sample[3] > 100,
+                $"玻璃底应实际渲染（中心像素 alpha={sample[3]}），而非只剩文字和边线");
+
+            // And through the real layered-window path: capture this window's own pixels
+            // off the screen and look for the glass tint in the middle of the strip.
+            var handle = new WindowInteropHelper(bar).Handle;
+            GetWindowRect(handle, out var screenRect);
+            using var capture = new System.Drawing.Bitmap(
+                Math.Max(1, screenRect.Right - screenRect.Left),
+                Math.Max(1, screenRect.Bottom - screenRect.Top));
+            using (var graphics = System.Drawing.Graphics.FromImage(capture))
+            {
+                graphics.CopyFromScreen(screenRect.Left, screenRect.Top, 0, 0, capture.Size);
+            }
+            var middle = capture.GetPixel(capture.Width / 2, capture.Height / 2);
+            Assert(middle.R > 40 && middle.B > 60 && middle.B > middle.G,
+                $"屏幕合成应有玻璃底色（中点 #{middle.R:X2}{middle.G:X2}{middle.B:X2}），" +
+                "分层窗口只画了文字没有底");
+        }
+        finally
+        {
+            bar.Close();
+            pump();
+        }
     }
 
     private static void ShowModulesAndStyles(Action<Window> show, Action pump)
