@@ -2241,7 +2241,8 @@ public sealed class WidgetCoordinator : IDisposable
     /// </summary>
     private sealed class TopBarEnvironment(WidgetCoordinator owner) : ITopBarEnvironment
     {
-        private bool _weatherInFlight;
+        private volatile bool _weatherInFlight;
+        private DateTimeOffset? _lastWeatherSuccess;
 
         public bool Use24HourClock => owner.InformationState().Use24HourClock;
 
@@ -2274,15 +2275,27 @@ public sealed class WidgetCoordinator : IDisposable
                 return;
             }
 
+            // The bar rides the one-second sampling tick, so it has to keep the 15-minute
+            // success interval itself; the service's retry gate alone is not a cadence.
+            if (_lastWeatherSuccess is { } last
+                && now - last < WeatherService.SuccessRefreshInterval)
+            {
+                return;
+            }
+
             _weatherInFlight = true;
             _ = Task.Run(async () =>
             {
                 try
                 {
-                    await owner._weatherService.RefreshAsync(
+                    var snapshot = await owner._weatherService.RefreshAsync(
                         information.WeatherCity,
                         information.WeatherLatitude!.Value,
                         information.WeatherLongitude!.Value);
+                    if (snapshot.Status == WeatherStatus.Fresh)
+                    {
+                        _lastWeatherSuccess = now;
+                    }
                 }
                 finally
                 {
@@ -2305,11 +2318,10 @@ public sealed class WidgetCoordinator : IDisposable
                 return false;
             }
 
-            if (DockNativeMethods.IsIconic(handle))
-            {
-                DockNativeMethods.ShowWindowAsync(handle, DockNativeMethods.SwRestore);
-            }
-            return DockNativeMethods.SetForegroundWindow(handle);
+            // The bar never takes focus itself, so Windows may refuse the switch: the
+            // same flash fallback the dock uses tells the user where the window is.
+            return WindowCommandService.Focus(
+                new TrackedWindow(handle, 0, "窗口", null, null, false, false)).Succeeded;
         }
 
         public void ExitApp() => owner.Exit();

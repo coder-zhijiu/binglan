@@ -1267,7 +1267,7 @@
                             <local:SettingsRow Glyph="&#xE7C4;" GlyphBrush="{DynamicResource SettingsIconIndigoBrush}" Header="显示方式"/>
                             <local:SettingsRow Style="{StaticResource NestedSettingsRowStyle}"
                                                Header="始终显示，并预留屏幕顶部空间"
-                                               Description="最大化的窗口从信息条下方开始；全屏应用运行时信息条退到后面">
+                                               Description="最大化的窗口从信息条下方开始；全屏应用运行时信息条退到后面；顶边被系统任务栏占用（Windows 10）时自动改为智能隐藏">
                                 <RadioButton x:Name="TopBarReserveRadio"
                                              GroupName="TopBarVisibility"
                                              AutomationProperties.Name="始终显示，并预留屏幕顶部空间"

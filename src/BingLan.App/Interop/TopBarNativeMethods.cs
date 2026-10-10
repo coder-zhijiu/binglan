@@ -20,22 +20,10 @@ internal static class TopBarNativeMethods
         internal int BatteryFullLifeTime;
     }
 
-    internal const byte AcOffline = 0;
-    internal const byte AcOnline = 1;
-    internal const byte AcUnknown = 255;
-    internal const byte BatteryCharging = 8;
-    internal const byte BatteryUnknown = 128;
-
     [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool GetSystemPowerStatus(ref SystemPowerStatus status);
 
     [DllImport("user32.dll", SetLastError = true)]
     internal static extern nint GetKeyboardLayout(uint idThread);
-
-    [DllImport("user32.dll", SetLastError = true)]
-    internal static extern nint GetForegroundWindow();
-
-    [DllImport("user32.dll", SetLastError = true)]
-    internal static extern uint GetWindowThreadProcessId(nint window, out uint processId);
 }

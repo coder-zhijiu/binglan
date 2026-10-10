@@ -51,9 +51,6 @@
             <StackPanel x:Name="RightModules"
                         DockPanel.Dock="Right"
                         Orientation="Horizontal"/>
-            <StackPanel x:Name="AttentionPanel"
-                        DockPanel.Dock="Right"
-                        Orientation="Horizontal"/>
             <StackPanel x:Name="LeftModules"
                         Orientation="Horizontal"
                         VerticalAlignment="Center"/>

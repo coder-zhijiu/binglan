@@ -94,10 +94,26 @@ internal static class TopBarWindowTests
             {
                 throw new InvalidOperationException("天气模块悬停应提供高低温与湿度详情");
             }
-            if (string.IsNullOrWhiteSpace(TextOf(ButtonByName(bar, "电量模块")))
-                || string.IsNullOrWhiteSpace(TextOf(ButtonByName(bar, "输入法模块"))))
+            // System facts arrive from a background read; wait for them to land, then
+            // hold them to the real thing: a dash or fallback label on this machine
+            // means the underlying API call is dead, not that the value is unknown.
+            var batteryButton = ButtonByName(bar, "电量模块");
+            var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(5);
+            while (string.IsNullOrWhiteSpace(TextOf(batteryButton)) && DateTime.UtcNow < deadline)
             {
-                throw new InvalidOperationException("系统状态模块应在显示时立即渲染，而非等慢速节拍");
+                pump();
+            }
+            if (string.IsNullOrWhiteSpace(TextOf(batteryButton)))
+            {
+                throw new InvalidOperationException("系统状态模块应在显示后数秒内完成首次渲染");
+            }
+            if (TextOf(ButtonByName(bar, "音量模块")) == "音量 —")
+            {
+                throw new InvalidOperationException("音量模块应读到真实音量而非占位符（COM 路径失效）");
+            }
+            if (TextOf(ButtonByName(bar, "输入法模块")) == "键盘")
+            {
+                throw new InvalidOperationException("输入法模块应读到真实布局名而非回退文案（注册表路径失效）");
             }
         }
         finally

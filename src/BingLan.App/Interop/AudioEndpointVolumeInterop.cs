@@ -9,7 +9,11 @@ namespace BingLan.App.Interop;
 /// </summary>
 internal static class AudioEndpointVolumeInterop
 {
+    // The MMDeviceEnumerator coclass and its interface; the interface needs its own
+    // IID, since casting the RCW queries for exactly that.
     private const string EnumeratorClsid = "BCDE0395-E52F-467C-8E3D-C4579291692E";
+    private const string EnumeratorInterfaceId = "A95664D2-9614-4F35-A746-DE8DB63617E6";
+    private const string DeviceInterfaceId = "D666063F-1587-4E43-81F1-B948E807363F";
     private const string EndpointInterfaceId = "5CDF2C82-841E-4546-9722-0CF74078229A";
     private const int ClsctxInprocServer = 0x1;
     private const int Render = 0;
@@ -86,27 +90,52 @@ internal static class AudioEndpointVolumeInterop
         }
     }
 
-    [ComImport, Guid(EnumeratorClsid)]
+    // Interfaces are declared in the exact order of the real vtables: COM interop
+    // places each method by its position here, so a shortened interface would call
+    // the wrong slot.
+    [ComImport, Guid(EnumeratorInterfaceId)]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     private interface IMMDeviceEnumerator
     {
         [PreserveSig]
+        int EnumAudioEndpoints(int dataFlow, int stateMask, out nint collection);
+
+        [PreserveSig]
         int GetDefaultAudioEndpoint(int dataFlow, int role, out IMMDevice? device);
+
+        [PreserveSig]
+        int GetDevice([MarshalAs(UnmanagedType.LPWStr)] string id, out IMMDevice? device);
+
+        [PreserveSig]
+        int RegisterEndpointNotificationCallback(nint callback);
+
+        [PreserveSig]
+        int UnregisterEndpointNotificationCallback(nint callback);
     }
 
-    [ComImport, Guid("D666063F-1587-4E43-81F1-B948E807363F")]
+    [ComImport, Guid(DeviceInterfaceId)]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     private interface IMMDevice
     {
         [PreserveSig]
         int Activate(
             ref Guid interfaceId,
             int classContext,
-            int activationParams,
+            nint activationParams,
             out IAudioEndpointVolume? endpoint);
+
+        [PreserveSig]
+        int OpenPropertyStore(int access, out nint store);
+
+        [PreserveSig]
+        int GetId([MarshalAs(UnmanagedType.LPWStr)] out string id);
+
+        [PreserveSig]
+        int GetState(out int state);
     }
 
-    // Declared in the exact order of the real vtable: COM interop places each method
-    // by its position here, so a shortened interface would call the wrong slot.
     [ComImport, Guid(EndpointInterfaceId)]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     private interface IAudioEndpointVolume
     {
         [PreserveSig]

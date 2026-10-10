@@ -65,6 +65,10 @@ public sealed partial class TopBarWindow : Window
     private readonly DesktopStyleState _style;
     private readonly ITopBarEnvironment _environment;
     private readonly IPerformanceSamplingService _sampler;
+    private readonly StackPanel _attentionPanel = new()
+    {
+        Orientation = System.Windows.Controls.Orientation.Horizontal
+    };
     private DockAutoHideState _autoHide = new();
     private readonly TopBarAttentionQueue _attention = new();
     private readonly Dictionary<nint, string> _attentionNames = [];
@@ -73,6 +77,7 @@ public sealed partial class TopBarWindow : Window
     private readonly Dictionary<TopBarModuleKind, Button> _moduleButtons = [];
     private TopBarAppBarController? _appBar;
     private PerformanceSnapshot? _lastSnapshot;
+    private TopBarSystemFacts? _facts;
     private MonitorSnapshot? _monitor;
     private nint _handle;
     private uint _shellHookMessage;
@@ -108,6 +113,9 @@ public sealed partial class TopBarWindow : Window
             (_, _) => UpdateForForeground(),
             Dispatcher);
         _sampler.Sampled += OnSampled;
+        // A network address change is the one system fact with an event source; the
+        // others ride the sampling tick.
+        System.Net.NetworkInformation.NetworkChange.NetworkAddressChanged += OnNetworkAddressChanged;
         BuildContextMenu();
     }
 
@@ -141,7 +149,7 @@ public sealed partial class TopBarWindow : Window
         _foregroundTimer.Interval = reserve ? FullScreenCheckInterval : SmartHideCheckInterval;
         _foregroundTimer.Start();
         RenderModules();
-        RenderSystemModules();
+        RefreshSystemFacts();
     }
 
     private MonitorSnapshot? ResolveMonitor()
@@ -221,6 +229,7 @@ public sealed partial class TopBarWindow : Window
         _closing = true;
         _foregroundTimer.Stop();
         _sampler.Sampled -= OnSampled;
+        System.Net.NetworkInformation.NetworkChange.NetworkAddressChanged -= OnNetworkAddressChanged;
         if (_shellHookActive && _handle != 0)
         {
             DockNativeMethods.DeregisterShellHookWindow(_handle);
@@ -229,19 +238,78 @@ public sealed partial class TopBarWindow : Window
         _appBar = null;
     }
 
+    private void OnNetworkAddressChanged(object? sender, EventArgs e) => RefreshSystemFacts();
+
     private void OnSampled(PerformanceSnapshot snapshot)
     {
         _lastSnapshot = snapshot;
+        // System facts are read off the UI thread: network enumeration and the volume COM
+        // call are not free. The tick counter keeps them on their slower cadence.
+        TopBarSystemFacts? facts = null;
+        if (Interlocked.Increment(ref _tick) % SystemInfoTickDivisor == 0)
+        {
+            facts = ReadSystemFacts();
+        }
         Dispatcher.BeginInvoke(() =>
         {
-            if (!IsLoaded || _closing)
+            // A smart-hidden bar is not on screen; its projection waits until it shows.
+            if (!IsLoaded || !IsVisible || _closing)
             {
                 return;
+            }
+            if (facts is not null)
+            {
+                _facts = facts;
+                RenderSystemModules();
             }
             _environment.RefreshWeatherIfDue();
             RenderModules();
         });
     }
+
+    private static TopBarSystemFacts ReadSystemFacts() => new(
+        TopBarSystemInfo.ReadBattery(),
+        TopBarSystemInfo.ReadVolumePercent(),
+        TopBarSystemInfo.ReadNetwork(),
+        TopBarSystemInfo.ReadInputMethod());
+
+    private void RefreshSystemFacts()
+    {
+        if (_closing)
+        {
+            return;
+        }
+
+        // The reads leave the UI thread: enumerating interfaces and the volume COM call
+        // are not free, and ApplyState can run on every display or settings change.
+        Task.Run(() =>
+        {
+            if (_closing)
+            {
+                return;
+            }
+
+            var facts = ReadSystemFacts();
+            Dispatcher.BeginInvoke(() =>
+            {
+                if (_closing)
+                {
+                    return;
+                }
+                _facts = facts;
+                if (IsLoaded)
+                {
+                    RenderSystemModules();
+                }
+            });
+        });
+    }
+
+    private sealed record TopBarSystemFacts(
+        (int Percent, TopBarBatteryStatus Status) Battery,
+        int? VolumePercent,
+        (bool Connected, string Label) Network,
+        string InputMethod);
 
     // ---------------------------------------------------------------- modules
 
@@ -258,12 +326,17 @@ public sealed partial class TopBarWindow : Window
         AddModule(TopBarModuleKind.Performance, LeftModules, "性能",
             () => _environment.OpenComponentSettings(DesktopComponentKind.Performance));
 
-        // Right side from the outer edge inwards: the docked-right panels stack from
-        // the screen edge leftwards, so the clock is added last to sit at the corner.
+        // Right side from the outer edge inwards: the docked-right stack fills from the
+        // screen edge leftwards, so the clock is added last to sit at the corner. The
+        // attention marks sit between the input method and the clock.
         AddModule(TopBarModuleKind.Battery, RightModules, "电量", _environment.OpenTopBarSettings);
         AddModule(TopBarModuleKind.Network, RightModules, "网络", _environment.OpenTopBarSettings);
         AddModule(TopBarModuleKind.Volume, RightModules, "音量", _environment.OpenTopBarSettings);
         AddModule(TopBarModuleKind.InputMethod, RightModules, "输入法", _environment.OpenTopBarSettings);
+        if (TopBarRules.IsModuleOn(_state.Modules, TopBarModuleKind.Attention))
+        {
+            RightModules.Children.Add(_attentionPanel);
+        }
         AddModule(TopBarModuleKind.Clock, RightModules, "时间日期",
             () => _environment.OpenComponentSettings(DesktopComponentKind.TimeDate));
         RefreshAttention();
@@ -348,9 +421,14 @@ public sealed partial class TopBarWindow : Window
 
     private void RenderSystemModules()
     {
+        if (_facts is not { } facts)
+        {
+            return;
+        }
+
         if (_moduleButtons.TryGetValue(TopBarModuleKind.Battery, out var battery))
         {
-            var (percent, status) = TopBarSystemInfo.ReadBattery();
+            var (percent, status) = facts.Battery;
             ((TextBlock)battery.Content).Text = percent < 0
                 ? "电量 —"
                 : status == TopBarBatteryStatus.Charging
@@ -359,17 +437,16 @@ public sealed partial class TopBarWindow : Window
         }
         if (_moduleButtons.TryGetValue(TopBarModuleKind.Volume, out var volume))
         {
-            var percent = TopBarSystemInfo.ReadVolumePercent();
+            var percent = facts.VolumePercent;
             ((TextBlock)volume.Content).Text = percent is { } value ? $"音量 {value}%" : "音量 —";
         }
         if (_moduleButtons.TryGetValue(TopBarModuleKind.Network, out var network))
         {
-            var (connected, label) = TopBarSystemInfo.ReadNetwork();
-            ((TextBlock)network.Content).Text = label;
+            ((TextBlock)network.Content).Text = facts.Network.Label;
         }
         if (_moduleButtons.TryGetValue(TopBarModuleKind.InputMethod, out var inputMethod))
         {
-            ((TextBlock)inputMethod.Content).Text = TopBarSystemInfo.ReadInputMethod();
+            ((TextBlock)inputMethod.Content).Text = facts.InputMethod;
         }
     }
 
@@ -435,14 +512,26 @@ public sealed partial class TopBarWindow : Window
             return;
         }
 
+        if (!TopBarRules.IsModuleOn(_state.Modules, TopBarModuleKind.Attention))
+        {
+            _attentionPanel.Children.Clear();
+            return;
+        }
+
         var running = _catalog.Capture();
         _attention.Retain(running.Select(window => window.Handle));
+        // Names of windows that have since closed would survive handle reuse, so they go.
+        var alive = running.Select(window => window.Handle).ToHashSet();
+        foreach (var stale in _attentionNames.Keys.Where(handle => !alive.Contains(handle)).ToList())
+        {
+            _attentionNames.Remove(stale);
+        }
         var groups = WindowGrouping.Group(running);
         var (shown, overflow) = TopBarAttentionQueue.ResolveDisplay(
             _attention.OrderedWindows,
             TopBarState.MaximumAttentionApps);
 
-        AttentionPanel.Children.Clear();
+        _attentionPanel.Children.Clear();
         foreach (var window in shown)
         {
             if (!_attentionNames.TryGetValue(window, out var name))
@@ -473,11 +562,11 @@ public sealed partial class TopBarWindow : Window
                     _environment.ActivateWindow(handle);
                 }
             };
-            AttentionPanel.Children.Add(button);
+            _attentionPanel.Children.Add(button);
         }
         if (overflow > 0)
         {
-            AttentionPanel.Children.Add(new TextBlock
+            _attentionPanel.Children.Add(new TextBlock
             {
                 Text = $"+{overflow}",
                 Foreground = Brushes.Orange,

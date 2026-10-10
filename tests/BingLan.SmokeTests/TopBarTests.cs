@@ -44,15 +44,16 @@ public static class TopBarTests
         state.VisibilityMode = (TopBarVisibilityMode)99;
         state.SurfaceOpacity = 5d;
         state.SurfaceColor = "not-a-color";
-        state.Modules = null!;
+        // A file from before the top bar carries no module node, which reads as null.
+        state.Modules = JsonSerializer.Deserialize<TopBarState>("{}")!.Modules;
         TopBarRules.Normalize(state);
         Assert(state.VisibilityMode == TopBarVisibilityMode.ReserveTopEdge, "未知显示方式回退预留");
         Assert(Math.Abs(state.SurfaceOpacity - 1d) < 0.001d, "不透明度钳制到 1");
         Assert(state.Modules is not null, "模块开关缺失时补默认");
 
-        TopBarRules.SetModule(state.Modules, TopBarModuleKind.Volume, false);
-        Assert(!TopBarRules.IsModuleOn(state.Modules, TopBarModuleKind.Volume), "模块开关可关闭");
-        Assert(TopBarRules.IsModuleOn(state.Modules, TopBarModuleKind.Clock), "其他模块不受影响");
+        TopBarRules.SetModule(state.Modules!, TopBarModuleKind.Volume, false);
+        Assert(!TopBarRules.IsModuleOn(state.Modules!, TopBarModuleKind.Volume), "模块开关可关闭");
+        Assert(TopBarRules.IsModuleOn(state.Modules!, TopBarModuleKind.Clock), "其他模块不受影响");
     }
 
     private static void TestPersistenceAndMigration()
