@@ -41,4 +41,11 @@ internal static class TopBarNativeMethods
         var state = GetAsyncKeyState(key);
         return (state & 0x8000) != 0 || (state & 0x1) != 0;
     }
+
+    /// <summary>
+    /// Reads and discards the "pressed since the last call" latch. The click that opens
+    /// the to-do flyout would otherwise look, one poll later, like a fresh click outside
+    /// it and close it right away.
+    /// </summary>
+    internal static void ConsumeMouseButtonDown(int key) => GetAsyncKeyState(key);
 }

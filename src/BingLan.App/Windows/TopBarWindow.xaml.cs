@@ -474,13 +474,16 @@ public sealed partial class TopBarWindow : Window
             Padding = new Thickness(14, 10, 14, 12),
             Child = panel
         };
+        // The flyout owns its closing: a StaysOpen popup drops cross-process clicks
+        // silently and swallows in-thread ones through capture, so the bar closes it
+        // from its own poll instead.
         var flyout = new Popup
         {
             PlacementTarget = button,
             Placement = PlacementMode.Bottom,
             HorizontalOffset = -6,
             VerticalOffset = 2,
-            StaysOpen = false,
+            StaysOpen = true,
             AllowsTransparency = true,
             Child = card
         };
@@ -496,6 +499,8 @@ public sealed partial class TopBarWindow : Window
         LeftModules.Children.Add(flyout);
         _todoFlyout = flyout;
         flyout.IsOpen = true;
+        // The click that opened the flyout must not read as the next outside click.
+        TopBarNativeMethods.ConsumeMouseButtonDown(TopBarNativeMethods.LeftMouseButton);
     }
 
     private FrameworkElement CreateTodoRow(TodoItemState item)
@@ -508,6 +513,7 @@ public sealed partial class TopBarWindow : Window
             Effect = CreateTextShadow()
         };
         var glyphStyle = new Style(typeof(TextBlock));
+        glyphStyle.Setters.Add(new Setter(TextBlock.TextProperty, "○"));
         glyphStyle.Triggers.Add(TodoCompletedTrigger(
             new Setter(TextBlock.TextProperty, "✓"),
             new Setter(TextBlock.OpacityProperty, 0.9)));
@@ -588,10 +594,25 @@ public sealed partial class TopBarWindow : Window
         }
         DockNativeMethods.GetCursorPos(out var cursor);
         DockNativeMethods.GetWindowRect(source.Handle, out var rect);
-        if (cursor.X < rect.Left || cursor.X >= rect.Right || cursor.Y < rect.Top || cursor.Y >= rect.Bottom)
+        if (cursor.X >= rect.Left && cursor.X < rect.Right && cursor.Y >= rect.Top && cursor.Y < rect.Bottom)
         {
-            flyout.IsOpen = false;
+            return;
         }
+
+        // A click on the to-do module itself toggles the flyout; letting the poll
+        // close it here would only make the same click re-open it.
+        if (_moduleButtons.TryGetValue(TopBarModuleKind.TodoSummary, out var button))
+        {
+            var topLeft = button.PointToScreen(new System.Windows.Point(0, 0));
+            var bottomRight = button.PointToScreen(new System.Windows.Point(button.ActualWidth, button.ActualHeight));
+            if (cursor.X >= topLeft.X && cursor.X < bottomRight.X
+                && cursor.Y >= topLeft.Y && cursor.Y < bottomRight.Y)
+            {
+                return;
+            }
+        }
+
+        flyout.IsOpen = false;
     }
 
     /// <summary>The open to-do flyout, for tests; popups sit outside the visual tree.</summary>
@@ -908,6 +929,7 @@ public sealed partial class TopBarWindow : Window
             }
             else
             {
+                CloseTodoFlyout();
                 Hide();
             }
         }
