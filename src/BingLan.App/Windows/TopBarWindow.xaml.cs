@@ -372,7 +372,7 @@ public sealed partial class TopBarWindow : Window
         AddModule(TopBarModuleKind.Battery, RightModules, "电量", _environment.OpenQuickSettings);
         AddModule(TopBarModuleKind.Network, RightModules, "网络", _environment.OpenQuickSettings);
         AddModule(TopBarModuleKind.Volume, RightModules, "音量", _environment.OpenQuickSettings);
-        AddModule(TopBarModuleKind.InputMethod, RightModules, "输入法", _environment.OpenTopBarSettings);
+        AddModule(TopBarModuleKind.InputMethod, RightModules, "输入法", null);
         StyleInputMethodModule();
         if (TopBarRules.IsModuleOn(_state.Modules, TopBarModuleKind.Attention))
         {
@@ -435,30 +435,33 @@ public sealed partial class TopBarWindow : Window
     }
 
     /// <summary>
-    /// The input method module wears the taskbar indicator's shape: the mode badge in a
-    /// rounded tile, followed by the input method's own name ("微信输入法"). The name
-    /// collapses for plain keyboard layouts; the full layout name lives on the tooltip.
+    /// The input method module is a display-only element wearing the taskbar indicator's
+    /// shape: the mode badge in a rounded tile, followed by the input method's own name
+    /// ("微信输入法"). The name collapses for plain keyboard layouts; the full layout
+    /// name lives on the tooltip.
     /// </summary>
     private void StyleInputMethodModule()
     {
         if (!_modules.TryGetValue(TopBarModuleKind.InputMethod, out var module)
-            || module is not Button { Content: TextBlock badgeText } button)
+            || module is not Border { Child: TextBlock badgeText } block)
         {
             return;
         }
 
-        button.Padding = new Thickness(2, 0, 2, 0);
+        block.Padding = new Thickness(2, 0, 2, 0);
         // Re-parenting demands detaching first: the initializer would otherwise adopt a
-        // TextBlock that still belongs to the button's content.
-        button.Content = null;
+        // TextBlock that still belongs to the block's child slot.
+        block.Child = null;
         var nameText = new TextBlock
         {
+            Foreground = Brushes.White,
             TextTrimming = TextTrimming.CharacterEllipsis,
             MaxWidth = 120,
             Margin = new Thickness(4, 0, 6, 0),
+            VerticalAlignment = VerticalAlignment.Center,
             Effect = CreateTextShadow()
         };
-        button.Content = new StackPanel
+        block.Child = new StackPanel
         {
             Orientation = System.Windows.Controls.Orientation.Horizontal,
             Children =
@@ -476,8 +479,8 @@ public sealed partial class TopBarWindow : Window
         _inputMethodBadgeText = badgeText;
         _inputMethodNameText = nameText;
         var toolTip = CreateGlassToolTip();
-        AttachHoverToolTip(button, toolTip);
-        button.ToolTip = toolTip;
+        AttachHoverToolTip(block, toolTip);
+        block.ToolTip = toolTip;
     }
 
     /// <summary>

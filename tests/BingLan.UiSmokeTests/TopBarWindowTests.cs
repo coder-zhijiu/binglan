@@ -188,7 +188,7 @@ internal static class TopBarWindowTests
             var names = buttons.Select(AutomationProperties.GetName).ToHashSet();
             foreach (var module in new[]
                      {
-                         "待办模块", "性能模块", "电量模块", "网络模块", "音量模块", "输入法模块", "时间日期模块"
+                         "待办模块", "性能模块", "电量模块", "网络模块", "音量模块", "时间日期模块"
                      })
             {
                 if (!names.Contains(module))
@@ -197,14 +197,18 @@ internal static class TopBarWindowTests
                 }
             }
 
-            // The weather is a display-only module: present as an element, not a button.
+            // The weather and the input method are display-only modules: present as
+            // elements, not buttons.
             var elementNames = DescendantElements(bar)
                 .OfType<FrameworkElement>()
                 .Select(AutomationProperties.GetName)
                 .ToHashSet();
-            if (!elementNames.Contains("天气模块"))
+            foreach (var module in new[] { "天气模块", "输入法模块" })
             {
-                throw new InvalidOperationException("顶栏缺少天气模块（展示元素）");
+                if (!elementNames.Contains(module))
+                {
+                    throw new InvalidOperationException($"顶栏缺少展示元素模块：{module}");
+                }
             }
 
             var clock = ButtonByName(bar, "时间日期模块");
@@ -244,24 +248,30 @@ internal static class TopBarWindowTests
             {
                 throw new InvalidOperationException("音量模块应读到真实音量而非占位符（COM 路径失效）");
             }
-            if (TextOf(ButtonByName(bar, "输入法模块")) == "键盘")
+            var inputMethod = ElementByName(bar, "输入法模块");
+            if (TextOf(inputMethod) == "键盘")
             {
                 throw new InvalidOperationException("输入法模块应读到真实输入法状态而非回退文案（注册表或 IME 路径失效）");
             }
             // The module shows the taskbar indicator's shape: the mode badge in a
             // rounded tile with the input method's own name beside it, and the full
-            // layout name on the hover tooltip.
-            if (ButtonByName(bar, "输入法模块").Content is not StackPanel imePanel
-                || imePanel.Children.OfType<Border>().FirstOrDefault() is not { } imeTile
+            // layout name on the hover tooltip. It is a display-only element: clicking
+            // it does nothing.
+            if (inputMethod is not Border { Child: StackPanel imePanel })
+            {
+                throw new InvalidOperationException("输入法模块应为无点击的展示元素并承载徽标布局");
+            }
+            if (imePanel.Children.OfType<Border>().FirstOrDefault() is not { } imeTile
                 || imeTile.CornerRadius == default)
             {
                 throw new InvalidOperationException("输入法模块应以圆角徽标显示任务栏式中/英文状态");
             }
-            if (imePanel.Children.OfType<TextBlock>().FirstOrDefault() is null)
+            var imeName = imePanel.Children.OfType<TextBlock>().FirstOrDefault();
+            if (imeName is null || imeName.Foreground != Brushes.White)
             {
-                throw new InvalidOperationException("输入法模块应在徽标旁显示当前输入法名");
+                throw new InvalidOperationException("输入法模块应在徽标旁以白字显示当前输入法名");
             }
-            if (ButtonByName(bar, "输入法模块").ToolTip is not ToolTip)
+            if (inputMethod.ToolTip is not ToolTip)
             {
                 throw new InvalidOperationException("输入法模块悬停应提供完整布局名");
             }
@@ -395,7 +405,7 @@ internal static class TopBarWindowTests
     private static string TextOf(FrameworkElement module) => module switch
     {
         Button button => ButtonContentText(button.Content),
-        Border border => TextOfTextBlock(border.Child as TextBlock),
+        Border border => ButtonContentText(border.Child),
         _ => string.Empty
     };
 
