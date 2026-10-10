@@ -1,0 +1,235 @@
+using System.Runtime.InteropServices;
+using System.Windows;
+using System.Windows.Automation;
+using System.Windows.Automation.Peers;
+using System.Windows.Automation.Provider;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Interop;
+using System.Windows.Media;
+using BingLan.App.Interop;
+using BingLan.App.Services;
+using BingLan.App.Windows;
+using BingLan.Core.Models;
+using BingLan.Core.Services;
+using BingLan.Core.TopBar;
+
+/// <summary>
+/// Drives the top bar without a mouse: window style, module layout, deep-link clicks and
+/// the module switches. The tests always use smart-hide mode so no real AppBar is
+/// registered on the machine running the suite.
+/// </summary>
+internal static class TopBarWindowTests
+{
+    private const int GwlExStyle = -20;
+
+    [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
+    private static extern nint GetWindowLongPtr(nint window, int index);
+
+    internal static void Run(Action<Window> show, Action pump)
+    {
+        ShowModulesAndStyles(show, pump);
+        ModuleSwitchesRemoveButtons(show, pump);
+        ClicksOpenSettings(show, pump);
+    }
+
+    private static void ShowModulesAndStyles(Action<Window> show, Action pump)
+    {
+        var state = BarState();
+        state.VisibilityMode = TopBarVisibilityMode.SmartHide;
+        using var sampler = new WindowsPerformanceSamplingService();
+        var environment = new FakeEnvironment
+        {
+            Todos = 2,
+            Weather = new WeatherSnapshot(
+                WeatherStatus.Fresh, "北京", 18.4d, 24d, 11d, 42, "多云", false,
+                DateTimeOffset.Now, null)
+        };
+        var bar = new TopBarWindow(state, new DesktopStyleState(), environment, sampler);
+        show(bar);
+        try
+        {
+            var hwnd = new WindowInteropHelper(bar).Handle;
+            var style = (long)GetWindowLongPtr(hwnd, GwlExStyle);
+            if ((style & NativeMethods.WsExToolWindow) == 0)
+            {
+                throw new InvalidOperationException("顶栏窗口缺少 ToolWindow 扩展样式，会出现在任务栏");
+            }
+            if ((style & DockNativeMethods.WsExNoActivate) == 0)
+            {
+                throw new InvalidOperationException("顶栏窗口缺少 NoActivate 扩展样式，点击会抢焦点");
+            }
+
+            var buttons = AllButtons(bar);
+            var names = buttons.Select(AutomationProperties.GetName).ToHashSet();
+            foreach (var module in new[]
+                     {
+                         "待办模块", "天气模块", "性能模块", "电量模块", "网络模块", "音量模块", "输入法模块",
+                         "时间日期模块"
+                     })
+            {
+                if (!names.Contains(module))
+                {
+                    throw new InvalidOperationException($"顶栏缺少模块按钮：{module}");
+                }
+            }
+
+            var clock = ButtonByName(bar, "时间日期模块");
+            if (!TextOf(clock).Contains("月"))
+            {
+                throw new InvalidOperationException("时钟模块应显示日期");
+            }
+            var todo = ButtonByName(bar, "待办模块");
+            if (TextOf(todo) != "待办 2")
+            {
+                throw new InvalidOperationException($"待办概要应显示未完成计数，实际：{TextOf(todo)}");
+            }
+            var weather = ButtonByName(bar, "天气模块");
+            if (!TextOf(weather).StartsWith("北京") || !TextOf(weather).Contains("18°"))
+            {
+                throw new InvalidOperationException($"天气模块应显示城市与温度，实际：{TextOf(weather)}");
+            }
+            if (weather.ToolTip is not ToolTip { Content: TextBlock detail }
+                || !TextOfTextBlock(detail).Contains("湿度"))
+            {
+                throw new InvalidOperationException("天气模块悬停应提供高低温与湿度详情");
+            }
+            if (string.IsNullOrWhiteSpace(TextOf(ButtonByName(bar, "电量模块")))
+                || string.IsNullOrWhiteSpace(TextOf(ButtonByName(bar, "输入法模块"))))
+            {
+                throw new InvalidOperationException("系统状态模块应在显示时立即渲染，而非等慢速节拍");
+            }
+        }
+        finally
+        {
+            bar.Close();
+            pump();
+        }
+    }
+
+    private static void ModuleSwitchesRemoveButtons(Action<Window> show, Action pump)
+    {
+        var state = BarState();
+        state.VisibilityMode = TopBarVisibilityMode.SmartHide;
+        state.Modules.Volume = false;
+        state.Modules.Network = false;
+        using var sampler = new WindowsPerformanceSamplingService();
+        var bar = new TopBarWindow(state, new DesktopStyleState(), new FakeEnvironment(), sampler);
+        show(bar);
+        try
+        {
+            var names = AllButtons(bar).Select(AutomationProperties.GetName).ToHashSet();
+            if (names.Contains("音量模块") || names.Contains("网络模块"))
+            {
+                throw new InvalidOperationException("关闭的模块不应出现在顶栏");
+            }
+            if (!names.Contains("时间日期模块"))
+            {
+                throw new InvalidOperationException("未关闭的模块应保持显示");
+            }
+        }
+        finally
+        {
+            bar.Close();
+            pump();
+        }
+    }
+
+    private static void ClicksOpenSettings(Action<Window> show, Action pump)
+    {
+        var state = BarState();
+        state.VisibilityMode = TopBarVisibilityMode.SmartHide;
+        using var sampler = new WindowsPerformanceSamplingService();
+        var environment = new FakeEnvironment();
+        var bar = new TopBarWindow(state, new DesktopStyleState(), environment, sampler);
+        show(bar);
+        try
+        {
+            Invoke(ButtonByName(bar, "时间日期模块"));
+            if (environment.ComponentRequested != DesktopComponentKind.TimeDate)
+            {
+                throw new InvalidOperationException("点击时钟模块应深链到时间日期组件设置");
+            }
+            Invoke(ButtonByName(bar, "音量模块"));
+            if (environment.TopBarPageRequested != 1)
+            {
+                throw new InvalidOperationException("点击系统状态模块应打开顶端信息条设置页");
+            }
+        }
+        finally
+        {
+            bar.Close();
+            pump();
+        }
+    }
+
+    private static TopBarState BarState() => new() { IsEnabled = true };
+
+    private static IReadOnlyList<Button> AllButtons(DependencyObject root)
+    {
+        var buttons = new List<Button>();
+        Collect(root, buttons);
+        return buttons;
+
+        static void Collect(DependencyObject node, List<Button> into)
+        {
+            if (node is Button button)
+            {
+                into.Add(button);
+            }
+            var children = VisualTreeHelper.GetChildrenCount(node);
+            for (var index = 0; index < children; index++)
+            {
+                Collect(VisualTreeHelper.GetChild(node, index), into);
+            }
+        }
+    }
+
+    private static Button ButtonByName(DependencyObject root, string name) =>
+        AllButtons(root).FirstOrDefault(button =>
+            AutomationProperties.GetName(button) == name)
+        ?? throw new InvalidOperationException($"找不到顶栏模块：{name}");
+
+    private static string TextOf(Button button) => TextOfTextBlock(button.Content as TextBlock);
+
+    private static string TextOfTextBlock(TextBlock? text) => text?.Text ?? string.Empty;
+
+    private static void Invoke(Button button)
+    {
+        var peer = UIElementAutomationPeer.CreatePeerForElement(button)
+            ?? throw new InvalidOperationException("模块按钮没有自动化对等项");
+        if (peer.GetPattern(PatternInterface.Invoke) is not IInvokeProvider)
+        {
+            throw new InvalidOperationException("模块按钮应支持 Invoke 模式");
+        }
+        button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    }
+
+    private sealed class FakeEnvironment : ITopBarEnvironment
+    {
+        internal int Todos { get; set; }
+        internal WeatherSnapshot? Weather { get; set; }
+        internal DesktopComponentKind? ComponentRequested { get; private set; }
+        internal int TopBarPageRequested { get; private set; }
+
+        public bool Use24HourClock => true;
+
+        public WeatherSnapshot? ReadWeather() => Weather;
+
+        public void RefreshWeatherIfDue()
+        {
+        }
+
+        public int CountIncompleteTodos() => Todos;
+
+        public void OpenTopBarSettings() => TopBarPageRequested++;
+
+        public void OpenComponentSettings(DesktopComponentKind kind) => ComponentRequested = kind;
+
+        public bool ActivateWindow(nint handle) => false;
+
+        public void ExitApp()
+        {
+        }
+    }
+}
