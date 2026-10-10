@@ -1,3 +1,4 @@
+using System.Globalization;
 using BingLan.Core.Models;
 
 namespace BingLan.Core.TopBar;
@@ -53,6 +54,49 @@ public static class TopBarModuleRules
     /// <summary>A keyboard layout handle carries the language id in its low word.</summary>
     public static ushort ExtractLanguageId(nint keyboardLayout) =>
         (ushort)(keyboardLayout & 0xFFFF);
+
+    /// <summary>The IME conversion-mode bit that marks native (Chinese) composition.</summary>
+    public const int ConversionModeNative = 0x0001;
+
+    /// <summary>
+    /// The taskbar-style short badge for the current input method: the Chinese IME's own
+    /// Chinese/English toggle shows "中"/"繁"/"英", every other layout shows its ISO
+    /// language code. A missing conversion mode (the IME did not answer) falls back to
+    /// the language code rather than guessing the mode.
+    /// </summary>
+    public static string DescribeInputMethod(nint keyboardLayout, int? conversionMode)
+    {
+        if (keyboardLayout == 0)
+        {
+            return "键盘";
+        }
+
+        var languageId = ExtractLanguageId(keyboardLayout);
+        // An IME carries a variant in the high word (E0200804); a plain layout does not
+        // (00000409), and only IMEs report a conversion mode worth showing.
+        var isChineseIme = languageId is 0x0804 or 0x0404 && (keyboardLayout >> 16) != 0;
+        if (isChineseIme && conversionMode is { } mode)
+        {
+            var native = (mode & ConversionModeNative) != 0;
+            return native
+                ? (languageId == 0x0804 ? "中" : "繁")
+                : "英";
+        }
+
+        return LanguageCode(languageId);
+    }
+
+    private static string LanguageCode(ushort languageId)
+    {
+        try
+        {
+            return new CultureInfo(languageId).TwoLetterISOLanguageName.ToUpperInvariant();
+        }
+        catch (CultureNotFoundException)
+        {
+            return "键盘";
+        }
+    }
 
     /// <summary>Volume as a whole percent; the API reports a 0–1 float.</summary>
     public static int VolumePercentFromScalar(float scalar) =>

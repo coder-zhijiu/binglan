@@ -225,6 +225,16 @@ public static class TopBarTests
         Assert(TopBarModuleRules.ExtractLanguageId(0x08040804) == 0x0804, "取 HKL 低字语言 ID");
         Assert(TopBarModuleRules.ExtractLanguageId(0x04090409) == 0x0409, "英文布局语言 ID");
 
+        // 微软拼音式 HKL（变体在高 16 位），转换模式的本地文字位决定中/英徽标。
+        Assert(TopBarModuleRules.DescribeInputMethod((nint)0xE0200804, 0x0409) == "中", "中文 IME 本地模式显示中");
+        Assert(TopBarModuleRules.DescribeInputMethod((nint)0xE0200804, 0x0) == "英", "中文 IME 英文模式显示英");
+        Assert(TopBarModuleRules.DescribeInputMethod((nint)0xE0200804, 0x0408) == "英", "全角英文仍非本地模式");
+        Assert(TopBarModuleRules.DescribeInputMethod((nint)0xE0080404, 0x0401) == "繁", "繁中 IME 本地模式显示繁");
+        Assert(TopBarModuleRules.DescribeInputMethod((nint)0xE0200804, null) == "ZH", "IME 未答问时回退语言码不猜模式");
+        Assert(TopBarModuleRules.DescribeInputMethod(0x00000409, 0x0401) == "EN", "普通布局不受转换模式影响");
+        Assert(TopBarModuleRules.DescribeInputMethod((nint)0xE0010411, 0x0001) == "JA", "非中文 IME 显示语言码");
+        Assert(TopBarModuleRules.DescribeInputMethod(0, null) == "键盘", "无布局回退占位文案");
+
         Assert(TopBarModuleRules.VolumePercentFromScalar(0.42f) == 42, "音量换算百分比");
         Assert(TopBarModuleRules.VolumePercentFromScalar(1.3f) == 100, "音量钳制上限");
         Assert(TopBarModuleRules.VolumePercentFromScalar(-0.5f) == 0, "音量钳制下限");

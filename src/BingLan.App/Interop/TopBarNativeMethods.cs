@@ -27,6 +27,26 @@ internal static class TopBarNativeMethods
     [DllImport("user32.dll", SetLastError = true)]
     internal static extern nint GetKeyboardLayout(uint idThread);
 
+    // The IME's Chinese/English toggle rides the imm32 bridge the taskbar indicator
+    // uses: ask the foreground thread's default IME window for its conversion mode.
+    [DllImport("imm32.dll")]
+    internal static extern nint ImmGetDefaultIMEWnd(nint window);
+
+    internal const int WmImeControl = 0x0283;
+    internal const int ImcGetConversionMode = 0x0005;
+    internal const int SmtoAbortIfHung = 0x0002;
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool SendMessageTimeout(
+        nint window,
+        int message,
+        nint wParam,
+        nint lParam,
+        int flags,
+        uint timeoutMilliseconds,
+        out nint result);
+
     internal const int LeftMouseButton = 0x01;
 
     [DllImport("user32.dll")]

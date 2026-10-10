@@ -53,8 +53,12 @@ internal static class TopBarSystemInfo
         }
     }
 
-    /// <summary>The display name of the keyboard layout of the foreground window.</summary>
-    internal static string ReadInputMethod()
+    /// <summary>
+    /// The taskbar-style badge of the foreground window's input method plus the layout's
+    /// full display name for the hover tooltip. The badge re-reads cheaply enough for the
+    /// 150 ms focus cadence: the IME mode is one bounded cross-process call.
+    /// </summary>
+    internal static (string Label, string FullName) ReadInputMethod()
     {
         // No classic foreground window (a console host, for example) falls back to this
         // thread's own layout, which is the same list Windows would show.
@@ -67,6 +71,46 @@ internal static class TopBarSystemInfo
         {
             layout = TopBarNativeMethods.GetKeyboardLayout(0);
         }
+
+        var conversionMode = ReadConversionMode(foreground);
+        return (TopBarModuleRules.DescribeInputMethod(layout, conversionMode), LayoutName(layout));
+    }
+
+    private static int? ReadConversionMode(nint foreground)
+    {
+        if (foreground == 0)
+        {
+            return null;
+        }
+
+        var imeWindow = TopBarNativeMethods.ImmGetDefaultIMEWnd(foreground);
+        if (imeWindow == 0)
+        {
+            return null;
+        }
+
+        // The IME window belongs to the foreground window's thread, so the call crosses
+        // a process boundary: bound it and give up on a hung target instead of stalling
+        // the caller.
+        if (!TopBarNativeMethods.SendMessageTimeout(
+                imeWindow,
+                TopBarNativeMethods.WmImeControl,
+                TopBarNativeMethods.ImcGetConversionMode,
+                0,
+                TopBarNativeMethods.SmtoAbortIfHung,
+                ConversionModeTimeoutMilliseconds,
+                out var mode))
+        {
+            return null;
+        }
+
+        return unchecked((int)mode);
+    }
+
+    private const uint ConversionModeTimeoutMilliseconds = 50;
+
+    private static string LayoutName(nint layout)
+    {
         if (layout == 0)
         {
             return LayoutFallback;
@@ -88,7 +132,7 @@ internal static class TopBarSystemInfo
                 null) as string;
             if (!string.IsNullOrWhiteSpace(text))
             {
-                return text.Length > 12 ? text[..12] : text;
+                return text;
             }
         }
 

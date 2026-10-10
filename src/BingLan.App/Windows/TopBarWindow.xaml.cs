@@ -108,7 +108,6 @@ public sealed partial class TopBarWindow : Window
     private bool _closing;
     private bool _menuOpen;
     private int _tick;
-    private nint _lastForegroundWindow;
 
     private const int HshellWindowDestroyed = 2;
     private const int HshellWindowActivated = 4;
@@ -340,7 +339,7 @@ public sealed partial class TopBarWindow : Window
         (int Percent, TopBarBatteryStatus Status) Battery,
         int? VolumePercent,
         (bool Connected, string Label) Network,
-        string InputMethod);
+        (string Label, string FullName) InputMethod);
 
     // ---------------------------------------------------------------- modules
 
@@ -368,6 +367,7 @@ public sealed partial class TopBarWindow : Window
         AddModule(TopBarModuleKind.Network, RightModules, "网络", _environment.OpenQuickSettings);
         AddModule(TopBarModuleKind.Volume, RightModules, "音量", _environment.OpenQuickSettings);
         AddModule(TopBarModuleKind.InputMethod, RightModules, "输入法", _environment.OpenTopBarSettings);
+        StyleInputMethodModule();
         if (TopBarRules.IsModuleOn(_state.Modules, TopBarModuleKind.Attention))
         {
             RightModules.Children.Add(_attentionPanel);
@@ -407,16 +407,7 @@ public sealed partial class TopBarWindow : Window
                 // hover details open manually after a rest delay, like the to-do flyout.
                 // The panel uses the bar's own glass and white text: the system tooltip
                 // style renders dark-on-dark on a dark desktop.
-                var glass = DesktopStyleRules.TopBar(_style, _state);
-                var toolTip = new ToolTip
-                {
-                    Background = FrozenBrush(glass.Surface),
-                    Foreground = Brushes.White,
-                    BorderBrush = FrozenBrush(glass.Border),
-                    BorderThickness = new Thickness(1),
-                    Padding = new Thickness(10, 8, 10, 9),
-                    StaysOpen = true
-                };
+                var toolTip = CreateGlassToolTip();
                 AttachHoverToolTip(block, toolTip);
                 block.ToolTip = toolTip;
             }
@@ -437,11 +428,56 @@ public sealed partial class TopBarWindow : Window
         panel.Children.Add(button);
     }
 
+    /// <summary>
+    /// The input method module wears the taskbar indicator's shape: one character in a
+    /// rounded tile. The full layout name moves to the hover tooltip, so the short badge
+    /// never needs trimming.
+    /// </summary>
+    private void StyleInputMethodModule()
+    {
+        if (!_modules.TryGetValue(TopBarModuleKind.InputMethod, out var module)
+            || module is not Button { Content: TextBlock text } button)
+        {
+            return;
+        }
+
+        button.Padding = new Thickness(2, 0, 2, 0);
+        // Re-parenting demands detaching first: the initializer would otherwise adopt a
+        // TextBlock that still belongs to the button's content.
+        button.Content = null;
+        button.Content = new Border
+        {
+            CornerRadius = new CornerRadius(5),
+            Background = FrozenBrush("#33FFFFFF"),
+            Padding = new Thickness(6, 1, 6, 1),
+            Child = text
+        };
+        var toolTip = CreateGlassToolTip();
+        AttachHoverToolTip(button, toolTip);
+        button.ToolTip = toolTip;
+    }
+
+    private ToolTip CreateGlassToolTip()
+    {
+        var glass = DesktopStyleRules.TopBar(_style, _state);
+        return new ToolTip
+        {
+            Background = FrozenBrush(glass.Surface),
+            Foreground = Brushes.White,
+            BorderBrush = FrozenBrush(glass.Border),
+            BorderThickness = new Thickness(1),
+            Padding = new Thickness(10, 8, 10, 9),
+            StaysOpen = true
+        };
+    }
+
     private TextBlock? ModuleText(TopBarModuleKind kind) =>
         _modules.TryGetValue(kind, out var module)
             ? module switch
             {
-                Button button => button.Content as TextBlock,
+                Button button => button.Content is Border { Child: TextBlock badge }
+                    ? badge
+                    : button.Content as TextBlock,
                 Border border => border.Child as TextBlock,
                 _ => null
             }
@@ -1033,9 +1069,24 @@ public sealed partial class TopBarWindow : Window
         {
             network.Text = facts.Network.Label;
         }
-        if (ModuleText(TopBarModuleKind.InputMethod) is { } inputMethod)
+        RenderInputMethod(facts.InputMethod);
+    }
+
+    private void RenderInputMethod((string Label, string FullName) inputMethod)
+    {
+        if (ModuleText(TopBarModuleKind.InputMethod) is { } text)
         {
-            inputMethod.Text = facts.InputMethod;
+            text.Text = inputMethod.Label;
+        }
+        if (_modules.TryGetValue(TopBarModuleKind.InputMethod, out var module)
+            && module.ToolTip is ToolTip toolTip
+            && (toolTip.Content as TextBlock)?.Text != inputMethod.FullName)
+        {
+            toolTip.Content = new TextBlock
+            {
+                Text = inputMethod.FullName,
+                Effect = CreateTextShadow()
+            };
         }
     }
 
@@ -1207,15 +1258,12 @@ public sealed partial class TopBarWindow : Window
 
         var bounds = _appBar.Bounds;
         var foreground = ForegroundWindowRect(out var foregroundBounds, out var foregroundWindow);
-        if (foregroundWindow != 0 && foregroundWindow != _lastForegroundWindow)
+        // The keyboard layout follows the focused window, and the IME's own
+        // Chinese/English toggle changes no window at all, so the module re-reads on
+        // every fast tick instead of waiting for the slower system-info cadence.
+        if (foregroundWindow != 0 && IsVisible)
         {
-            // The keyboard layout follows the focused window, so the module follows it too
-            // instead of waiting for the slower system-info cadence.
-            _lastForegroundWindow = foregroundWindow;
-            if (ModuleText(TopBarModuleKind.InputMethod) is { } text)
-            {
-                text.Text = TopBarSystemInfo.ReadInputMethod();
-            }
+            RenderInputMethod(TopBarSystemInfo.ReadInputMethod());
         }
 
         var fullScreen = foreground

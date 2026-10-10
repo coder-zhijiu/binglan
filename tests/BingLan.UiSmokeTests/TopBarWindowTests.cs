@@ -246,7 +246,17 @@ internal static class TopBarWindowTests
             }
             if (TextOf(ButtonByName(bar, "输入法模块")) == "键盘")
             {
-                throw new InvalidOperationException("输入法模块应读到真实布局名而非回退文案（注册表路径失效）");
+                throw new InvalidOperationException("输入法模块应读到真实输入法状态而非回退文案（注册表或 IME 路径失效）");
+            }
+            // The module shows the taskbar indicator's shape: one character in a rounded
+            // tile, with the full layout name on the hover tooltip.
+            if (ButtonByName(bar, "输入法模块").Content is not Border { } tile || tile.CornerRadius == default)
+            {
+                throw new InvalidOperationException("输入法模块应以圆角徽标显示任务栏式中/英文状态");
+            }
+            if (ButtonByName(bar, "输入法模块").ToolTip is not ToolTip)
+            {
+                throw new InvalidOperationException("输入法模块悬停应提供完整布局名");
             }
         }
         finally
@@ -377,7 +387,9 @@ internal static class TopBarWindowTests
 
     private static string TextOf(FrameworkElement module) => module switch
     {
-        Button button => TextOfTextBlock(button.Content as TextBlock),
+        Button button => button.Content is Border { Child: TextBlock badge }
+            ? TextOfTextBlock(badge)
+            : TextOfTextBlock(button.Content as TextBlock),
         Border border => TextOfTextBlock(border.Child as TextBlock),
         _ => string.Empty
     };
