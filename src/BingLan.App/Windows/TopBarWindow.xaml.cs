@@ -390,6 +390,7 @@ public sealed partial class TopBarWindow : Window
         {
             // A display-only module keeps the same padding and tooltip, but no button:
             // UIA would otherwise announce a control that does nothing.
+            text.VerticalAlignment = VerticalAlignment.Center;
             var block = new Border
             {
                 Padding = new Thickness(8, 0, 8, 0),
@@ -399,7 +400,22 @@ public sealed partial class TopBarWindow : Window
             System.Windows.Automation.AutomationProperties.SetName(block, $"{label}模块");
             if (kind == TopBarModuleKind.Weather)
             {
-                block.ToolTip = new ToolTip();
+                // ToolTips never open on their own in this no-activate window, so the
+                // hover details open manually after a rest delay, like the to-do flyout.
+                // The panel uses the bar's own glass and white text: the system tooltip
+                // style renders dark-on-dark on a dark desktop.
+                var glass = DesktopStyleRules.TopBar(_style, _state);
+                var toolTip = new ToolTip
+                {
+                    Background = FrozenBrush(glass.Surface),
+                    Foreground = Brushes.White,
+                    BorderBrush = FrozenBrush(glass.Border),
+                    BorderThickness = new Thickness(1),
+                    Padding = new Thickness(10, 8, 10, 9),
+                    StaysOpen = true
+                };
+                AttachHoverToolTip(block, toolTip);
+                block.ToolTip = toolTip;
             }
             _modules[kind] = block;
             panel.Children.Add(block);
@@ -599,6 +615,33 @@ public sealed partial class TopBarWindow : Window
         return trigger;
     }
 
+    /// <summary>
+    /// Opens a tool tip manually after the pointer rests on the host for a moment and
+    /// closes it when the pointer leaves. WPF's own tool tips never open in this
+    /// no-activate window, so the bar drives the same rest-then-show behaviour itself.
+    /// </summary>
+    private void AttachHoverToolTip(FrameworkElement host, ToolTip toolTip)
+    {
+        var openTimer = new DispatcherTimer(DispatcherPriority.Background)
+        {
+            Interval = TimeSpan.FromMilliseconds(450)
+        };
+        openTimer.Tick += (_, _) =>
+        {
+            openTimer.Stop();
+            toolTip.PlacementTarget = host;
+            toolTip.Placement = PlacementMode.Bottom;
+            toolTip.VerticalOffset = 4;
+            toolTip.IsOpen = true;
+        };
+        host.MouseEnter += (_, _) => openTimer.Start();
+        host.MouseLeave += (_, _) =>
+        {
+            openTimer.Stop();
+            toolTip.IsOpen = false;
+        };
+    }
+
     private void CloseTodoFlyout()
     {
         _todoFlyout?.SetCurrentValue(Popup.IsOpenProperty, false);
@@ -759,7 +802,8 @@ public sealed partial class TopBarWindow : Window
             {
                 Text = DescribeWeather(snapshot),
                 MaxWidth = 320,
-                TextWrapping = TextWrapping.Wrap
+                TextWrapping = TextWrapping.Wrap,
+                Effect = CreateTextShadow()
             };
         }
     }

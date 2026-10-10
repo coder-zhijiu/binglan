@@ -52,6 +52,57 @@ internal static class TopBarWindowTests
         ClicksOpenSettings(show, pump);
         SurfacePaintsGlass(show, pump);
         TodoFlyoutShowsItemsAndCloses(show, pump);
+        WeatherHoverOpensTooltip(show, pump);
+    }
+
+    private static void WeatherHoverOpensTooltip(Action<Window> show, Action pump)
+    {
+        var state = BarState();
+        state.VisibilityMode = TopBarVisibilityMode.SmartHide;
+        using var sampler = new WindowsPerformanceSamplingService();
+        var environment = new FakeEnvironment
+        {
+            Weather = new WeatherSnapshot(
+                WeatherStatus.Fresh, "北京", 18.4d, 24d, 11d, 42, "多云", false,
+                DateTimeOffset.Now, null)
+        };
+        var bar = new TopBarWindow(state, new DesktopStyleState(), environment, sampler);
+        show(bar);
+        try
+        {
+            var weather = ElementByName(bar, "天气模块");
+            var toolTip = (weather as Border)?.ToolTip as ToolTip
+                ?? throw new InvalidOperationException("天气模块应带悬停详情 tooltip");
+
+            // WPF's own tool tips never open in this no-activate window; the bar opens
+            // them itself after the pointer rests, and closes them on leave.
+            weather.RaiseEvent(new System.Windows.Input.MouseEventArgs(
+                System.Windows.Input.Mouse.PrimaryDevice, 0)
+            {
+                RoutedEvent = UIElement.MouseEnterEvent
+            });
+            var opened = false;
+            for (var i = 0; i < 24 && !opened; i++)
+            {
+                pump();
+                Thread.Sleep(50);
+                opened = toolTip.IsOpen;
+            }
+            Assert(opened, "指针停留后天气悬停详情应打开");
+
+            weather.RaiseEvent(new System.Windows.Input.MouseEventArgs(
+                System.Windows.Input.Mouse.PrimaryDevice, 0)
+            {
+                RoutedEvent = UIElement.MouseLeaveEvent
+            });
+            pump();
+            Assert(!toolTip.IsOpen, "指针离开后天气悬停详情应收起");
+        }
+        finally
+        {
+            bar.Close();
+            pump();
+        }
     }
 
     private static void SurfacePaintsGlass(Action<Window> show, Action pump)
