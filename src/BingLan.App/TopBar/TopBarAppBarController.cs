@@ -144,6 +144,14 @@ internal sealed class TopBarAppBarController : IDisposable
                 {
                     Bottom = data.Rectangle.Top + Math.Min(reservePixels, _monitor.Bounds.Height)
                 };
+                // ABN_POSCHANGED arrives for every bar's move (the auto-hiding taskbar
+                // fires it constantly), and every ABM_SETPOS rebroadcasts a work-area
+                // change system-wide — screen-capture overlays react to that by
+                // re-laying out. An unchanged strip needs no new broadcast.
+                if (adjusted == Bounds)
+                {
+                    return;
+                }
                 data.Rectangle = ToNative(adjusted);
                 DockNativeMethods.SHAppBarMessage(DockNativeMethods.AbmSetPos, ref data);
                 strip = ToPixel(data.Rectangle);
