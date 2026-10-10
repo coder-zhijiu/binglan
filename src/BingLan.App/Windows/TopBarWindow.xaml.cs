@@ -49,6 +49,12 @@ internal interface ITopBarEnvironment
 
     void OpenTopBarSettings();
 
+    /// <summary>Opens the system quick-settings flyout (the taskbar tray's panel).</summary>
+    void OpenQuickSettings();
+
+    /// <summary>Opens Task Manager and lands on its performance page.</summary>
+    void OpenTaskManagerPerformance();
+
     void OpenComponentSettings(DesktopComponentKind kind);
 
     /// <summary>Brings one window of an app that asked for attention to the front.</summary>
@@ -88,7 +94,7 @@ public sealed partial class TopBarWindow : Window
     private readonly Dictionary<nint, string> _attentionNames = [];
     private readonly WindowCatalog _catalog = new();
     private readonly DispatcherTimer _foregroundTimer;
-    private readonly Dictionary<TopBarModuleKind, Button> _moduleButtons = [];
+    private readonly Dictionary<TopBarModuleKind, FrameworkElement> _modules = [];
     private TopBarAppBarController? _appBar;
     private PerformanceSnapshot? _lastSnapshot;
     private TopBarSystemFacts? _facts;
@@ -339,22 +345,24 @@ public sealed partial class TopBarWindow : Window
     {
         LeftModules.Children.Clear();
         RightModules.Children.Clear();
-        _moduleButtons.Clear();
+        _modules.Clear();
         CloseTodoFlyout();
 
         // The to-do module shows its own flyout instead of opening settings.
         AddTodoModule(LeftModules);
-        AddModule(TopBarModuleKind.Weather, LeftModules, "天气",
-            () => _environment.OpenComponentSettings(DesktopComponentKind.Weather));
+        // The weather is a glance with hover details; it does nothing on click.
+        AddModule(TopBarModuleKind.Weather, LeftModules, "天气", null);
         AddModule(TopBarModuleKind.Performance, LeftModules, "性能",
-            () => _environment.OpenComponentSettings(DesktopComponentKind.Performance));
+            _environment.OpenTaskManagerPerformance);
 
         // Right side from the outer edge inwards: the docked-right stack fills from the
         // screen edge leftwards, so the clock is added last to sit at the corner. The
         // attention marks sit between the input method and the clock.
-        AddModule(TopBarModuleKind.Battery, RightModules, "电量", _environment.OpenTopBarSettings);
-        AddModule(TopBarModuleKind.Network, RightModules, "网络", _environment.OpenTopBarSettings);
-        AddModule(TopBarModuleKind.Volume, RightModules, "音量", _environment.OpenTopBarSettings);
+        // The battery, network and volume modules summon the system quick settings,
+        // the same panel the taskbar's tray icons open.
+        AddModule(TopBarModuleKind.Battery, RightModules, "电量", _environment.OpenQuickSettings);
+        AddModule(TopBarModuleKind.Network, RightModules, "网络", _environment.OpenQuickSettings);
+        AddModule(TopBarModuleKind.Volume, RightModules, "音量", _environment.OpenQuickSettings);
         AddModule(TopBarModuleKind.InputMethod, RightModules, "输入法", _environment.OpenTopBarSettings);
         if (TopBarRules.IsModuleOn(_state.Modules, TopBarModuleKind.Attention))
         {
@@ -365,7 +373,7 @@ public sealed partial class TopBarWindow : Window
         RefreshAttention();
     }
 
-    private void AddModule(TopBarModuleKind kind, StackPanel panel, string label, Action click)
+    private void AddModule(TopBarModuleKind kind, StackPanel panel, string label, Action? click)
     {
         if (!TopBarRules.IsModuleOn(_state.Modules, kind))
         {
@@ -378,6 +386,26 @@ public sealed partial class TopBarWindow : Window
             TextTrimming = TextTrimming.CharacterEllipsis,
             Effect = CreateTextShadow()
         };
+        if (click is null)
+        {
+            // A display-only module keeps the same padding and tooltip, but no button:
+            // UIA would otherwise announce a control that does nothing.
+            var block = new Border
+            {
+                Padding = new Thickness(8, 0, 8, 0),
+                MinHeight = TopBarState.HeightDip,
+                Child = text
+            };
+            System.Windows.Automation.AutomationProperties.SetName(block, $"{label}模块");
+            if (kind == TopBarModuleKind.Weather)
+            {
+                block.ToolTip = new ToolTip();
+            }
+            _modules[kind] = block;
+            panel.Children.Add(block);
+            return;
+        }
+
         var button = new Button
         {
             Style = (Style)Resources["ModuleButton"],
@@ -386,13 +414,19 @@ public sealed partial class TopBarWindow : Window
         };
         System.Windows.Automation.AutomationProperties.SetName(button, $"{label}模块");
         button.Click += (_, _) => click();
-        if (kind == TopBarModuleKind.Weather)
-        {
-            button.ToolTip = new ToolTip();
-        }
-        _moduleButtons[kind] = button;
+        _modules[kind] = button;
         panel.Children.Add(button);
     }
+
+    private TextBlock? ModuleText(TopBarModuleKind kind) =>
+        _modules.TryGetValue(kind, out var module)
+            ? module switch
+            {
+                Button button => button.Content as TextBlock,
+                Border border => border.Child as TextBlock,
+                _ => null
+            }
+            : null;
 
     private void AddTodoModule(StackPanel panel)
     {
@@ -415,7 +449,7 @@ public sealed partial class TopBarWindow : Window
         };
         System.Windows.Automation.AutomationProperties.SetName(button, "待办模块");
         button.Click += (_, _) => ToggleTodoFlyout(button);
-        _moduleButtons[TopBarModuleKind.TodoSummary] = button;
+        _modules[TopBarModuleKind.TodoSummary] = button;
         panel.Children.Add(button);
     }
 
@@ -601,7 +635,8 @@ public sealed partial class TopBarWindow : Window
 
         // A click on the to-do module itself toggles the flyout; letting the poll
         // close it here would only make the same click re-open it.
-        if (_moduleButtons.TryGetValue(TopBarModuleKind.TodoSummary, out var button))
+        if (_modules.TryGetValue(TopBarModuleKind.TodoSummary, out var element)
+            && element is Button button)
         {
             var topLeft = button.PointToScreen(new System.Windows.Point(0, 0));
             var bottomRight = button.PointToScreen(new System.Windows.Point(button.ActualWidth, button.ActualHeight));
@@ -642,22 +677,22 @@ public sealed partial class TopBarWindow : Window
         }
 
         _tick++;
-        if (_moduleButtons.TryGetValue(TopBarModuleKind.Clock, out var clock))
+        if (ModuleText(TopBarModuleKind.Clock) is { } clock)
         {
-            ((TextBlock)clock.Content).Text = FormatClock(_environment.Use24HourClock);
+            clock.Text = FormatClock(_environment.Use24HourClock);
         }
-        if (_moduleButtons.TryGetValue(TopBarModuleKind.TodoSummary, out var todo))
+        if (ModuleText(TopBarModuleKind.TodoSummary) is { } todo)
         {
-            ((TextBlock)todo.Content).Text = $"待办 {_environment.CountIncompleteTodos()}";
+            todo.Text = $"待办 {_environment.CountIncompleteTodos()}";
         }
-        if (_moduleButtons.TryGetValue(TopBarModuleKind.Weather, out var weather))
+        if (ModuleText(TopBarModuleKind.Weather) is { } weather)
         {
             RenderWeather(weather);
         }
-        if (_moduleButtons.TryGetValue(TopBarModuleKind.Performance, out var performance))
+        if (ModuleText(TopBarModuleKind.Performance) is { } performance)
         {
             var snapshot = _lastSnapshot;
-            ((TextBlock)performance.Content).Text = snapshot is null
+            performance.Text = snapshot is null
                 ? "性能 …"
                 : $"CPU {PerformanceSamplingRules.FormatPercent(snapshot.CpuPercent)}  "
                     + $"内存 {PerformanceSamplingRules.FormatPercent(snapshot.MemoryPercent)}  "
@@ -680,33 +715,32 @@ public sealed partial class TopBarWindow : Window
             return;
         }
 
-        if (_moduleButtons.TryGetValue(TopBarModuleKind.Battery, out var battery))
+        if (ModuleText(TopBarModuleKind.Battery) is { } battery)
         {
             var (percent, status) = facts.Battery;
-            ((TextBlock)battery.Content).Text = percent < 0
+            battery.Text = percent < 0
                 ? "电量 —"
                 : status == TopBarBatteryStatus.Charging
                     ? $"充电 {percent}%"
                     : $"电量 {percent}%";
         }
-        if (_moduleButtons.TryGetValue(TopBarModuleKind.Volume, out var volume))
+        if (ModuleText(TopBarModuleKind.Volume) is { } volume)
         {
             var percent = facts.VolumePercent;
-            ((TextBlock)volume.Content).Text = percent is { } value ? $"音量 {value}%" : "音量 —";
+            volume.Text = percent is { } value ? $"音量 {value}%" : "音量 —";
         }
-        if (_moduleButtons.TryGetValue(TopBarModuleKind.Network, out var network))
+        if (ModuleText(TopBarModuleKind.Network) is { } network)
         {
-            ((TextBlock)network.Content).Text = facts.Network.Label;
+            network.Text = facts.Network.Label;
         }
-        if (_moduleButtons.TryGetValue(TopBarModuleKind.InputMethod, out var inputMethod))
+        if (ModuleText(TopBarModuleKind.InputMethod) is { } inputMethod)
         {
-            ((TextBlock)inputMethod.Content).Text = facts.InputMethod;
+            inputMethod.Text = facts.InputMethod;
         }
     }
 
-    private void RenderWeather(Button button)
+    private void RenderWeather(TextBlock text)
     {
-        var text = (TextBlock)button.Content;
         var snapshot = _environment.ReadWeather();
         if (snapshot is null)
         {
@@ -719,7 +753,7 @@ public sealed partial class TopBarWindow : Window
             : snapshot.TemperatureCelsius is { } temperature
                 ? $"{snapshot.City} {Math.Round(temperature):0}° {snapshot.Condition}"
                 : $"{snapshot.City} {snapshot.Condition}";
-        if (button.ToolTip is ToolTip toolTip)
+        if (_modules.TryGetValue(TopBarModuleKind.Weather, out var module) && module.ToolTip is ToolTip toolTip)
         {
             toolTip.Content = new TextBlock
             {
@@ -877,8 +911,7 @@ public sealed partial class TopBarWindow : Window
             // The keyboard layout follows the focused window, so the module follows it too
             // instead of waiting for the slower system-info cadence.
             _lastForegroundWindow = foregroundWindow;
-            if (_moduleButtons.TryGetValue(TopBarModuleKind.InputMethod, out var inputMethod)
-                && inputMethod.Content is TextBlock text)
+            if (ModuleText(TopBarModuleKind.InputMethod) is { } text)
             {
                 text.Text = TopBarSystemInfo.ReadInputMethod();
             }

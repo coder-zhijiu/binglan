@@ -137,14 +137,23 @@ internal static class TopBarWindowTests
             var names = buttons.Select(AutomationProperties.GetName).ToHashSet();
             foreach (var module in new[]
                      {
-                         "待办模块", "天气模块", "性能模块", "电量模块", "网络模块", "音量模块", "输入法模块",
-                         "时间日期模块"
+                         "待办模块", "性能模块", "电量模块", "网络模块", "音量模块", "输入法模块", "时间日期模块"
                      })
             {
                 if (!names.Contains(module))
                 {
                     throw new InvalidOperationException($"顶栏缺少模块按钮：{module}");
                 }
+            }
+
+            // The weather is a display-only module: present as an element, not a button.
+            var elementNames = DescendantElements(bar)
+                .OfType<FrameworkElement>()
+                .Select(AutomationProperties.GetName)
+                .ToHashSet();
+            if (!elementNames.Contains("天气模块"))
+            {
+                throw new InvalidOperationException("顶栏缺少天气模块（展示元素）");
             }
 
             var clock = ButtonByName(bar, "时间日期模块");
@@ -157,7 +166,7 @@ internal static class TopBarWindowTests
             {
                 throw new InvalidOperationException($"待办概要应显示未完成计数，实际：{TextOf(todo)}");
             }
-            var weather = ButtonByName(bar, "天气模块");
+            var weather = ElementByName(bar, "天气模块");
             if (!TextOf(weather).StartsWith("北京") || !TextOf(weather).Contains("18°"))
             {
                 throw new InvalidOperationException($"天气模块应显示城市与温度，实际：{TextOf(weather)}");
@@ -240,9 +249,24 @@ internal static class TopBarWindowTests
                 throw new InvalidOperationException("点击时钟模块应深链到时间日期组件设置");
             }
             Invoke(ButtonByName(bar, "音量模块"));
-            if (environment.TopBarPageRequested != 1)
+            if (environment.QuickSettingsRequested != 1)
             {
-                throw new InvalidOperationException("点击系统状态模块应打开顶端信息条设置页");
+                throw new InvalidOperationException("点击音量模块应唤起系统快速设置");
+            }
+            Invoke(ButtonByName(bar, "电量模块"));
+            if (environment.QuickSettingsRequested != 2)
+            {
+                throw new InvalidOperationException("点击电量模块应唤起系统快速设置");
+            }
+            Invoke(ButtonByName(bar, "性能模块"));
+            if (environment.TaskManagerRequested != 1)
+            {
+                throw new InvalidOperationException("点击性能模块应打开任务管理器性能页");
+            }
+            if (AllButtons(bar).Any(candidate =>
+                    AutomationProperties.GetName(candidate) == "天气模块"))
+            {
+                throw new InvalidOperationException("天气模块应不可点击（无按钮语义）");
             }
         }
         finally
@@ -279,7 +303,17 @@ internal static class TopBarWindowTests
             AutomationProperties.GetName(button) == name)
         ?? throw new InvalidOperationException($"找不到顶栏模块：{name}");
 
-    private static string TextOf(Button button) => TextOfTextBlock(button.Content as TextBlock);
+    private static FrameworkElement ElementByName(DependencyObject root, string name) =>
+        DescendantElements(root).OfType<FrameworkElement>().FirstOrDefault(element =>
+            AutomationProperties.GetName(element) == name)
+        ?? throw new InvalidOperationException($"找不到顶栏元素：{name}");
+
+    private static string TextOf(FrameworkElement module) => module switch
+    {
+        Button button => TextOfTextBlock(button.Content as TextBlock),
+        Border border => TextOfTextBlock(border.Child as TextBlock),
+        _ => string.Empty
+    };
 
     private static string TextOfTextBlock(TextBlock? text) => text?.Text ?? string.Empty;
 
@@ -300,6 +334,8 @@ internal static class TopBarWindowTests
         internal WeatherSnapshot? Weather { get; set; }
         internal TopBarTodoList? TodoList { get; set; }
         internal int Toggles { get; private set; }
+        internal int QuickSettingsRequested { get; private set; }
+        internal int TaskManagerRequested { get; private set; }
         internal DesktopComponentKind? ComponentRequested { get; private set; }
         internal int TopBarPageRequested { get; private set; }
 
@@ -318,6 +354,10 @@ internal static class TopBarWindowTests
         public void TodoItemToggled() => Toggles++;
 
         public void OpenTopBarSettings() => TopBarPageRequested++;
+
+        public void OpenQuickSettings() => QuickSettingsRequested++;
+
+        public void OpenTaskManagerPerformance() => TaskManagerRequested++;
 
         public void OpenComponentSettings(DesktopComponentKind kind) => ComponentRequested = kind;
 

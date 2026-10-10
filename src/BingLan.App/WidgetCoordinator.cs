@@ -2320,6 +2320,122 @@ public sealed class WidgetCoordinator : IDisposable
 
         public void OpenTopBarSettings() => owner.OpenSettings("TopBar");
 
+        public void OpenQuickSettings()
+        {
+            // The tray's own flyout: invoking the taskbar's volume, network or battery
+            // icon opens exactly what the taskbar opens. Win+A is deliberately not used;
+            // newer builds turn it into the full Settings app instead of the flyout.
+            _ = Task.Run(() =>
+            {
+                for (var attempt = 0; attempt < 6; attempt++)
+                {
+                    try
+                    {
+                        var taskbar = System.Windows.Automation.AutomationElement.RootElement.FindFirst(
+                            System.Windows.Automation.TreeScope.Children,
+                            new System.Windows.Automation.PropertyCondition(
+                                System.Windows.Automation.AutomationElement.ClassNameProperty,
+                                "Shell_TrayWnd"));
+                        if (taskbar is null)
+                        {
+                            return;
+                        }
+                        foreach (var button in taskbar.FindAll(
+                                     System.Windows.Automation.TreeScope.Descendants,
+                                     new System.Windows.Automation.PropertyCondition(
+                                         System.Windows.Automation.AutomationElement.ControlTypeProperty,
+                                         System.Windows.Automation.ControlType.Button))
+                                 .Cast<System.Windows.Automation.AutomationElement>())
+                        {
+                            var name = button.Current.Name;
+                            if (!name.StartsWith("音量") && !name.StartsWith("网络")
+                                && !name.StartsWith("电池"))
+                            {
+                                continue;
+                            }
+                            if (button.GetCurrentPattern(
+                                    System.Windows.Automation.InvokePattern.Pattern)
+                                is System.Windows.Automation.InvokePattern invoke)
+                            {
+                                invoke.Invoke();
+                                return;
+                            }
+                        }
+                    }
+                    catch (Exception exception)
+                        when (exception is System.Windows.Automation.ElementNotAvailableException
+                            or System.Windows.Automation.ElementNotEnabledException)
+                    {
+                        // The taskbar rebuilt mid-walk; the next attempt re-reads it.
+                    }
+                }
+            });
+        }
+
+        public void OpenTaskManagerPerformance()
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("taskmgr.exe")
+                {
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception exception) when (exception is System.ComponentModel.Win32Exception
+                or InvalidOperationException)
+            {
+                return;
+            }
+
+            // Task Manager rebuilds its window while starting and drops in-flight UIA
+            // reads, so each attempt re-reads and the loop gives up quietly.
+            _ = Task.Run(async () =>
+            {
+                for (var attempt = 0; attempt < 30; attempt++)
+                {
+                    await Task.Delay(300);
+                    try
+                    {
+                        var manager = System.Windows.Automation.AutomationElement.RootElement.FindFirst(
+                            System.Windows.Automation.TreeScope.Children,
+                            new System.Windows.Automation.PropertyCondition(
+                                System.Windows.Automation.AutomationElement.NameProperty,
+                                "任务管理器"));
+                        var page = manager?.FindFirst(
+                            System.Windows.Automation.TreeScope.Descendants,
+                            new System.Windows.Automation.PropertyCondition(
+                                System.Windows.Automation.AutomationElement.NameProperty,
+                                "性能"));
+                        if (page is null)
+                        {
+                            continue;
+                        }
+                        // The side navigation is a list: selection first, invoke second.
+                        if (page.GetCurrentPattern(
+                                System.Windows.Automation.SelectionItemPattern.Pattern)
+                            is System.Windows.Automation.SelectionItemPattern selection)
+                        {
+                            selection.Select();
+                            return;
+                        }
+                        if (page.GetCurrentPattern(
+                                System.Windows.Automation.InvokePattern.Pattern)
+                            is System.Windows.Automation.InvokePattern invoke)
+                        {
+                            invoke.Invoke();
+                            return;
+                        }
+                    }
+                    catch (Exception exception)
+                        when (exception is System.Windows.Automation.ElementNotAvailableException
+                            or System.Windows.Automation.ElementNotEnabledException)
+                    {
+                        // Window rebuilt mid-read; try again on the next attempt.
+                    }
+                }
+            });
+        }
+
         public void OpenComponentSettings(DesktopComponentKind kind) => owner.OpenSettings(kind);
 
         public bool ActivateWindow(nint handle)
