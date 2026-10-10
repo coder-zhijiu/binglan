@@ -2320,11 +2320,18 @@ public sealed class WidgetCoordinator : IDisposable
 
         public void OpenTopBarSettings() => owner.OpenSettings("TopBar");
 
-        public void OpenQuickSettings()
+        public void OpenQuickSettings() =>
+            InvokeTrayButton("音量", "网络", "电源", "电池");
+
+        public void OpenSystemClock() => InvokeTrayButton("时钟");
+
+        /// <summary>
+        /// Invokes the taskbar tray button whose name starts with one of the prefixes,
+        /// opening exactly what that tray icon opens. The taskbar rebuilds itself now and
+        /// then, so each attempt re-reads and the loop gives up quietly.
+        /// </summary>
+        private static void InvokeTrayButton(params string[] prefixes)
         {
-            // The tray's own flyout: invoking the taskbar's volume, network or battery
-            // icon opens exactly what the taskbar opens. Win+A is deliberately not used;
-            // newer builds turn it into the full Settings app instead of the flyout.
             _ = Task.Run(() =>
             {
                 for (var attempt = 0; attempt < 6; attempt++)
@@ -2348,8 +2355,7 @@ public sealed class WidgetCoordinator : IDisposable
                                  .Cast<System.Windows.Automation.AutomationElement>())
                         {
                             var name = button.Current.Name;
-                            if (!name.StartsWith("音量") && !name.StartsWith("网络")
-                                && !name.StartsWith("电池"))
+                            if (!prefixes.Any(prefix => name.StartsWith(prefix)))
                             {
                                 continue;
                             }

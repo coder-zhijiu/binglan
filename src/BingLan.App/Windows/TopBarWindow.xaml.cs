@@ -52,6 +52,9 @@ internal interface ITopBarEnvironment
     /// <summary>Opens the system quick-settings flyout (the taskbar tray's panel).</summary>
     void OpenQuickSettings();
 
+    /// <summary>Opens the system clock and calendar flyout (the taskbar clock's panel).</summary>
+    void OpenSystemClock();
+
     /// <summary>Opens Task Manager and lands on its performance page.</summary>
     void OpenTaskManagerPerformance();
 
@@ -369,7 +372,7 @@ public sealed partial class TopBarWindow : Window
             RightModules.Children.Add(_attentionPanel);
         }
         AddModule(TopBarModuleKind.Clock, RightModules, "时间日期",
-            () => _environment.OpenComponentSettings(DesktopComponentKind.TimeDate));
+            _environment.OpenSystemClock);
         RefreshAttention();
     }
 

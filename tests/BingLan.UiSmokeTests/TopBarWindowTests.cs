@@ -295,9 +295,9 @@ internal static class TopBarWindowTests
         try
         {
             Invoke(ButtonByName(bar, "时间日期模块"));
-            if (environment.ComponentRequested != DesktopComponentKind.TimeDate)
+            if (environment.SystemClockRequested != 1)
             {
-                throw new InvalidOperationException("点击时钟模块应深链到时间日期组件设置");
+                throw new InvalidOperationException("点击时钟模块应唤起系统日历时间面板");
             }
             Invoke(ButtonByName(bar, "音量模块"));
             if (environment.QuickSettingsRequested != 1)
@@ -387,6 +387,7 @@ internal static class TopBarWindowTests
         internal int Toggles { get; private set; }
         internal int QuickSettingsRequested { get; private set; }
         internal int TaskManagerRequested { get; private set; }
+        internal int SystemClockRequested { get; private set; }
         internal DesktopComponentKind? ComponentRequested { get; private set; }
         internal int TopBarPageRequested { get; private set; }
 
@@ -409,6 +410,8 @@ internal static class TopBarWindowTests
         public void OpenQuickSettings() => QuickSettingsRequested++;
 
         public void OpenTaskManagerPerformance() => TaskManagerRequested++;
+
+        public void OpenSystemClock() => SystemClockRequested++;
 
         public void OpenComponentSettings(DesktopComponentKind kind) => ComponentRequested = kind;
 
